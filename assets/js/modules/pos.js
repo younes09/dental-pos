@@ -145,7 +145,7 @@ const posModule = {
         if (this.cart.length === 0) {
             cartList.innerHTML = `
                 <div class="text-center py-5 text-muted">
-                    <i class="fas fa-shopping-basket display-1 mb-3 opacity-25"></i>
+                    <i class="bi bi-basket display-1 mb-3 opacity-25"></i>
                     <p>Cart is empty</p>
                 </div>
             `;
@@ -161,15 +161,15 @@ const posModule = {
                 </div>
                 <div class="d-flex align-items-center me-3">
                     <button class="btn btn-sm btn-white border-0 shadow-none p-1" onclick="posModule.updateQty(${item.id}, -1)">
-                        <i class="fas fa-minus-circle text-muted"></i>
+                        <i class="bi bi-dash-circle text-muted"></i>
                     </button>
                     <span class="mx-2 fw-bold">${item.qty}</span>
                     <button class="btn btn-sm btn-white border-0 shadow-none p-1" onclick="posModule.updateQty(${item.id}, 1)">
-                        <i class="fas fa-plus-circle text-teal"></i>
+                        <i class="bi bi-plus-circle text-teal"></i>
                     </button>
                 </div>
                 <button class="btn btn-sm text-danger" onclick="posModule.removeFromCart(${item.id})">
-                    <i class="fas fa-times"></i>
+                    <i class="bi bi-x-lg"></i>
                 </button>
             </div>
         `).join('');

@@ -40,7 +40,7 @@ const stockModule = {
             document.getElementById('productForm').reset();
             document.getElementById('product-id').value = '';
             document.getElementById('productModalLabel').textContent = 'Add New Product';
-            document.getElementById('product-img-preview').src = 'assets/img/default.png';
+            document.getElementById('product-img-preview').src = 'assets/img/products/default.png';
         };
     },
 

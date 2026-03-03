@@ -1,0 +1,271 @@
+/**
+ * Purchase Orders Module
+ */
+
+const purchase_ordersModule = {
+    table: null,
+    products: [],
+    suppliers: [],
+
+    async init() {
+        this.initDataTable();
+        await this.loadMeta();
+        this.bindEvents();
+
+        // Handle shortcut from other modules (e.g. Suppliers)
+        const params = new URLSearchParams(window.location.hash.split('?')[1]);
+        const supplierId = params.get('supplier_id');
+        if (supplierId) {
+            this.createForSupplier(supplierId);
+        }
+
+        // Default date to today
+        document.getElementById('po-date').valueAsDate = new Date();
+
+        console.log('Purchase Orders Module Loaded');
+    },
+
+    bindEvents() {
+        document.getElementById('btn-add-item').onclick = () => this.addItemRow();
+
+        document.getElementById('poForm').onsubmit = async (e) => {
+            e.preventDefault();
+            await this.savePO();
+        };
+
+        // Delegate row calculations and removals
+        document.querySelector('#po-items-table tbody').addEventListener('input', (e) => {
+            if (e.target.classList.contains('item-qty') || e.target.classList.contains('item-cost')) {
+                this.calculateRowTotal(e.target.closest('tr'));
+                this.calculateOrderTotal();
+            }
+        });
+
+        document.querySelector('#po-items-table tbody').addEventListener('click', (e) => {
+            if (e.target.closest('.btn-remove-item')) {
+                e.target.closest('tr').remove();
+                this.calculateOrderTotal();
+            }
+        });
+    },
+
+    initDataTable() {
+        this.table = $('#poTable').DataTable({
+            ajax: 'api/purchase_orders.php?action=list',
+            columns: [
+                {
+                    data: 'id',
+                    render: (data) => `<span class="fw-bold">#PO-${data}</span>`
+                },
+                { data: 'date' },
+                {
+                    data: 'supplier_name',
+                    render: (data, type, row) => `
+                        <div class="fw-medium">${data}</div>
+                        <small class="text-muted small">${row.supplier_company || ''}</small>
+                    `
+                },
+                {
+                    data: 'total',
+                    render: (data) => `<span class="fw-bold text-navy">$${parseFloat(data).toFixed(2)}</span>`
+                },
+                {
+                    data: 'status',
+                    render: (data) => {
+                        const badges = {
+                            'Pending': 'bg-warning-subtle text-warning',
+                            'Received': 'bg-success-subtle text-success',
+                            'Partial': 'bg-info-subtle text-info',
+                            'Cancelled': 'bg-danger-subtle text-danger'
+                        };
+                        return `<span class="badge ${badges[data] || 'bg-secondary'} px-3 rounded-pill">${data}</span>`;
+                    }
+                },
+                {
+                    data: null,
+                    orderable: false,
+                    render: (data) => `
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-light" data-bs-toggle="dropdown"><i class="fas fa-ellipsis-v"></i></button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+                                <li><a class="dropdown-item" href="javascript:void(0)" onclick="purchase_ordersModule.viewDetails(${data.id})"><i class="fas fa-eye me-2 text-info"></i>View Details</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="javascript:void(0)" onclick="purchase_ordersModule.deletePO(${data.id})"><i class="fas fa-trash me-2"></i>Delete</a></li>
+                            </ul>
+                        </div>
+                    `
+                }
+            ],
+            language: {
+                search: "_INPUT_",
+                searchPlaceholder: "Search orders...",
+                lengthMenu: "_MENU_",
+            },
+            dom: '<"d-flex justify-content-between align-items-center mb-3"lf>rt<"d-flex justify-content-between align-items-center mt-3"ip>',
+            drawCallback: () => this.updateStats()
+        });
+    },
+
+    async loadMeta() {
+        // Load suppliers for dropdown
+        const supplierRes = await App.api('purchase_orders.php?action=get_suppliers');
+        if (supplierRes) {
+            this.suppliers = supplierRes.data;
+            const select = document.getElementById('po-supplier-select');
+            select.innerHTML = '<option value="">Select Supplier</option>' +
+                this.suppliers.map(s => `<option value="${s.id}">${s.name} (${s.company})</option>`).join('');
+        }
+
+        // Load products for item selectors
+        const productRes = await App.api('purchase_orders.php?action=get_products');
+        if (productRes) {
+            this.products = productRes.data;
+        }
+    },
+
+    addItemRow() {
+        const tbody = document.querySelector('#po-items-table tbody');
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>
+                <select class="form-select form-select-sm item-product" required>
+                    <option value="">Select Product</option>
+                    ${this.products.map(p => `<option value="${p.id}" data-price="${p.purchase_price}">${p.name}</option>`).join('')}
+                </select>
+            </td>
+            <td><input type="number" class="form-control form-control-sm item-qty" value="1" min="1" required></td>
+            <td><input type="number" step="0.01" class="form-control form-control-sm item-cost" value="0.00" required></td>
+            <td class="item-total fw-bold text-navy">$0.00</td>
+            <td class="text-end">
+                <button type="button" class="btn btn-sm text-danger btn-remove-item">
+                    <i class="fas fa-times"></i>
+                </button>
+            </td>
+        `;
+
+        // Update cost when product changes
+        row.querySelector('.item-product').onchange = (e) => {
+            const option = e.target.selectedOptions[0];
+            const price = option ? option.dataset.price : 0;
+            row.querySelector('.item-cost').value = price;
+            this.calculateRowTotal(row);
+            this.calculateOrderTotal();
+        };
+
+        tbody.appendChild(row);
+    },
+
+    calculateRowTotal(row) {
+        const qty = parseFloat(row.querySelector('.item-qty').value) || 0;
+        const cost = parseFloat(row.querySelector('.item-cost').value) || 0;
+        const total = qty * cost;
+        row.querySelector('.item-total').textContent = `$${total.toFixed(2)}`;
+    },
+
+    calculateOrderTotal() {
+        let total = 0;
+        document.querySelectorAll('#po-items-table tbody tr').forEach(row => {
+            const qty = parseFloat(row.querySelector('.item-qty').value) || 0;
+            const cost = parseFloat(row.querySelector('.item-cost').value) || 0;
+            total += qty * cost;
+        });
+        document.getElementById('po-total-display').textContent = `$${total.toFixed(2)}`;
+    },
+
+    async savePO() {
+        const supplier_id = document.getElementById('po-supplier-select').value;
+        const date = document.getElementById('po-date').value;
+        const status = document.getElementById('po-status').value;
+        const items = [];
+        let total = 0;
+
+        document.querySelectorAll('#po-items-table tbody tr').forEach(row => {
+            const productId = row.querySelector('.item-product').value;
+            const qty = parseFloat(row.querySelector('.item-qty').value);
+            const cost = parseFloat(row.querySelector('.item-cost').value);
+
+            if (productId && qty > 0) {
+                items.push({
+                    product_id: productId,
+                    qty: qty,
+                    unit_cost: cost
+                });
+                total += qty * cost;
+            }
+        });
+
+        if (items.length === 0) {
+            App.toast('error', 'Please add at least one product');
+            return;
+        }
+
+        const data = {
+            supplier_id,
+            date,
+            status,
+            total,
+            items
+        };
+
+        const result = await App.api('purchase_orders.php?action=save', 'POST', data);
+        if (result && result.success) {
+            App.toast('success', result.success);
+            bootstrap.Modal.getInstance(document.getElementById('poModal')).hide();
+            this.table.ajax.reload();
+            document.getElementById('poForm').reset();
+            document.querySelector('#po-items-table tbody').innerHTML = '';
+            document.getElementById('po-total-display').textContent = '$0.00';
+        }
+    },
+
+    async deletePO(id) {
+        const confirm = await Swal.fire({
+            title: 'Delete Purchase Order?',
+            text: "This action cannot be undone!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, delete it!'
+        });
+
+        if (confirm.isConfirmed) {
+            const result = await App.api(`purchase_orders.php?action=delete&id=${id}`);
+            if (result && result.success) {
+                App.toast('success', result.success);
+                this.table.ajax.reload();
+            }
+        }
+    },
+
+    updateStats() {
+        if (!this.table) return; // Guard against null during initialization
+        const data = this.table.rows().data().toArray();
+        const totalCount = data.length;
+        const pendingCount = data.filter(d => d.status === 'Pending').length;
+        const receivedCount = data.filter(d => d.status === 'Received').length;
+        const totalValue = data.reduce((sum, d) => sum + parseFloat(d.total), 0);
+
+        document.getElementById('stat-total-po').textContent = totalCount;
+        document.getElementById('stat-pending-po').textContent = pendingCount;
+        document.getElementById('stat-received-po').textContent = receivedCount;
+        document.getElementById('stat-total-value').textContent = `$${totalValue.toFixed(2)}`;
+    },
+
+    viewDetails(id) {
+        App.toast('info', 'PO Detail view coming soon');
+    },
+
+    // Shortcut from Suppliers module
+    createForSupplier(supplierId) {
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('poModal')).show();
+        document.getElementById('po-supplier-select').value = supplierId;
+    }
+};
+
+// Initialize
+if (document.getElementById('poTable')) {
+    purchase_ordersModule.init();
+}
+
+window.purchase_ordersModule = purchase_ordersModule;

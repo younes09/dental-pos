@@ -59,6 +59,12 @@ if (!isset($_SESSION['user_id'])) {
                 </a>
             </li>
             <li>
+                <a href="#purchase_orders" class="nav-link">
+                    <i class="fas fa-file-invoice"></i>
+                    <span>Purchase Orders</span>
+                </a>
+            </li>
+            <li>
                 <a href="#stock" class="nav-link">
                     <i class="fas fa-boxes-stacked"></i>
                     <span>Stock Management</span>

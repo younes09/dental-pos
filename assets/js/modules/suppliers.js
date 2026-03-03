@@ -128,7 +128,7 @@ const suppliersModule = {
     },
 
     createPO(id) {
-        App.toast('info', 'Purchase Order creation coming soon');
+        window.location.hash = `#purchase_orders?supplier_id=${id}`;
     }
 };
 
