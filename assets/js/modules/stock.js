@@ -30,17 +30,29 @@ const stockModule = {
                 const reader = new FileReader();
                 reader.onload = (event) => {
                     document.getElementById('product-img-preview').src = event.target.result;
+                    document.getElementById('btn-remove-image').classList.remove('d-none');
                 };
                 reader.readAsDataURL(e.target.files[0]);
             }
+        };
+
+        // Remove Image
+        document.getElementById('btn-remove-image').onclick = (e) => {
+            e.stopPropagation();
+            document.getElementById('product-image-input').value = '';
+            document.getElementById('existing-image').value = ''; // Clear for DB update
+            document.getElementById('product-img-preview').src = 'assets/img/img_holder.png';
+            document.getElementById('btn-remove-image').classList.add('d-none');
         };
 
         // Reset form on open
         document.getElementById('btn-add-product').onclick = () => {
             document.getElementById('productForm').reset();
             document.getElementById('product-id').value = '';
+            document.getElementById('existing-image').value = '';
             document.getElementById('productModalLabel').textContent = 'Add New Product';
-            document.getElementById('product-img-preview').src = 'assets/img/products/default.png';
+            document.getElementById('product-img-preview').src = 'assets/img/img_holder.png';
+            document.getElementById('btn-remove-image').classList.add('d-none');
         };
     },
 
@@ -168,7 +180,15 @@ const stockModule = {
         document.querySelector('[name="min_stock"]').value = product.min_stock;
         document.querySelector('[name="expiry_date"]').value = product.expiry_date;
 
-        document.getElementById('product-img-preview').src = `assets/img/products/${product.image || 'default.png'}`;
+        document.getElementById('existing-image').value = product.image || '';
+        document.getElementById('product-img-preview').src = product.image ? `assets/img/products/${product.image}` : `assets/img/img_holder.png`;
+
+        if (product.image) {
+            document.getElementById('btn-remove-image').classList.remove('d-none');
+        } else {
+            document.getElementById('btn-remove-image').classList.add('d-none');
+        }
+
         document.getElementById('productModalLabel').textContent = 'Edit Product';
 
         new bootstrap.Modal(document.getElementById('productModal')).show();

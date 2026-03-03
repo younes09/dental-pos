@@ -114,13 +114,13 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold">Category</label>
-                                    <select name="category_id" id="product-category" class="form-select" required>
+                                    <select name="category_id" id="product-category" class="form-select" style="cursor: pointer;" required>
                                         <option value="">Select Category</option>
                                     </select>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold">Brand</label>
-                                    <select name="brand_id" id="product-brand" class="form-select" required>
+                                    <select name="brand_id" id="product-brand" class="form-select" style="cursor: pointer;" required>
                                         <option value="">Select Brand</option>
                                     </select>
                                 </div>
@@ -136,8 +136,12 @@
                         </div>
                         <div class="col-md-4">
                             <label class="form-label fw-semibold">Product Image</label>
-                            <div class="image-upload-wrapper text-center border rounded-4 p-3 mb-3 bg-light" style="cursor: pointer;" id="imageUploadBtn">
-                                <img id="product-img-preview" src="https://via.placeholder.com/150?text=Upload+Image" class="img-fluid rounded mb-2">
+                            <input type="hidden" name="existing_image" id="existing-image">
+                            <div class="image-upload-wrapper text-center border rounded-4 p-3 mb-3 bg-light position-relative" id="imageUploadBtn">
+                                <img id="product-img-preview" src="assets/img/img_holder.png" class="img-fluid rounded mb-2" style="width: 150px; height: 150px; object-fit: cover; cursor: pointer;">
+                                <button type="button" id="btn-remove-image" class="btn btn-sm btn-danger rounded-circle position-absolute top-0 end-0 m-2 d-none" title="Remove image" style="width: 25px; height: 25px; padding: 0; line-height: 25px;">
+                                    <i class="fas fa-times"></i>
+                                </button>
                                 <p class="small text-muted mb-0">Click to upload image</p>
                                 <input type="file" name="image" id="product-image-input" hidden accept="image/*">
                             </div>
