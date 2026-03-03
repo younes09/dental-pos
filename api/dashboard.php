@@ -30,14 +30,43 @@ try {
     $stmt->execute();
     $pending_po = $stmt->fetch()['count'] ?? 0;
 
-    // 2. Sales Chart Data (Last 7 days)
-    $stmt = $pdo->prepare("
-        SELECT DATE_FORMAT(date, '%b %d') as day, SUM(total) as total 
-        FROM sales 
-        WHERE date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY) AND status = 'Completed'
-        GROUP BY DATE(date)
-        ORDER BY date ASC
-    ");
+    // 2. Sales Chart Data
+    $filter = $_GET['filter'] ?? 'daily';
+    
+    switch ($filter) {
+        case 'weekly':
+            // Last 4 weeks, grouped by week
+            $stmt = $pdo->prepare("
+                SELECT DATE_FORMAT(date, 'Week %u') as day, SUM(total) as total 
+                FROM sales 
+                WHERE date >= DATE_SUB(CURDATE(), INTERVAL 4 WEEK) AND status = 'Completed'
+                GROUP BY WEEK(date)
+                ORDER BY date ASC
+            ");
+            break;
+        case 'monthly':
+            // Last 6 months, grouped by month
+            $stmt = $pdo->prepare("
+                SELECT DATE_FORMAT(date, '%b %Y') as day, SUM(total) as total 
+                FROM sales 
+                WHERE date >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH) AND status = 'Completed'
+                GROUP BY MONTH(date)
+                ORDER BY date ASC
+            ");
+            break;
+        case 'daily':
+        default:
+            // Last 7 days, grouped by day (original behavior)
+            $stmt = $pdo->prepare("
+                SELECT DATE_FORMAT(date, '%b %d') as day, SUM(total) as total 
+                FROM sales 
+                WHERE date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY) AND status = 'Completed'
+                GROUP BY DATE(date)
+                ORDER BY date ASC
+            ");
+            break;
+    }
+    
     $stmt->execute();
     $chart_data = $stmt->fetchAll();
 

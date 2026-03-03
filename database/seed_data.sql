@@ -43,27 +43,27 @@ INSERT INTO users (name, email, password, role) VALUES
 ('Amanda White', 'amanda@dentalpos.com', '$2a$12$Zka66PNoO.Ryd5K.993dtuZBiZw7IJr3Fs1Q3UdyW78umKIrdF/2q', 'Admin');
 
 -- 4. Products (20)
-INSERT INTO products (name, category_id, brand_id, barcode, purchase_price, selling_price, stock_qty, min_stock, expiry_date, status) VALUES
-('Filtek Universal Restorative (4g)', 2, 1, '710001', 35.50, 65.00, 50, 10, '2027-12-31', 'Active'),
-('Cavex CA37 Impression Alginate', 8, 3, '710002', 12.00, 25.00, 30, 5, '2026-06-30', 'Active'),
-('K-Files Assorted 25mm (Pk 6)', 3, 4, '710003', 18.00, 42.00, 100, 20, '2028-01-01', 'Active'),
-('Septocaine 4% with Epinephrine', 7, 9, '710004', 45.00, 85.00, 24, 6, '2025-08-15', 'Active'),
-('Hygienist Prophy Paste (Medium)', 1, 8, '710005', 15.00, 35.00, 15, 5, '2026-11-20', 'Active'),
-('Nitrile Exam Gloves (Medium, Box 100)', 10, 6, '710006', 8.50, 18.00, 200, 40, '2029-01-01', 'Active'),
-('Clearfil Majesty ES-2 Composite', 2, 7, '710007', 42.00, 89.00, 40, 8, '2027-05-10', 'Active'),
-('AH Plus Resin Sealer', 3, 2, '710008', 65.00, 125.00, 12, 3, '2026-03-30', 'Active'),
-('Self-Seal Sterilization Pouches (2.2x13)', 12, 5, '710009', 14.50, 28.00, 500, 100, '2030-01-01', 'Active'),
-('Explorer Hu-Friedy #5', 9, 6, '710010', 22.00, 45.00, 25, 5, NULL, 'Active'),
-('Mirror Head #4 Front Surface', 9, 6, '710011', 4.50, 12.00, 60, 10, NULL, 'Active'),
-('Sonicare DiamondClean Brush Heads', 1, 10, '710012', 12.00, 24.00, 48, 12, NULL, 'Active'),
-('Dycal Calcium Hydroxide', 2, 2, '710013', 28.00, 55.00, 20, 5, '2026-12-31', 'Active'),
-('ProTaper Gold NiTi Files F1', 3, 2, '710014', 55.00, 95.00, 30, 10, '2028-06-01', 'Active'),
-('Transbond XT Orthodontic Adhesive', 4, 1, '710015', 75.00, 145.00, 15, 5, '2026-04-15', 'Active'),
-('Oraqix Non-Injectable Anesthetic', 7, 9, '710016', 95.00, 185.00, 8, 2, '2025-12-01', 'Active'),
-('G-Premio Bond (5ml)', 2, 3, '710017', 48.00, 98.00, 12, 3, '2027-09-20', 'Active'),
-('Alginate Mixer Cups (Small)', 8, 3, '710018', 2.50, 7.00, 100, 20, NULL, 'Active'),
-('Lidocaine 2% Red', 7, 9, '710019', 38.00, 72.00, 20, 5, '2026-01-15', 'Active'),
-('Disposable Bibs (Blue, Box 500)', 10, 5, '710020', 18.00, 35.00, 80, 15, NULL, 'Active');
+INSERT INTO products (name, category_id, brand_id, barcode, purchase_price, selling_price, stock_qty, min_stock, expiry_date, image, status) VALUES
+('Filtek Universal Restorative (4g)', 2, 1, '710001', 35.50, 65.00, 50, 10, '2027-12-31', '1.jpg', 'Active'),
+('Cavex CA37 Impression Alginate', 8, 3, '710002', 12.00, 25.00, 30, 5, '2026-06-30', '2.jpg', 'Active'),
+('K-Files Assorted 25mm (Pk 6)', 3, 4, '710003', 18.00, 42.00, 100, 20, '2028-01-01', '3.jpg', 'Active'),
+('Septocaine 4% with Epinephrine', 7, 9, '710004', 45.00, 85.00, 24, 6, '2025-08-15', '4.jpg', 'Active'),
+('Hygienist Prophy Paste (Medium)', 1, 8, '710005', 15.00, 35.00, 15, 5, '2026-11-20', '5.jpg', 'Active'),
+('Nitrile Exam Gloves (Medium, Box 100)', 10, 6, '710006', 8.50, 18.00, 200, 40, '2029-01-01', '6.jpg', 'Active'),
+('Clearfil Majesty ES-2 Composite', 2, 7, '710007', 42.00, 89.00, 40, 8, '2027-05-10', '7.jpg', 'Active'),
+('AH Plus Resin Sealer', 3, 2, '710008', 65.00, 125.00, 12, 3, '2026-03-30', '8.jpg', 'Active'),
+('Self-Seal Sterilization Pouches (2.2x13)', 12, 5, '710009', 14.50, 28.00, 500, 100, '2030-01-01', '9.jpg', 'Active'),
+('Explorer Hu-Friedy #5', 9, 6, '710010', 22.00, 45.00, 25, 5, NULL, '10.jpg', 'Active'),
+('Mirror Head #4 Front Surface', 9, 6, '710011', 4.50, 12.00, 60, 10, NULL, '11.jpg', 'Active'),
+('Sonicare DiamondClean Brush Heads', 1, 10, '710012', 12.00, 24.00, 48, 12, NULL, '12.jpg', 'Active'),
+('Dycal Calcium Hydroxide', 2, 2, '710013', 28.00, 55.00, 20, 5, '2026-12-31', '13.jpg', 'Active'),
+('ProTaper Gold NiTi Files F1', 3, 2, '710014', 55.00, 95.00, 30, 10, '2028-06-01', '14.jpg', 'Active'),
+('Transbond XT Orthodontic Adhesive', 4, 1, '710015', 75.00, 145.00, 15, 5, '2026-04-15', '15.jpg', 'Active'),
+('Oraqix Non-Injectable Anesthetic', 7, 9, '710016', 95.00, 185.00, 8, 2, '2025-12-01', '16.jpg', 'Active'),
+('G-Premio Bond (5ml)', 2, 3, '710017', 48.00, 98.00, 12, 3, '2027-09-20', '17.jpg', 'Active'),
+('Alginate Mixer Cups (Small)', 8, 3, '710018', 2.50, 7.00, 100, 20, NULL, '18.jpg', 'Active'),
+('Lidocaine 2% Red', 7, 9, '710019', 38.00, 72.00, 20, 5, '2026-01-15', '19.jpg', 'Active'),
+('Disposable Bibs (Blue, Box 500)', 10, 5, '710020', 18.00, 35.00, 80, 15, NULL, '20.jpg', 'Active');
 
 -- 5. Customers (12)
 INSERT INTO customers (name, phone, email, balance, loyalty_points) VALUES

@@ -4,12 +4,33 @@
 
 const dashboardModule = {
     init() {
+        this.currentRange = 'daily';
+        this.salesChart = null;
+        this.productsChart = null;
+        this.bindEvents();
         this.fetchData();
         console.log('Dashboard Module Loaded');
     },
 
-    async fetchData() {
-        const data = await App.api('dashboard.php');
+    bindEvents() {
+        const rangeButtons = document.querySelectorAll('.btn-group [class*="btn-outline-secondary"]');
+        rangeButtons.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const range = e.target.textContent.toLowerCase();
+                if (range === this.currentRange) return;
+
+                // Update UI active state
+                rangeButtons.forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+
+                this.currentRange = range;
+                this.fetchData(range);
+            });
+        });
+    },
+
+    async fetchData(range = 'daily') {
+        const data = await App.api(`dashboard.php?filter=${range}`);
         if (!data) return;
 
         this.updateKPIs(data.kpis);
@@ -30,7 +51,13 @@ const dashboardModule = {
     renderCharts(salesData, productsData) {
         // Line Chart
         const ctxSales = document.getElementById('salesChart').getContext('2d');
-        new Chart(ctxSales, {
+
+        // Destroy existing chart if it exists
+        if (this.salesChart) {
+            this.salesChart.destroy();
+        }
+
+        this.salesChart = new Chart(ctxSales, {
             type: 'line',
             data: {
                 labels: salesData.map(d => d.day),
@@ -68,7 +95,13 @@ const dashboardModule = {
 
         // Bar Chart
         const ctxProducts = document.getElementById('productsChart').getContext('2d');
-        new Chart(ctxProducts, {
+
+        // Destroy existing chart if it exists
+        if (this.productsChart) {
+            this.productsChart.destroy();
+        }
+
+        this.productsChart = new Chart(ctxProducts, {
             type: 'bar',
             data: {
                 labels: productsData.map(p => p.name.length > 15 ? p.name.substring(0, 12) + '...' : p.name),
