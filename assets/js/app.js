@@ -11,13 +11,47 @@ const App = {
     state: {
         currentRoute: '',
         user: null,
-        notifications: []
+        notifications: [],
+        settings: {
+            currency: '$',
+            store_name: 'DentalPOS',
+            vat_rate: 0
+        }
     },
 
-    init() {
+    async init() {
+        await this.loadAppSettings();
         this.bindEvents();
         this.handleRouting();
+        this.applySettings();
         console.log('DentalPOS Initialized');
+    },
+
+    async loadAppSettings() {
+        const settings = await this.api('settings.php');
+        if (settings) {
+            this.state.settings = { ...this.state.settings, ...settings };
+        }
+    },
+
+    applySettings() {
+        // Apply global settings like theme or store name in title
+        if (this.state.settings.store_name) {
+            document.title = `${this.state.settings.store_name} - Premium Stock & POS`;
+        }
+
+        this.updateStaticCurrency();
+    },
+
+    updateStaticCurrency() {
+        const symbol = this.state.settings.currency || '$';
+        document.querySelectorAll('.currency-symbol').forEach(el => {
+            // If it's an input-group-text, it usually stays as is but we can ensure it's correct
+            el.textContent = symbol;
+
+            // For elements that contain both value and symbol class, we might need more logic
+            // but usually it's used as a standalone label or prefix/suffix
+        });
     },
 
     bindEvents() {
@@ -153,6 +187,9 @@ const App = {
             // Inject content
             viewport.innerHTML = `<div class="fade-in">${html}</div>`;
 
+            // Update static currency symbols in the newly loaded view
+            this.updateStaticCurrency();
+
             // Initialize module logic
             this.initModule(viewName);
 
@@ -232,6 +269,11 @@ const App = {
             this.toast('error', 'Network error or server unavailable');
             return null;
         }
+    },
+
+    formatCurrency(amount) {
+        const symbol = this.state.settings.currency || '$';
+        return `${parseFloat(amount).toFixed(2)} ${symbol}`;
     },
 
     toast(icon, title) {

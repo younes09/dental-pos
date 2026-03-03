@@ -126,6 +126,22 @@ CREATE TABLE stock_adjustments (
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
+-- Settings table
+CREATE TABLE settings (
+    setting_key VARCHAR(50) PRIMARY KEY,
+    setting_value TEXT,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Initialize default settings
+INSERT IGNORE INTO settings (setting_key, setting_value) VALUES 
+('store_name', 'DentalPOS Premium'),
+('tax_number', 'VAT-12345678'),
+('currency', '$'),
+('address', '123 Clinical Way, Medical District'),
+('vat_rate', '15');
+
+
 -- Insert a default admin user (password: admin123)
 -- In a real app, use password_hash()
 INSERT INTO users (name, email, password, role) VALUES ('Admin User', 'admin@dentalpos.com', '$2a$12$Zka66PNoO.Ryd5K.993dtuZBiZw7IJr3Fs1Q3UdyW78umKIrdF/2q', 'Admin');

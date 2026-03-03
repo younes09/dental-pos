@@ -7,9 +7,10 @@ const posModule = {
     allCustomers: [],
     selectedCustomer: null,
     cart: [],
-    taxRate: 0.15, // 15% VAT
+    taxRate: 0.15,
 
     init() {
+        this.loadSettings();
         this.loadCategories();
 
         // Handle search query from URL if any
@@ -20,6 +21,14 @@ const posModule = {
         this.loadCustomers();
         this.bindEvents();
         console.log('POS Module Loaded');
+    },
+
+    loadSettings() {
+        if (App.state.settings.vat_rate) {
+            this.taxRate = parseFloat(App.state.settings.vat_rate) / 100;
+            const vatDisplay = document.getElementById('vat-rate-display');
+            if (vatDisplay) vatDisplay.textContent = App.state.settings.vat_rate;
+        }
     },
 
     bindEvents() {
@@ -135,7 +144,7 @@ const posModule = {
                     </div>
                     <div class="card-body pt-0 text-center">
                         <h6 class="fw-bold mb-1 text-truncate">${p.name}</h6>
-                        <span class="text-teal fw-bold">$${parseFloat(p.selling_price).toFixed(2)}</span>
+                        <span class="text-teal fw-bold">${App.formatCurrency(p.selling_price)}</span>
                     </div>
                 </div>
             </div>
@@ -223,7 +232,7 @@ const posModule = {
                 <img src="assets/img/products/${item.image || 'default.jpg'}" class="rounded-3 me-3" width="50" height="50" onerror="this.src='https://ui-avatars.com/api/?name=P&background=random'">
                 <div class="flex-grow-1">
                     <h6 class="mb-0 fw-bold small text-truncate" style="max-width: 140px;">${item.name}</h6>
-                    <span class="text-teal fw-bold">$${item.price.toFixed(2)}</span>
+                    <span class="text-teal fw-bold">${App.formatCurrency(item.price)}</span>
                 </div>
                 <div class="d-flex align-items-center me-3">
                     <button class="btn btn-sm btn-white border-0 shadow-none p-1" onclick="posModule.updateQty(${item.id}, -1)">
@@ -249,9 +258,9 @@ const posModule = {
         const tax = taxableAmount * this.taxRate;
         const total = taxableAmount + tax;
 
-        document.getElementById('cart-subtotal').textContent = `$${subtotal.toFixed(2)}`;
-        document.getElementById('cart-tax').textContent = `$${tax.toFixed(2)}`;
-        document.getElementById('cart-total').textContent = `$${total.toFixed(2)}`;
+        document.getElementById('cart-subtotal').textContent = App.formatCurrency(subtotal);
+        document.getElementById('cart-tax').textContent = App.formatCurrency(tax);
+        document.getElementById('cart-total').textContent = App.formatCurrency(total);
 
         return { subtotal, discountAmount, tax, total };
     },

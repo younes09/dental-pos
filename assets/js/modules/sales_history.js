@@ -51,7 +51,7 @@ const sales_historyModule = {
                 },
                 {
                     data: 'total',
-                    render: (data) => `<span class="fw-bold text-navy">$${parseFloat(data).toFixed(2)}</span>`
+                    render: (data) => `<span class="fw-bold text-navy">${App.formatCurrency(data)}</span>`
                 },
                 {
                     data: null,
@@ -61,7 +61,7 @@ const sales_historyModule = {
                             <button class="btn btn-sm btn-light" data-bs-toggle="dropdown"><i class="fas fa-ellipsis-v"></i></button>
                             <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
                                 <li><a class="dropdown-item" href="javascript:void(0)" onclick="sales_historyModule.viewDetails(${data.id})"><i class="fas fa-eye me-2 text-info"></i>View Details</a></li>
-                                <li><a class="dropdown-item" href="javascript:void(0)" onclick="App.toast('info', 'Receipt printing...')"><i class="fas fa-print me-2 text-teal"></i>Print Receipt</a></li>
+                                <li><a class="dropdown-item" href="javascript:void(0)" onclick="sales_historyModule.directPrint(${data.id})"><i class="fas fa-print me-2 text-teal"></i>Print Receipt</a></li>
                             </ul>
                         </div>
                     `
@@ -74,6 +74,11 @@ const sales_historyModule = {
             },
             dom: '<"d-flex justify-content-between align-items-center mb-3"lf>rt<"d-flex justify-content-between align-items-center mt-3"ip>'
         });
+    },
+
+    async directPrint(id) {
+        const result = await App.api(`sales.php?action=sale_details&id=${id}`);
+        if (result) this.printReceipt(result);
     },
 
     async viewDetails(id) {
@@ -117,19 +122,41 @@ const sales_historyModule = {
                     <small class="text-muted small">${item.barcode || ''}</small>
                 </td>
                 <td class="text-center">${item.qty}</td>
-                <td class="text-end">$${parseFloat(item.unit_price).toFixed(2)}</td>
-                <td class="text-end fw-bold">$${parseFloat(item.total).toFixed(2)}</td>
+                <td class="text-end">${App.formatCurrency(item.unit_price)}</td>
+                <td class="text-end fw-bold">${App.formatCurrency(item.total)}</td>
             </tr>
         `).join('');
 
         // Populate Totals
-        document.getElementById('sale-details-subtotal').textContent = `$${parseFloat(sale.subtotal).toFixed(2)}`;
-        document.getElementById('sale-details-discount').textContent = `-$${parseFloat(sale.discount).toFixed(2)}`;
-        document.getElementById('sale-details-tax').textContent = `$${parseFloat(sale.tax).toFixed(2)}`;
-        document.getElementById('sale-details-total').textContent = `$${parseFloat(sale.total).toFixed(2)}`;
+        document.getElementById('sale-details-subtotal').textContent = App.formatCurrency(sale.subtotal);
+        document.getElementById('sale-details-discount').textContent = `-${App.formatCurrency(sale.discount)}`;
+        document.getElementById('sale-details-tax').textContent = App.formatCurrency(sale.tax);
+        document.getElementById('sale-details-total').textContent = App.formatCurrency(sale.total);
+
+        // Update VAT Percentage label
+        const vatDisplays = document.querySelectorAll('.vat-rate-display');
+        const vatRate = App.state.settings.vat_rate || 15;
+        vatDisplays.forEach(el => el.textContent = vatRate);
 
         // Show Modal
         new bootstrap.Modal(document.getElementById('saleDetailsModal')).show();
+
+        // Bind Print Receipt button in modal to this specific sale
+        document.getElementById('btn-print-receipt').onclick = () => {
+            this.printReceipt(result);
+        };
+    },
+
+    printReceipt(data) {
+        const printWindow = window.open('views/receipt-template.html', '_blank', 'width=900,height=800');
+
+        // Wait for window to load then send data
+        printWindow.onload = function () {
+            printWindow.postMessage({
+                type: 'POPULATE_RECEIPT',
+                payload: { ...data, settings: App.state.settings }
+            }, window.location.origin);
+        };
     }
 };
 

@@ -17,7 +17,7 @@ const settingsModule = {
 
         document.getElementById('tax-settings-form').onsubmit = (e) => {
             e.preventDefault();
-            App.toast('success', 'Tax configuration updated');
+            this.saveTaxInfo();
         };
 
         document.getElementById('settingsDarkModeToggle').onchange = (e) => {
@@ -28,12 +28,46 @@ const settingsModule = {
         document.getElementById('settingsDarkModeToggle').checked = document.body.classList.contains('dark-mode');
     },
 
-    loadSettings() {
-        // Load from localStorage or API
+    async loadSettings() {
+        const settings = await App.api('settings.php');
+        if (settings) {
+            // Fill Business Info Form
+            const businessForm = document.getElementById('business-settings-form');
+            if (businessForm) {
+                if (settings.store_name) businessForm.elements['store_name'].value = settings.store_name;
+                if (settings.tax_number) businessForm.elements['tax_number'].value = settings.tax_number;
+                if (settings.currency) businessForm.elements['currency'].value = settings.currency;
+                if (settings.address) businessForm.elements['address'].value = settings.address;
+            }
+
+            // Fill Tax Rate Form
+            const taxForm = document.getElementById('tax-settings-form');
+            if (taxForm) {
+                if (settings.vat_rate) taxForm.elements['vat_rate'].value = settings.vat_rate;
+            }
+        }
     },
 
-    saveBusinessInfo() {
-        App.toast('success', 'Business settings saved successfully');
+    async saveBusinessInfo() {
+        const form = document.getElementById('business-settings-form');
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+
+        const result = await App.api('settings.php', 'POST', data);
+        if (result && result.success) {
+            App.toast('success', 'Business settings saved successfully');
+        }
+    },
+
+    async saveTaxInfo() {
+        const form = document.getElementById('tax-settings-form');
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+
+        const result = await App.api('settings.php', 'POST', data);
+        if (result && result.success) {
+            App.toast('success', 'Tax configuration updated');
+        }
     },
 
     backupDB() {

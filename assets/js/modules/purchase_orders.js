@@ -67,7 +67,7 @@ const purchase_ordersModule = {
                 },
                 {
                     data: 'total',
-                    render: (data) => `<span class="fw-bold text-navy">$${parseFloat(data).toFixed(2)}</span>`
+                    render: (data) => `<span class="fw-bold text-navy">${App.formatCurrency(data)}</span>`
                 },
                 {
                     data: 'status',
@@ -135,7 +135,7 @@ const purchase_ordersModule = {
             </td>
             <td><input type="number" class="form-control form-control-sm item-qty" value="1" min="1" required></td>
             <td><input type="number" step="0.01" class="form-control form-control-sm item-cost" value="0.00" required></td>
-            <td class="item-total fw-bold text-navy">$0.00</td>
+            <td class="item-total fw-bold text-navy">${App.formatCurrency(0)}</td>
             <td class="text-end">
                 <button type="button" class="btn btn-sm text-danger btn-remove-item">
                     <i class="fas fa-times"></i>
@@ -159,7 +159,7 @@ const purchase_ordersModule = {
         const qty = parseFloat(row.querySelector('.item-qty').value) || 0;
         const cost = parseFloat(row.querySelector('.item-cost').value) || 0;
         const total = qty * cost;
-        row.querySelector('.item-total').textContent = `$${total.toFixed(2)}`;
+        row.querySelector('.item-total').textContent = App.formatCurrency(total);
     },
 
     calculateOrderTotal() {
@@ -169,7 +169,7 @@ const purchase_ordersModule = {
             const cost = parseFloat(row.querySelector('.item-cost').value) || 0;
             total += qty * cost;
         });
-        document.getElementById('po-total-display').textContent = `$${total.toFixed(2)}`;
+        document.getElementById('po-total-display').textContent = App.formatCurrency(total);
     },
 
     async savePO() {
@@ -214,7 +214,7 @@ const purchase_ordersModule = {
             this.table.ajax.reload();
             document.getElementById('poForm').reset();
             document.querySelector('#po-items-table tbody').innerHTML = '';
-            document.getElementById('po-total-display').textContent = '$0.00';
+            document.getElementById('po-total-display').textContent = App.formatCurrency(0);
         }
     },
 
@@ -249,7 +249,7 @@ const purchase_ordersModule = {
         document.getElementById('stat-total-po').textContent = totalCount;
         document.getElementById('stat-pending-po').textContent = pendingCount;
         document.getElementById('stat-received-po').textContent = receivedCount;
-        document.getElementById('stat-total-value').textContent = `$${totalValue.toFixed(2)}`;
+        document.getElementById('stat-total-value').textContent = App.formatCurrency(totalValue);
     },
 
     async viewDetails(id) {
@@ -295,12 +295,12 @@ const purchase_ordersModule = {
                 </td>
                 <td><small class="text-muted">${item.barcode || 'N/A'}</small></td>
                 <td class="text-center">${item.qty}</td>
-                <td class="text-end">$${parseFloat(item.unit_cost).toFixed(2)}</td>
-                <td class="text-end fw-bold text-navy">$${(item.qty * item.unit_cost).toFixed(2)}</td>
+                <td class="text-end">${App.formatCurrency(item.unit_cost)}</td>
+                <td class="text-end fw-bold text-navy">${App.formatCurrency(item.qty * item.unit_cost)}</td>
             </tr>
         `).join('');
 
-        document.getElementById('po-details-grand-total').textContent = `$${parseFloat(order.total).toFixed(2)}`;
+        document.getElementById('po-details-grand-total').textContent = App.formatCurrency(order.total);
 
         // Show Modal
         new bootstrap.Modal(document.getElementById('poDetailsModal')).show();

@@ -36,7 +36,7 @@ const customersModule = {
                     render: (data) => {
                         const val = parseFloat(data);
                         const color = val > 0 ? 'danger' : 'success';
-                        return `<span class="fw-bold text-${color}">$${val.toFixed(2)}</span>`;
+                        return `<span class="fw-bold text-${color}">${App.formatCurrency(val)}</span>`;
                     }
                 },
                 { data: 'loyalty_points', render: (data) => `<span class="badge bg-info-subtle text-info px-3">${data} pts</span>` },

@@ -70,8 +70,8 @@ const stockModule = {
                 {
                     data: null,
                     render: (data) => `
-                        <small class="text-muted">B: $${data.purchase_price}</small><br>
-                        <span class="text-teal fw-bold">S: $${data.selling_price}</span>
+                        <small class="text-muted">B: ${App.formatCurrency(data.purchase_price)}</small><br>
+                        <span class="text-teal fw-bold">S: ${App.formatCurrency(data.selling_price)}</span>
                     `
                 },
                 {
@@ -126,7 +126,7 @@ const stockModule = {
             document.getElementById('stat-total-products').textContent = stats.total;
             document.getElementById('stat-low-stock').textContent = stats.low;
             document.getElementById('stat-expired').textContent = stats.expired;
-            document.getElementById('stat-inventory-value').textContent = `$${stats.value}`;
+            document.getElementById('stat-inventory-value').textContent = App.formatCurrency(stats.value);
         }
     },
 

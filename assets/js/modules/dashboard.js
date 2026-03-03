@@ -19,7 +19,7 @@ const dashboardModule = {
     },
 
     updateKPIs(kpis) {
-        document.getElementById('kpi-revenue').textContent = `$${kpis.revenue}`;
+        document.getElementById('kpi-revenue').textContent = App.formatCurrency(kpis.revenue);
         document.getElementById('kpi-sales').textContent = kpis.sales;
         document.getElementById('kpi-low-stock').textContent = kpis.low_stock;
         document.getElementById('kpi-customers').textContent = kpis.customers;
@@ -107,7 +107,7 @@ const dashboardModule = {
                 <td><strong>#${t.id}</strong></td>
                 <td>${t.customer_name || 'Walking Customer'}</td>
                 <td>${new Date(t.date).toLocaleDateString()}</td>
-                <td class="fw-bold">$${parseFloat(t.total).toFixed(2)}</td>
+                <td class="fw-bold">${App.formatCurrency(t.total)}</td>
                 <td>
                     <span class="badge ${this.getStatusBadgeClass(t.status)}">
                         ${t.status}

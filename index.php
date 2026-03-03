@@ -12,6 +12,7 @@ if (!isset($_SESSION['user_id'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DentalPOS - Premium Stock & POS</title>
     
+    <link rel="icon" type="image/png" href="assets/img/favicon.png">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
     
@@ -56,6 +57,12 @@ if (!isset($_SESSION['user_id'])) {
                 <a href="#pos" class="nav-link">
                     <i class="fas fa-cash-register"></i>
                     <span>Point of Sale</span>
+                </a>
+            </li>
+            <li>
+                <a href="#sales_history" class="nav-link">
+                    <i class="fas fa-history"></i>
+                    <span>Sales History</span>
                 </a>
             </li>
             <li>

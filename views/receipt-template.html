@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Receipt - DentalPOS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-navy: #0A1628;
+            --primary-teal: #00BFA6;
+            --text-dark: #2C3E50;
+            --text-light: #7F8C8D;
+            --border-color: #E9ECEF;
+            --glass-bg: rgba(255, 255, 255, 0.95);
+        }
+
+        @media print {
+            @page {
+                size: A4;
+                margin: 0;
+            }
+            body {
+                background: white !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .receipt-container {
+                box-shadow: none !important;
+                border: none !important;
+                margin: 0 !important;
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+            color: var(--text-dark);
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .receipt-container {
+            background: var(--glass-bg);
+            width: 100%;
+            max-width: 800px;
+            padding: 50px;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .receipt-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 8px;
+            background: linear-gradient(90deg, var(--primary-navy), var(--primary-teal));
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 40px;
+        }
+
+        .brand h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 28px;
+            font-weight: 700;
+            margin: 0;
+            color: var(--primary-navy);
+        }
+
+        .brand span {
+            color: var(--primary-teal);
+        }
+
+        .brand-sub {
+            color: var(--text-light);
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .invoice-meta {
+            text-align: right;
+        }
+
+        .invoice-meta h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 32px;
+            font-weight: 700;
+            margin: 0;
+            color: var(--primary-navy);
+            opacity: 0.1;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .meta-item {
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        .meta-label {
+            color: var(--text-light);
+            text-transform: uppercase;
+            font-weight: 600;
+            font-size: 11px;
+            letter-spacing: 1px;
+        }
+
+        .meta-value {
+            font-weight: 700;
+            color: var(--primary-navy);
+            display: block;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+            padding: 30px;
+            background: rgba(0, 191, 166, 0.03);
+            border-radius: 16px;
+        }
+
+        .info-section h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--primary-teal);
+            margin: 0 0 15px 0;
+        }
+
+        .info-content {
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        .info-name {
+            font-weight: 700;
+            font-size: 18px;
+            color: var(--primary-navy);
+            margin-bottom: 5px;
+        }
+
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 40px;
+        }
+
+        .items-table th {
+            text-align: left;
+            padding: 15px;
+            border-bottom: 2px solid var(--primary-navy);
+            font-family: 'Outfit', sans-serif;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--primary-navy);
+        }
+
+        .items-table td {
+            padding: 20px 15px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 15px;
+        }
+
+        .item-name {
+            font-weight: 600;
+            color: var(--primary-navy);
+        }
+
+        .item-sku {
+            display: block;
+            font-size: 12px;
+            color: var(--text-light);
+            margin-top: 4px;
+        }
+
+        .totals-section {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .totals-box {
+            width: 300px;
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            font-size: 15px;
+        }
+
+        .total-row.grand-total {
+            margin-top: 15px;
+            padding: 20px 0;
+            border-top: 2px solid var(--primary-navy);
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary-teal);
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .footer {
+            margin-top: 60px;
+            padding-top: 30px;
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+            color: var(--text-light);
+            font-size: 13px;
+        }
+
+        .print-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--primary-teal);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-weight: 600;
+            box-shadow: 0 10px 20px rgba(0, 191, 166, 0.3);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s;
+            z-index: 1001;
+        }
+
+        .print-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(0, 191, 166, 0.4);
+            background: #00A690;
+        }
+
+        .text-end { text-align: right !important; }
+        .text-center { text-align: center !important; }
+    </style>
+</head>
+<body>
+    <button class="print-btn no-print" onclick="window.print()">
+        <i class="fas fa-print"></i> Print Receipt
+    </button>
+
+    <div class="receipt-container" id="receipt-content">
+        <div class="header">
+            <div class="brand">
+                <h1 id="receipt-brand-name">Dental<span>POS</span></h1>
+                <div class="brand-sub" id="receipt-brand-sub">Premium Dental store Management</div>
+            </div>
+            <div class="invoice-meta">
+                <h2>Receipt</h2>
+                <div class="meta-item">
+                    <span class="meta-label">Invoice Number</span>
+                    <span class="meta-value" id="receipt-id">#INV-0000</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Date Issued</span>
+                    <span class="meta-value" id="receipt-date">March 03, 2026</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-grid">
+            <div class="info-section">
+                <h3>From</h3>
+                <div class="info-content">
+                    <div class="info-name" id="shop-name">DentalPOS Premium</div>
+                    <div id="shop-address">123 Clinical Way, Medical District</div>
+                    <div id="shop-tax">VAT-12345678</div>
+                </div>
+            </div>
+            <div class="info-section">
+                <h3>Bill To</h3>
+                <div class="info-content">
+                    <div class="info-name" id="customer-name">Walk-in Customer</div>
+                    <div id="customer-phone">No phone provided</div>
+                    <div>Payment Method: <strong id="payment-method">Cash</strong></div>
+                </div>
+            </div>
+        </div>
+
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th>Description</th>
+                    <th class="text-center">Qty</th>
+                    <th class="text-end">Unit Price</th>
+                    <th class="text-end">Amount</th>
+                </tr>
+            </thead>
+            <tbody id="receipt-items">
+                <!-- Items will be populated here -->
+            </tbody>
+        </table>
+
+        <div class="totals-section">
+            <div class="totals-box">
+                <div class="total-row">
+                    <span>Subtotal</span>
+                    <span id="receipt-subtotal">$0.00</span>
+                </div>
+                <div class="total-row">
+                    <span>Discount</span>
+                    <span id="receipt-discount">-$0.00</span>
+                </div>
+                <div class="total-row">
+                    <span id="receipt-tax-label">Tax (15%)</span>
+                    <span id="receipt-tax">$0.00</span>
+                </div>
+                <div class="total-row grand-total">
+                    <span>Grand Total</span>
+                    <span id="receipt-total">$0.00</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Thank you for choosing our clinic!</p>
+            <p class="small">This is a system generated receipt.</p>
+        </div>
+    </div>
+
+    <script>
+        // Function to populate receipt data
+        function populateReceipt(data) {
+            const { sale, items, settings } = data;
+            const currency = settings?.currency || '$';
+            const vatRate = settings?.vat_rate || 15;
+
+            function formatCurrency(amount) {
+                return `${parseFloat(amount).toFixed(2)} ${currency}`;
+            }
+            
+            // Set Shop Info
+            if (settings) {
+                document.getElementById('receipt-brand-name').innerHTML = settings.store_name.replace('POS', '<span>POS</span>') || 'Dental<span>POS</span>';
+                document.getElementById('shop-name').textContent = settings.store_name || 'DentalPOS Premium';
+                document.getElementById('shop-address').textContent = settings.address || '';
+                document.getElementById('shop-tax').textContent = settings.tax_number || '';
+                
+                // Set dynamic VAT label if exists
+                const taxLabel = document.getElementById('receipt-tax-label');
+                if (taxLabel) {
+                    taxLabel.textContent = `Tax (${vatRate}%)`;
+                }
+            }
+
+            // Set Header Info
+            document.getElementById('receipt-id').textContent = `#INV-${sale.id}`;
+            document.getElementById('receipt-date').textContent = new Date(sale.date).toLocaleDateString('en-US', {
+                year: 'numeric', month: 'long', day: 'numeric'
+            });
+
+            // Set Customer Info
+            document.getElementById('customer-name').textContent = sale.customer_name || 'Walk-in Customer';
+            document.getElementById('customer-phone').textContent = sale.customer_phone || 'No phone provided';
+            document.getElementById('payment-method').textContent = sale.payment_method;
+
+            // Populate Items
+            const itemsTbody = document.getElementById('receipt-items');
+            itemsTbody.innerHTML = items.map(item => `
+                <tr>
+                    <td>
+                        <span class="item-name">${item.product_name}</span>
+                        <span class="item-sku">${item.barcode || ''}</span>
+                    </td>
+                    <td class="text-center">${item.qty}</td>
+                    <td class="text-end">${formatCurrency(item.unit_price)}</td>
+                    <td class="text-end fw-bold">${formatCurrency(item.total)}</td>
+                </tr>
+            `).join('');
+
+            // Set Totals
+            document.getElementById('receipt-subtotal').textContent = formatCurrency(parseFloat(sale.subtotal));
+            document.getElementById('receipt-discount').textContent = `-${formatCurrency(parseFloat(sale.discount))}`;
+            document.getElementById('receipt-tax-label').textContent = `Tax (${vatRate}%)`;
+            document.getElementById('receipt-tax').textContent = formatCurrency(parseFloat(sale.tax));
+            document.getElementById('receipt-total').textContent = formatCurrency(parseFloat(sale.total));
+        }
+
+        // Listen for data from parent window
+        window.addEventListener('message', function(event) {
+            if (event.data && event.data.type === 'POPULATE_RECEIPT') {
+                populateReceipt(event.data.payload);
+                // Optional: Auto-trigger print after a short delay
+                // setTimeout(() => window.print(), 500);
+            }
+        });
+    </script>
+</body>
+</html>
