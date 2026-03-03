@@ -1,0 +1,96 @@
+<div class="container-fluid">
+    <h4 class="fw-bold mb-4">System Settings</h4>
+
+    <div class="row g-4">
+        <!-- Business Info -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-4"><i class="fas fa-building me-2 text-teal"></i>Business Information</h5>
+                    <form id="business-settings-form">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Store Name</label>
+                            <input type="text" class="form-control" name="store_name" value="DentalPOS Premium">
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Tax Number (VAT)</label>
+                                <input type="text" class="form-control" name="tax_number" value="VAT-12345678">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Currency Symbol</label>
+                                <input type="text" class="form-control" name="currency" value="$">
+                            </div>
+                        </div>
+                        <div class="mt-3 mb-3">
+                            <label class="form-label small fw-bold">Address</label>
+                            <textarea class="form-control" name="address" rows="2">123 Clinical Way, Medical District</textarea>
+                        </div>
+                        <button type="submit" class="btn btn-teal">Save Business Info</button>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-4"><i class="fas fa-percentage me-2 text-teal"></i>Tax & Fees</h5>
+                    <form id="tax-settings-form">
+                        <div class="row g-3 align-items-end">
+                            <div class="col-md-8">
+                                <label class="form-label small fw-bold">Default VAT Rate (%)</label>
+                                <input type="number" class="form-control" name="vat_rate" value="15">
+                            </div>
+                            <div class="col-md-4">
+                                <button type="submit" class="btn btn-teal-outline w-100">Update</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- User & Appearance -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-4"><i class="fas fa-palette me-2 text-teal"></i>Appearance</h5>
+                    <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded-3 mb-3">
+                        <div>
+                            <h6 class="mb-0 fw-bold">Dark Mode</h6>
+                            <small class="text-muted">Switch to a darker clinical theme</small>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="settingsDarkModeToggle" style="transform: scale(1.5);">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-4"><i class="fas fa-database me-2 text-teal"></i>System & Backup</h5>
+                    <div class="list-group list-group-flush">
+                        <a href="javascript:void(0)" class="list-group-item list-group-item-action border-0 px-0 d-flex align-items-center" onclick="settingsModule.backupDB()">
+                            <div class="icon-circle bg-primary-subtle text-primary me-3">
+                                <i class="fas fa-download"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fw-bold">Download Database Backup</h6>
+                                <small class="text-muted">Export full SQL dump of your data</small>
+                            </div>
+                        </a>
+                        <a href="javascript:void(0)" class="list-group-item list-group-item-action border-0 px-0 d-flex align-items-center mt-3" onclick="settingsModule.clearCache()">
+                            <div class="icon-circle bg-warning-subtle text-warning me-3">
+                                <i class="fas fa-broom"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fw-bold">Clear System Cache</h6>
+                                <small class="text-muted">Refresh local storage and state</small>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
