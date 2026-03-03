@@ -74,6 +74,54 @@ try {
             echo json_encode(['success' => 'Sale completed successfully', 'sale_id' => $sale_id]);
             break;
 
+        case 'history':
+            $stmt = $pdo->prepare("
+                SELECT s.*, c.name as customer_name, u.name as user_name
+                FROM sales s
+                LEFT JOIN customers c ON s.customer_id = c.id
+                LEFT JOIN users u ON s.user_id = u.id
+                ORDER BY s.date DESC
+            ");
+            $stmt->execute();
+            $sales = $stmt->fetchAll();
+            echo json_encode(['data' => $sales]);
+            break;
+
+        case 'sale_details':
+            $id = $_GET['id'];
+            
+            // Get Sale Header
+            $stmt = $pdo->prepare("
+                SELECT s.*, c.name as customer_name, c.phone as customer_phone, u.name as user_name
+                FROM sales s
+                LEFT JOIN customers c ON s.customer_id = c.id
+                LEFT JOIN users u ON s.user_id = u.id
+                WHERE s.id = ?
+            ");
+            $stmt->execute([$id]);
+            $sale = $stmt->fetch();
+            
+            if (!$sale) {
+                echo json_encode(['error' => 'Sale not found']);
+                exit;
+            }
+            
+            // Get Sale Items
+            $stmt = $pdo->prepare("
+                SELECT si.*, p.name as product_name, p.barcode
+                FROM sale_items si
+                JOIN products p ON si.product_id = p.id
+                WHERE si.sale_id = ?
+            ");
+            $stmt->execute([$id]);
+            $items = $stmt->fetchAll();
+            
+            echo json_encode([
+                'sale' => $sale,
+                'items' => $items
+            ]);
+            break;
+
         default:
             echo json_encode(['error' => 'Invalid action']);
             break;

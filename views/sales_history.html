@@ -1,0 +1,116 @@
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold mb-0">Sales History</h4>
+            <p class="text-muted small mb-0">Track and review all previous sales transactions</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-teal px-3" id="btn-export-sales">
+                <i class="fas fa-file-export me-2"></i>Export
+            </button>
+            <a href="#pos" class="btn btn-teal px-4">
+                <i class="fas fa-cart-plus me-2"></i>New Sale
+            </a>
+        </div>
+    </div>
+
+    <!-- Sales Table -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="card-body p-4">
+            <div class="table-responsive">
+                <table id="salesHistoryTable" class="table table-hover align-middle w-100">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Invoice #</th>
+                            <th>Date & Time</th>
+                            <th>Customer</th>
+                            <th>Cashier</th>
+                            <th>Payment</th>
+                            <th>Total Amount</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- DataTable Content -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sale Details Modal -->
+<div class="modal fade" id="saleDetailsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-bottom-0 p-4">
+                <div>
+                    <h5 class="modal-title fw-bold">Sale Transaction Details</h5>
+                    <p class="text-muted small mb-0" id="sale-details-subtitle">Invoice information</p>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4 pt-0">
+                <div class="row g-4 mb-4">
+                    <div class="col-md-6">
+                        <div class="p-3 bg-light rounded-4 h-100">
+                            <h6 class="fw-bold mb-2 small text-uppercase text-muted">Customer Information</h6>
+                            <div id="sale-details-customer-info">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-3 bg-navy text-white rounded-4 h-100">
+                            <h6 class="fw-bold mb-2 small text-uppercase opacity-75">Sale Metadata</h6>
+                            <div id="sale-details-meta-info">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h6 class="fw-bold mb-3">Itemized Receipt</h6>
+                <div class="table-responsive rounded-4 border">
+                    <table class="table table-hover align-middle mb-0" id="sale-details-items-table">
+                        <thead class="table-light small">
+                            <tr>
+                                <th>Product</th>
+                                <th class="text-center">Qty</th>
+                                <th class="text-end">Unit Price</th>
+                                <th class="text-end">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Populated by JS -->
+                        </tbody>
+                        <tfoot class="table-light small">
+                            <tr>
+                                <td colspan="3" class="text-end">Subtotal</td>
+                                <td class="text-end fw-bold" id="sale-details-subtotal">$0.00</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3" class="text-end">Discount</td>
+                                <td class="text-end text-danger fw-bold" id="sale-details-discount">$0.00</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3" class="text-end">Tax (15%)</td>
+                                <td class="text-end fw-bold" id="sale-details-tax">$0.00</td>
+                            </tr>
+                            <tr class="fw-bold fs-5">
+                                <td colspan="3" class="text-end text-navy">Grand Total</td>
+                                <td class="text-end text-navy" id="sale-details-total">$0.00</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer border-top-0 p-4">
+                <button type="button" class="btn btn-outline-teal px-4 me-auto" id="btn-print-receipt">
+                    <i class="fas fa-print me-2"></i>Print Receipt
+                </button>
+                <button type="button" class="btn btn-navy px-4" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>

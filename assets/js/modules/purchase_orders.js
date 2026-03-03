@@ -252,8 +252,58 @@ const purchase_ordersModule = {
         document.getElementById('stat-total-value').textContent = `$${totalValue.toFixed(2)}`;
     },
 
-    viewDetails(id) {
-        App.toast('info', 'PO Detail view coming soon');
+    async viewDetails(id) {
+        const result = await App.api(`purchase_orders.php?action=get_details&id=${id}`);
+        if (!result) return;
+
+        const { order, items } = result;
+
+        // Populate Modal Header
+        document.getElementById('po-details-title').textContent = `Purchase Order #PO-${order.id}`;
+        document.getElementById('po-details-subtitle').textContent = `Status: ${order.status}`;
+
+        // Populate Supplier Info
+        document.getElementById('po-details-supplier-info').innerHTML = `
+            <div class="fw-bold fs-5 text-teal mb-1">${order.supplier_name}</div>
+            <div class="text-muted small mb-2"><i class="fas fa-building me-2"></i>${order.supplier_company || 'N/A'}</div>
+            <div class="small mb-1"><i class="fas fa-phone me-2"></i>${order.supplier_phone || 'N/A'}</div>
+            <div class="small"><i class="fas fa-envelope me-2"></i>${order.supplier_email || 'N/A'}</div>
+        `;
+
+        // Populate Order Metadata
+        document.getElementById('po-details-meta-info').innerHTML = `
+            <div class="d-flex justify-content-between mb-2">
+                <span>Order Date:</span>
+                <span class="fw-bold">${order.date}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+                <span>Created At:</span>
+                <span class="fw-bold">${new Date(order.created_at).toLocaleString()}</span>
+            </div>
+            <div class="d-flex justify-content-between">
+                <span>Current Status:</span>
+                <span class="badge ${order.status === 'Received' ? 'bg-success' : 'bg-warning'} px-2">${order.status}</span>
+            </div>
+        `;
+
+        // Populate Item Table
+        const tbody = document.querySelector('#po-details-items-table tbody');
+        tbody.innerHTML = items.map(item => `
+            <tr>
+                <td>
+                    <div class="fw-medium">${item.product_name}</div>
+                </td>
+                <td><small class="text-muted">${item.barcode || 'N/A'}</small></td>
+                <td class="text-center">${item.qty}</td>
+                <td class="text-end">$${parseFloat(item.unit_cost).toFixed(2)}</td>
+                <td class="text-end fw-bold text-navy">$${(item.qty * item.unit_cost).toFixed(2)}</td>
+            </tr>
+        `).join('');
+
+        document.getElementById('po-details-grand-total').textContent = `$${parseFloat(order.total).toFixed(2)}`;
+
+        // Show Modal
+        new bootstrap.Modal(document.getElementById('poDetailsModal')).show();
     },
 
     // Shortcut from Suppliers module

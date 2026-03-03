@@ -57,6 +57,40 @@ try {
             echo json_encode(['success' => 'Purchase order saved successfully', 'id' => $po_id]);
             break;
 
+        case 'get_details':
+            $id = $_GET['id'];
+            
+            // Get PO header
+            $stmt = $pdo->prepare("
+                SELECT po.*, s.name as supplier_name, s.company as supplier_company, s.phone as supplier_phone, s.email as supplier_email
+                FROM purchase_orders po
+                JOIN suppliers s ON po.supplier_id = s.id
+                WHERE po.id = ?
+            ");
+            $stmt->execute([$id]);
+            $po = $stmt->fetch();
+            
+            if (!$po) {
+                echo json_encode(['error' => 'Purchase order not found']);
+                exit;
+            }
+            
+            // Get PO items
+            $stmt = $pdo->prepare("
+                SELECT poi.*, p.name as product_name, p.barcode
+                FROM purchase_order_items poi
+                JOIN products p ON poi.product_id = p.id
+                WHERE poi.po_id = ?
+            ");
+            $stmt->execute([$id]);
+            $items = $stmt->fetchAll();
+            
+            echo json_encode([
+                'order' => $po,
+                'items' => $items
+            ]);
+            break;
+
         case 'delete':
             $id = $_GET['id'];
             // purchase_order_items has ON DELETE CASCADE in schema

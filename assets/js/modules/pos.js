@@ -4,6 +4,8 @@
 
 const posModule = {
     allProducts: [],
+    allCustomers: [],
+    selectedCustomer: null,
     cart: [],
     taxRate: 0.15, // 15% VAT
 
@@ -15,6 +17,7 @@ const posModule = {
         const searchQuery = params.get('search');
 
         this.loadProducts(searchQuery);
+        this.loadCustomers();
         this.bindEvents();
         console.log('POS Module Loaded');
     },
@@ -31,6 +34,9 @@ const posModule = {
         document.getElementById('cart-discount').oninput = () => this.calculateTotals();
 
         document.getElementById('btn-checkout').onclick = () => this.processCheckout();
+
+        // Customer search
+        document.getElementById('pos-customer-search').oninput = (e) => this.searchCustomers(e.target.value);
     },
 
     async loadProducts(searchQuery = null) {
@@ -45,6 +51,66 @@ const posModule = {
             this.loadCategories();
             this.renderCart();
         }
+    },
+
+    async loadCustomers() {
+        const result = await App.api('customers.php?action=list');
+        if (result && result.data) {
+            this.allCustomers = result.data;
+        }
+    },
+
+    searchCustomers(query) {
+        const resultsContainer = document.getElementById('pos-customer-results');
+        if (!query || query.length < 2) {
+            resultsContainer.innerHTML = '<div class="text-center py-4 text-muted small">Type at least 2 characters to search...</div>';
+            return;
+        }
+
+        const filtered = this.allCustomers.filter(c =>
+            c.name.toLowerCase().includes(query.toLowerCase()) ||
+            (c.phone && c.phone.includes(query))
+        );
+
+        if (filtered.length === 0) {
+            resultsContainer.innerHTML = '<div class="text-center py-4 text-muted small">No customers found</div>';
+            return;
+        }
+
+        resultsContainer.innerHTML = filtered.map(c => `
+            <div class="customer-result-item d-flex align-items-center p-3 mb-2 rounded-4 border pointer hover-bg-light" onclick="posModule.selectCustomer(${c.id})">
+                <div class="avatar me-3 bg-teal-soft text-teal rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div>
+                    <h6 class="mb-0 fw-bold">${c.name}</h6>
+                    <small class="text-muted">${c.phone || 'No phone'}</small>
+                </div>
+            </div>
+        `).join('');
+    },
+
+    selectCustomer(customerId) {
+        if (customerId === null) {
+            this.selectedCustomer = null;
+            document.getElementById('pos-selected-customer-name').textContent = 'Walking Customer';
+            document.getElementById('pos-selected-customer-phone').textContent = '';
+        } else {
+            const customer = this.allCustomers.find(c => c.id == customerId);
+            if (customer) {
+                this.selectedCustomer = customer;
+                document.getElementById('pos-selected-customer-name').textContent = customer.name;
+                document.getElementById('pos-selected-customer-phone').textContent = customer.phone || '';
+            }
+        }
+
+        // Close modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('posCustomerModal'));
+        if (modal) modal.hide();
+
+        // Clear search
+        document.getElementById('pos-customer-search').value = '';
+        document.getElementById('pos-customer-results').innerHTML = '<div class="text-center py-4 text-muted small">Type to search customers...</div>';
     },
 
     loadCategories() {
@@ -200,6 +266,7 @@ const posModule = {
         const paymentMethod = document.querySelector('input[name="payment-method"]:checked').value;
 
         const saleData = {
+            customer_id: this.selectedCustomer ? this.selectedCustomer.id : null,
             subtotal: totals.subtotal,
             discount_amount: totals.discountAmount,
             tax: totals.tax,

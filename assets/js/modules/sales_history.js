@@ -1,0 +1,141 @@
+/**
+ * Sales History Module
+ */
+
+const sales_historyModule = {
+    table: null,
+
+    init() {
+        this.initDataTable();
+        this.bindEvents();
+        console.log('Sales History Module Loaded');
+    },
+
+    bindEvents() {
+        document.getElementById('btn-export-sales').onclick = () => {
+            App.toast('info', 'Export functionality coming soon');
+        };
+
+        document.getElementById('btn-print-receipt').onclick = () => {
+            window.print();
+        };
+    },
+
+    initDataTable() {
+        this.table = $('#salesHistoryTable').DataTable({
+            ajax: 'api/sales.php?action=history',
+            columns: [
+                {
+                    data: 'id',
+                    render: (data) => `<span class="fw-bold">#INV-${data}</span>`
+                },
+                {
+                    data: 'date',
+                    render: (data) => new Date(data).toLocaleString()
+                },
+                {
+                    data: 'customer_name',
+                    render: (data) => data || '<span class="text-muted">Walk-in Customer</span>'
+                },
+                { data: 'user_name' },
+                {
+                    data: 'payment_method',
+                    render: (data) => {
+                        const colors = {
+                            'Cash': 'bg-success-subtle text-success',
+                            'Card': 'bg-primary-subtle text-primary',
+                            'Insurance': 'bg-info-subtle text-info'
+                        };
+                        return `<span class="badge ${colors[data] || 'bg-secondary'} px-3 rounded-pill">${data}</span>`;
+                    }
+                },
+                {
+                    data: 'total',
+                    render: (data) => `<span class="fw-bold text-navy">$${parseFloat(data).toFixed(2)}</span>`
+                },
+                {
+                    data: null,
+                    orderable: false,
+                    render: (data) => `
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-light" data-bs-toggle="dropdown"><i class="fas fa-ellipsis-v"></i></button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+                                <li><a class="dropdown-item" href="javascript:void(0)" onclick="sales_historyModule.viewDetails(${data.id})"><i class="fas fa-eye me-2 text-info"></i>View Details</a></li>
+                                <li><a class="dropdown-item" href="javascript:void(0)" onclick="App.toast('info', 'Receipt printing...')"><i class="fas fa-print me-2 text-teal"></i>Print Receipt</a></li>
+                            </ul>
+                        </div>
+                    `
+                }
+            ],
+            language: {
+                search: "_INPUT_",
+                searchPlaceholder: "Search transactions...",
+                lengthMenu: "_MENU_",
+            },
+            dom: '<"d-flex justify-content-between align-items-center mb-3"lf>rt<"d-flex justify-content-between align-items-center mt-3"ip>'
+        });
+    },
+
+    async viewDetails(id) {
+        const result = await App.api(`sales.php?action=sale_details&id=${id}`);
+        if (!result) return;
+
+        const { sale, items } = result;
+
+        // Populate Modal Header
+        document.getElementById('sale-details-subtitle').textContent = `Invoice #INV-${sale.id} | ${new Date(sale.date).toLocaleString()}`;
+
+        // Populate Customer Info
+        document.getElementById('sale-details-customer-info').innerHTML = `
+            <div class="fw-bold fs-5 text-teal mb-1">${sale.customer_name || 'Walk-in Customer'}</div>
+            <div class="small mb-1"><i class="fas fa-phone me-2 text-muted"></i>${sale.customer_phone || 'No phone provided'}</div>
+            <div class="small"><i class="fas fa-user-tag me-2 text-muted"></i>Payment: <strong>${sale.payment_method}</strong></div>
+        `;
+
+        // Populate Sale Metadata
+        document.getElementById('sale-details-meta-info').innerHTML = `
+            <div class="d-flex justify-content-between mb-2">
+                <span>Cashier:</span>
+                <span class="fw-bold">${sale.user_name}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+                <span>Status:</span>
+                <span class="badge bg-success px-2">Completed</span>
+            </div>
+            <div class="d-flex justify-content-between">
+                <span>Date:</span>
+                <span class="fw-bold text-nowrap">${new Date(sale.date).toLocaleDateString()}</span>
+            </div>
+        `;
+
+        // Populate Item Table
+        const tbody = document.querySelector('#sale-details-items-table tbody');
+        tbody.innerHTML = items.map(item => `
+            <tr>
+                <td>
+                    <div class="fw-medium">${item.product_name}</div>
+                    <small class="text-muted small">${item.barcode || ''}</small>
+                </td>
+                <td class="text-center">${item.qty}</td>
+                <td class="text-end">$${parseFloat(item.unit_price).toFixed(2)}</td>
+                <td class="text-end fw-bold">$${parseFloat(item.total).toFixed(2)}</td>
+            </tr>
+        `).join('');
+
+        // Populate Totals
+        document.getElementById('sale-details-subtotal').textContent = `$${parseFloat(sale.subtotal).toFixed(2)}`;
+        document.getElementById('sale-details-discount').textContent = `-$${parseFloat(sale.discount).toFixed(2)}`;
+        document.getElementById('sale-details-tax').textContent = `$${parseFloat(sale.tax).toFixed(2)}`;
+        document.getElementById('sale-details-total').textContent = `$${parseFloat(sale.total).toFixed(2)}`;
+
+        // Show Modal
+        new bootstrap.Modal(document.getElementById('saleDetailsModal')).show();
+    }
+};
+
+// Initialize
+if (document.getElementById('salesHistoryTable')) {
+    sales_historyModule.init();
+}
+
+window.sales_historyModule = sales_historyModule;
