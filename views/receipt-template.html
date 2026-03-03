@@ -19,10 +19,11 @@
         @media print {
             @page {
                 size: A4;
-                margin: 0;
+                margin: 15mm;
             }
             body {
                 background: white !important;
+                padding: 0 !important;
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
@@ -33,8 +34,20 @@
                 box-shadow: none !important;
                 border: none !important;
                 margin: 0 !important;
+                padding: 0 !important;
                 width: 100% !important;
                 max-width: 100% !important;
+                background: white !important;
+                min-height: auto !important; /* Allow single page for short receipts */
+            }
+            .items-table thead {
+                display: table-header-group;
+            }
+            .items-table tr {
+                page-break-inside: avoid;
+            }
+            .totals-section {
+                page-break-inside: avoid;
             }
         }
 
@@ -46,17 +59,20 @@
             padding: 40px 20px;
             display: flex;
             justify-content: center;
+            min-height: 100vh;
         }
 
         .receipt-container {
             background: var(--glass-bg);
             width: 100%;
             max-width: 800px;
-            padding: 50px;
+            min-height: 297mm; /* Standard A4 height for better preview */
+            padding: 60px;
             border-radius: 24px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.1);
             position: relative;
-            overflow: hidden;
+            display: flex;
+            flex-direction: column;
             border: 1px solid rgba(255,255,255,0.3);
             backdrop-filter: blur(10px);
         }
@@ -182,6 +198,7 @@
             padding: 20px 15px;
             border-bottom: 1px solid var(--border-color);
             font-size: 15px;
+            vertical-align: top;
         }
 
         .item-name {
@@ -303,7 +320,7 @@
             </div>
         </div>
 
-        <table class="items-table">
+        <table class="items-table" style="flex-grow: 1;">
             <thead>
                 <tr>
                     <th>Description</th>
@@ -338,7 +355,7 @@
             </div>
         </div>
 
-        <div class="footer">
+        <div class="footer" style="margin-top: auto; page-break-inside: avoid;">
             <p>Thank you for choosing our Store!</p>
             <p class="small">This is a system generated receipt.</p>
         </div>
