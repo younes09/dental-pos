@@ -59,7 +59,7 @@
                 <!-- Cart Items List -->
                 <div id="pos-cart-items" class="flex-grow-1 overflow-auto mb-4" style="max-height: 40vh;">
                     <div class="text-center py-5 text-muted">
-                        <i class="fas fa-shopping-basket display-1 mb-3 opacity-25"></i>
+                        <i class="bi bi-basket display-1 mb-3 opacity-25"></i>
                         <p>Cart is empty</p>
                     </div>
                 </div>
@@ -126,7 +126,7 @@
                             </button>
                         </div>
                         <div class="col-6">
-                            <button class="btn btn-light w-100 py-2 small">
+                            <button class="btn btn-light w-100 py-2 small" id="btn-recent-sales" data-bs-toggle="modal" data-bs-target="#posHeldSalesModal">
                                 <i class="fas fa-receipt me-2"></i>Recent
                             </button>
                         </div>
@@ -163,7 +163,7 @@
                     <button class="btn btn-light rounded-pill px-4" onclick="posModule.selectCustomer(null)">
                         Walking Customer
                     </button>
-                    <button class="btn btn-teal rounded-pill px-4" data-bs-dismiss="modal" onclick="App.loadPage('customers')">
+                    <button class="btn btn-teal rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#posQuickCustomerModal">
                         <i class="fas fa-plus me-1"></i>New
                     </button>
                 </div>
@@ -172,3 +172,62 @@
     </div>
 </div>
 
+<!-- Held Sales Modal -->
+<div class="modal fade" id="posHeldSalesModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 rounded-4">
+            <div class="modal-header border-0 p-4">
+                <h5 class="modal-title fw-bold">Held Sales</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 pt-0">
+                <p class="text-muted small">Resume or delete previously held sales.</p>
+                <div id="pos-held-sales-list" class="overflow-auto" style="max-height: 400px;">
+                    <!-- Held sales list items will be injected here -->
+                    <div class="text-center py-4 text-muted small">
+                        No held sales found.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Add Customer Modal -->
+<div class="modal fade" id="posQuickCustomerModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 rounded-4">
+            <div class="modal-header border-0 p-4 pb-0">
+                <h5 class="modal-title fw-bold text-teal">Quick Add Customer</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="pos-quick-customer-form">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">FULL NAME</label>
+                        <input type="text" name="name" class="form-control rounded-pill px-3" placeholder="Enter customer name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">PHONE NUMBER</label>
+                        <input type="text" name="phone" class="form-control rounded-pill px-3" placeholder="Enter phone number">
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-muted">EMAIL ADDRESS (OPTIONAL)</label>
+                        <input type="email" name="email" class="form-control rounded-pill px-3" placeholder="Enter email">
+                    </div>
+                    
+                    <!-- Hidden fields to match api expectations -->
+                    <input type="hidden" name="balance" value="0">
+                    <input type="hidden" name="loyalty_points" value="0">
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-teal py-2 rounded-pill fw-bold">
+                            <i class="fas fa-save me-2"></i>SAVE & SELECT
+                        </button>
+                        <button type="button" class="btn btn-light py-2 rounded-pill text-muted small" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

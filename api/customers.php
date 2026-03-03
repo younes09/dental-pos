@@ -35,7 +35,8 @@ try {
             } else {
                 $stmt = $pdo->prepare("INSERT INTO customers (name, phone, email, balance, loyalty_points) VALUES (?, ?, ?, ?, ?)");
                 $stmt->execute([$name, $phone, $email, $balance, $loyalty_points]);
-                echo json_encode(['success' => 'Customer added successfully']);
+                $newId = $pdo->lastInsertId();
+                echo json_encode(['success' => 'Customer added successfully', 'id' => $newId]);
             }
             break;
 

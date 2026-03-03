@@ -44,8 +44,52 @@ const posModule = {
 
         document.getElementById('btn-checkout').onclick = () => this.processCheckout();
 
+        // Hold Sale
+        const btnHold = document.getElementById('btn-hold-sale');
+        if (btnHold) btnHold.onclick = () => this.holdSale();
+
+        const btnRecent = document.getElementById('btn-recent-sales');
+        if (btnRecent) btnRecent.onclick = () => this.renderHeldSales();
+
         // Customer search
         document.getElementById('pos-customer-search').oninput = (e) => this.searchCustomers(e.target.value);
+
+        // Quick add customer form
+        document.getElementById('pos-quick-customer-form').onsubmit = (e) => {
+            e.preventDefault();
+            this.saveQuickCustomer(new FormData(e.target));
+        };
+    },
+
+    async saveQuickCustomer(formData) {
+        try {
+            const response = await fetch('api/customers.php?action=save', {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+
+            if (result.success && result.id) {
+                App.toast('success', 'Customer added and selected');
+
+                // Refresh local customers list
+                await this.loadCustomers();
+
+                // Select the new customer
+                this.selectCustomer(result.id);
+
+                // Close modals
+                bootstrap.Modal.getInstance(document.getElementById('posQuickCustomerModal')).hide();
+                bootstrap.Modal.getInstance(document.getElementById('posCustomerModal')).hide();
+
+                // Reset form
+                document.getElementById('pos-quick-customer-form').reset();
+            } else {
+                App.toast('error', result.error || 'Failed to add customer');
+            }
+        } catch (error) {
+            App.toast('error', 'Network error while adding customer');
+        }
     },
 
     async loadProducts(searchQuery = null) {
@@ -59,6 +103,7 @@ const posModule = {
             }
             this.loadCategories();
             this.renderCart();
+            this.renderHeldSales(); // Initial load if any
         }
     },
 
@@ -67,6 +112,122 @@ const posModule = {
         if (result && result.data) {
             this.allCustomers = result.data;
         }
+    },
+
+    holdSale() {
+        if (this.cart.length === 0) {
+            App.toast('error', 'Cart is empty');
+            return;
+        }
+
+        const heldSales = JSON.parse(localStorage.getItem('pos_held_sales') || '[]');
+        const totals = this.calculateTotals();
+
+        const saleToHold = {
+            id: Date.now(),
+            timestamp: new Date().toISOString(),
+            customer: this.selectedCustomer,
+            cart: [...this.cart],
+            discount: parseFloat(document.getElementById('cart-discount').value) || 0,
+            total: totals.total
+        };
+
+        heldSales.push(saleToHold);
+        localStorage.setItem('pos_held_sales', JSON.stringify(heldSales));
+
+        this.clearCart();
+        this.selectCustomer(null);
+        document.getElementById('cart-discount').value = 0;
+
+        App.toast('success', 'Sale held successfully');
+        this.renderHeldSales();
+    },
+
+    renderHeldSales() {
+        const heldSales = JSON.parse(localStorage.getItem('pos_held_sales') || '[]');
+        const container = document.getElementById('pos-held-sales-list');
+
+        if (!container) return;
+
+        if (heldSales.length === 0) {
+            container.innerHTML = '<div class="text-center py-4 text-muted small">No held sales found.</div>';
+            return;
+        }
+
+        container.innerHTML = heldSales.map((sale, index) => `
+            <div class="held-sale-item p-3 mb-3 bg-light rounded-4 border">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div>
+                        <h6 class="fw-bold mb-0">${sale.customer ? sale.customer.name : 'Walking Customer'}</h6>
+                        <small class="text-muted">${new Date(sale.timestamp).toLocaleString()}</small>
+                    </div>
+                    <span class="badge bg-teal-soft text-teal rounded-pill">${App.formatCurrency(sale.total)}</span>
+                </div>
+                <div class="small mb-3 text-muted">
+                    ${sale.cart.length} items: ${sale.cart.map(i => i.name).join(', ')}
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-teal btn-sm rounded-pill px-3" onclick="posModule.resumeSale(${sale.id})">
+                        <i class="fas fa-play me-1 small"></i> Resume
+                    </button>
+                    <button class="btn btn-outline-danger btn-sm rounded-pill px-3" onclick="posModule.deleteHeldSale(${sale.id})">
+                        <i class="fas fa-trash-alt me-1 small"></i> Delete
+                    </button>
+                </div>
+            </div>
+        `).reverse().join('');
+    },
+
+    resumeSale(heldId) {
+        let heldSales = JSON.parse(localStorage.getItem('pos_held_sales') || '[]');
+        const saleIndex = heldSales.findIndex(s => s.id === heldId);
+
+        if (saleIndex === -1) return;
+
+        const sale = heldSales[saleIndex];
+
+        // Ask for confirmation if current cart is not empty
+        if (this.cart.length > 0) {
+            if (!confirm('This will replace your current cart. Continue?')) return;
+        }
+
+        this.cart = sale.cart;
+        this.selectedCustomer = sale.customer;
+
+        // Update UI
+        if (this.selectedCustomer) {
+            document.getElementById('pos-selected-customer-name').textContent = this.selectedCustomer.name;
+            document.getElementById('pos-selected-customer-phone').textContent = this.selectedCustomer.phone || '';
+        } else {
+            this.selectCustomer(null);
+        }
+
+        document.getElementById('cart-discount').value = sale.discount;
+
+        // Remove from held sales
+        heldSales.splice(saleIndex, 1);
+        localStorage.setItem('pos_held_sales', JSON.stringify(heldSales));
+
+        this.renderCart();
+        this.calculateTotals();
+        this.renderHeldSales();
+
+        // Close modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('posHeldSalesModal'));
+        if (modal) modal.hide();
+
+        App.toast('success', 'Sale resumed');
+    },
+
+    deleteHeldSale(heldId) {
+        if (!confirm('Are you sure you want to delete this held sale?')) return;
+
+        let heldSales = JSON.parse(localStorage.getItem('pos_held_sales') || '[]');
+        heldSales = heldSales.filter(s => s.id !== heldId);
+        localStorage.setItem('pos_held_sales', JSON.stringify(heldSales));
+
+        this.renderHeldSales();
+        App.toast('info', 'Held sale deleted');
     },
 
     searchCustomers(query) {
@@ -122,10 +283,13 @@ const posModule = {
         document.getElementById('pos-customer-results').innerHTML = '<div class="text-center py-4 text-muted small">Type to search customers...</div>';
     },
 
-    loadCategories() {
-        // Just extract from products for now or fetch from meta
-        const categories = [...new Set(this.allProducts.map(p => p.category_id))];
-        // For a better UX, should fetch category names
+    async loadCategories() {
+        const result = await App.api('catalog.php?action=list&type=categories');
+        const filter = document.getElementById('pos-category-filter');
+        if (result && result.data && filter) {
+            filter.innerHTML = '<option value="">All Categories</option>' +
+                result.data.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+        }
     },
 
     renderProducts(products) {

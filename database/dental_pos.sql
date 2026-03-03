@@ -1,3 +1,4 @@
+DROP DATABASE IF EXISTS dental_pos;
 CREATE DATABASE IF NOT EXISTS dental_pos;
 USE dental_pos;
 
@@ -134,12 +135,12 @@ CREATE TABLE settings (
 );
 
 -- Initialize default settings
-INSERT IGNORE INTO settings (setting_key, setting_value) VALUES 
+INSERT IGNORE INTO settings (setting_key, setting_value) VALUES
 ('store_name', 'DentalPOS Premium'),
 ('tax_number', 'VAT-12345678'),
-('currency', '$'),
+('currency', 'DZD'),
 ('address', '123 Clinical Way, Medical District'),
-('vat_rate', '15');
+('vat_rate', '0');
 
 
 -- Insert a default admin user (password: admin123)
