@@ -14,6 +14,50 @@ const stockModule = {
     },
 
     bindEvents() {
+        // Bulk Import
+        const importBtn = document.getElementById('btn-import-csv');
+        if (importBtn) {
+            importBtn.onclick = () => {
+                new bootstrap.Modal(document.getElementById('importModal')).show();
+            };
+        }
+
+        const importDropZone = document.getElementById('importDropZone');
+        const importInput = document.getElementById('import-file-input');
+        const importForm = document.getElementById('importForm');
+
+        if (importDropZone && importInput) {
+            importDropZone.onclick = () => importInput.click();
+
+            importInput.onchange = (e) => this.handleImportFileSelect(e.target.files[0]);
+
+            importDropZone.ondragover = (e) => {
+                e.preventDefault();
+                importDropZone.classList.add('bg-teal-subtle', 'border-teal');
+            };
+
+            importDropZone.ondragleave = () => {
+                importDropZone.classList.remove('bg-teal-subtle', 'border-teal');
+            };
+
+            importDropZone.ondrop = (e) => {
+                e.preventDefault();
+                importDropZone.classList.remove('bg-teal-subtle', 'border-teal');
+                if (e.dataTransfer.files.length) {
+                    this.handleImportFileSelect(e.dataTransfer.files[0]);
+                }
+            };
+        }
+
+        document.getElementById('btn-remove-import-file').onclick = () => {
+            this.handleImportFileSelect(null);
+        };
+
+        importForm.onsubmit = async (e) => {
+            e.preventDefault();
+            await this.processImport();
+        };
+
         // Form Submission
         document.getElementById('productForm').onsubmit = async (e) => {
             e.preventDefault();
@@ -54,6 +98,26 @@ const stockModule = {
             document.getElementById('product-img-preview').src = 'assets/img/img_holder.png';
             document.getElementById('btn-remove-image').classList.add('d-none');
         };
+
+        // Stock Adjustment Form
+        const adjForm = document.getElementById('adjustmentForm');
+        if (adjForm) {
+            adjForm.onsubmit = async (e) => {
+                e.preventDefault();
+                const formData = new FormData(adjForm);
+                const result = await App.api(`products.php?action=adjust_stock&id=${formData.get('id')}&type=${formData.get('adjustment_type')}&qty=${formData.get('quantity')}`);
+
+                if (result && result.success) {
+                    App.toast('success', result.success);
+                    bootstrap.Modal.getInstance(document.getElementById('adjustmentModal')).hide();
+                    this.table.ajax.reload();
+                    this.fetchStats();
+                    adjForm.reset();
+                } else {
+                    App.toast('error', result ? result.error : 'Adjustment failed');
+                }
+            };
+        }
     },
 
     initDataTable() {
@@ -126,7 +190,7 @@ const stockModule = {
             document.getElementById('stat-total-products').textContent = stats.total;
             document.getElementById('stat-low-stock').textContent = stats.low;
             document.getElementById('stat-expired').textContent = stats.expired;
-            document.getElementById('stat-inventory-value').textContent = App.formatCurrency(stats.value);
+            document.getElementById('stat-inventory-value').textContent = stats.value + ' ' + App.state.settings.currency;
         }
     },
 
@@ -216,8 +280,97 @@ const stockModule = {
     },
 
     adjustStock(id) {
-        // Placeholder for stock adjustment logic
-        App.toast('info', 'Stock adjustment feature coming soon');
+        const product = this.table.rows().data().toArray().find(p => p.id == id);
+        if (!product) return;
+
+        document.getElementById('adj-product-id').value = product.id;
+        document.getElementById('adj-product-name').value = product.name;
+        document.getElementById('adj-current-stock').value = `${product.stock_qty} units`;
+
+        new bootstrap.Modal(document.getElementById('adjustmentModal')).show();
+    },
+
+    handleImportFileSelect(file) {
+        const info = document.getElementById('file-selected-info');
+        const dropZone = document.getElementById('importDropZone');
+        const btnSubmit = document.getElementById('btn-submit-import');
+        const nameEl = document.getElementById('selected-file-name');
+        const sizeEl = document.getElementById('selected-file-size');
+
+        if (file) {
+            if (!file.name.endsWith('.csv')) {
+                App.toast('error', 'Please select a valid CSV file');
+                return;
+            }
+            nameEl.textContent = file.name;
+            sizeEl.textContent = `${(file.size / 1024).toFixed(2)} KB`;
+            info.classList.remove('d-none');
+            dropZone.classList.add('d-none');
+            btnSubmit.disabled = false;
+        } else {
+            document.getElementById('import-file-input').value = '';
+            info.classList.add('d-none');
+            dropZone.classList.remove('d-none');
+            btnSubmit.disabled = true;
+        }
+    },
+
+    async processImport() {
+        const form = document.getElementById('importForm');
+        const formData = new FormData(form);
+        const progressContainer = document.getElementById('import-progress-container');
+        const progressBar = document.getElementById('import-progress-bar');
+        const statusText = document.getElementById('import-status-text');
+        const btnSubmit = document.getElementById('btn-submit-import');
+
+        progressContainer.classList.remove('d-none');
+        btnSubmit.disabled = true;
+        progressBar.style.width = '0%';
+        statusText.textContent = 'Uploading...';
+
+        try {
+            // Using XHR for progress tracking
+            const xhr = new XMLHttpRequest();
+
+            xhr.upload.onprogress = (e) => {
+                if (e.lengthComputable) {
+                    const percent = (e.loaded / e.total) * 100;
+                    progressBar.style.width = percent + '%';
+                    if (percent === 100) statusText.textContent = 'Processing CSV data...';
+                }
+            };
+
+            xhr.onload = () => {
+                const result = JSON.parse(xhr.responseText);
+                if (result.success) {
+                    App.toast('success', result.success);
+                    bootstrap.Modal.getInstance(document.getElementById('importModal')).hide();
+                    this.table.ajax.reload();
+                    this.fetchStats();
+
+                    // Reset UI
+                    this.handleImportFileSelect(null);
+                    progressContainer.classList.add('d-none');
+                } else {
+                    App.toast('error', result.error || 'Import failed');
+                    progressBar.style.width = '0%';
+                    statusText.textContent = 'Error occurred';
+                    btnSubmit.disabled = false;
+                }
+            };
+
+            xhr.onerror = () => {
+                App.toast('error', 'Network error occurred');
+                btnSubmit.disabled = false;
+            };
+
+            xhr.open('POST', 'api/products.php?action=import_csv');
+            xhr.send(formData);
+
+        } catch (error) {
+            App.toast('error', 'Failed to process import');
+            btnSubmit.disabled = false;
+        }
     }
 };
 

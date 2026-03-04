@@ -97,6 +97,118 @@ try {
             $stmt->execute([$id]);
             echo json_encode(['success' => 'Product deleted successfully']);
             break;
+
+        case 'adjust_stock':
+            $id = $_GET['id'];
+            $type = $_GET['type'];
+            $qty = (int)$_GET['qty'];
+            
+            if ($type === 'add') {
+                $stmt = $pdo->prepare("UPDATE products SET stock_qty = stock_qty + ? WHERE id = ?");
+            } else {
+                $stmt = $pdo->prepare("UPDATE products SET stock_qty = stock_qty - ? WHERE id = ?");
+            }
+            
+            $stmt->execute([$qty, $id]);
+            echo json_encode(['success' => 'Stock adjusted successfully']);
+            break;
+
+        case 'download_template':
+            header('Content-Type: text/csv');
+            header('Content-Disposition: attachment; filename="product_template.csv"');
+            
+            $output = fopen('php://output', 'w');
+            fputcsv($output, ['Name', 'Category', 'Brand', 'Barcode', 'Purchase Price', 'Selling Price', 'Stock Qty', 'Min Stock', 'Expiry Date (YYYY-MM-DD)']);
+            fputcsv($output, ['Composite Resin A2', 'Consumables', '3M', '123456789', '45.00', '65.00', '10', '5', '2025-12-31']);
+            fclose($output);
+            exit;
+
+        case 'import_csv':
+            if (!isset($_FILES['csv_file']) || $_FILES['csv_file']['error'] !== UPLOAD_ERR_OK) {
+                echo json_encode(['error' => 'No file uploaded or upload error']);
+                exit;
+            }
+
+            $file = $_FILES['csv_file']['tmp_name'];
+            $handle = fopen($file, 'r');
+            
+            // Skip header
+            fgetcsv($handle);
+            
+            $success_count = 0;
+            $error_count = 0;
+            
+            $pdo->beginTransaction();
+            
+            try {
+                // Get all categories and brands for mapping
+                $categories = $pdo->query("SELECT id, name FROM categories")->fetchAll(PDO::FETCH_KEY_PAIR);
+                $brands = $pdo->query("SELECT id, name FROM brands")->fetchAll(PDO::FETCH_KEY_PAIR);
+                
+                while (($data = fgetcsv($handle)) !== FALSE) {
+                    if (count($data) < 6) continue; // Basic validation
+                    
+                    $name = trim($data[0]);
+                    $cat_name = trim($data[1]);
+                    $brand_name = trim($data[2]);
+                    $barcode = trim($data[3]);
+                    $purchase_price = (float)$data[4];
+                    $selling_price = (float)$data[5];
+                    $stock_qty = (int)($data[6] ?? 0);
+                    $min_stock = (int)($data[7] ?? 5);
+                    $expiry_date = !empty($data[8]) ? trim($data[8]) : null;
+
+                    if (empty($name)) {
+                        $error_count++;
+                        continue;
+                    }
+
+                    // Resolve or create category
+                    $category_id = null;
+                    if (!empty($cat_name)) {
+                        $cat_id = array_search($cat_name, $categories);
+                        if ($cat_id === false) {
+                            $stmt = $pdo->prepare("INSERT INTO categories (name) VALUES (?)");
+                            $stmt->execute([$cat_name]);
+                            $cat_id = $pdo->lastInsertId();
+                            $categories[$cat_id] = $cat_name;
+                        }
+                        $category_id = $cat_id;
+                    }
+
+                    // Resolve or create brand
+                    $brand_id = null;
+                    if (!empty($brand_name)) {
+                        $b_id = array_search($brand_name, $brands);
+                        if ($b_id === false) {
+                            $stmt = $pdo->prepare("INSERT INTO brands (name) VALUES (?)");
+                            $stmt->execute([$brand_name]);
+                            $b_id = $pdo->lastInsertId();
+                            $brands[$b_id] = $brand_name;
+                        }
+                        $brand_id = $b_id;
+                    }
+
+                    // Insert product
+                    $stmt = $pdo->prepare("
+                        INSERT INTO products 
+                        (name, category_id, brand_id, barcode, purchase_price, selling_price, stock_qty, min_stock, expiry_date, image) 
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ");
+                    $stmt->execute([$name, $category_id, $brand_id, $barcode, $purchase_price, $selling_price, $stock_qty, $min_stock, $expiry_date, 'default.png']);
+                    $success_count++;
+                }
+                
+                $pdo->commit();
+                fclose($handle);
+                echo json_encode(['success' => "Imported $success_count products successfully. Errors: $error_count"]);
+                
+            } catch (Exception $e) {
+                $pdo->rollBack();
+                fclose($handle);
+                echo json_encode(['error' => 'Database error: ' . $e->getMessage()]);
+            }
+            exit;
             
         default:
             echo json_encode(['error' => 'Invalid action']);
