@@ -217,7 +217,7 @@ const App = {
         if (!document.getElementById(scriptId)) {
             const script = document.createElement('script');
             script.id = scriptId;
-            script.src = `assets/js/modules/${viewName}.js`;
+            script.src = `assets/js/modules/${viewName}.js?v=${Date.now()}`;
             script.onerror = () => {
                 console.warn(`No logic module found for ${viewName}`);
             };

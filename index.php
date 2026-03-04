@@ -114,7 +114,7 @@ if (!isset($_SESSION['user_id'])) {
                 <img src="https://ui-avatars.com/api/?name=Admin+User&background=00BFA6&color=fff" alt="User" class="rounded-circle">
                 <div class="ms-2">
                     <p class="mb-0 fw-bold text-truncate">Admin User</p>
-                    <small class="text-muted">Administrator</small>
+                    <small class="text-primary">Administrator</small>
                 </div>
             </div>
             <a href="api/auth.php?action=logout" class="logout-btn" title="Logout">

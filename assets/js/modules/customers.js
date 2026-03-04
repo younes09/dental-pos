@@ -127,8 +127,37 @@ const customersModule = {
         }
     },
 
-    viewHistory(id) {
-        App.toast('info', 'Purchase history view coming soon');
+    async viewHistory(id) {
+        const customer = this.table.rows().data().toArray().find(c => c.id == id);
+        if (!customer) return;
+
+        document.getElementById('historyCustomerName').textContent = customer.name;
+        const historyBody = document.getElementById('historyBody');
+        historyBody.innerHTML = '<tr><td colspan="5" class="text-center"><div class="spinner-border spinner-border-sm text-teal"></div> Loading...</td></tr>';
+
+        const modal = new bootstrap.Modal(document.getElementById('historyModal'));
+        modal.show();
+
+        try {
+            const result = await App.api(`sales.php?action=history&customer_id=${id}`);
+            if (result && result.data) {
+                if (result.data.length === 0) {
+                    historyBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No purchase history found</td></tr>';
+                } else {
+                    historyBody.innerHTML = result.data.map(sale => `
+                        <tr>
+                            <td>${new Date(sale.date).toLocaleDateString()}</td>
+                            <td class="fw-medium">#${sale.id}</td>
+                            <td class="fw-bold">${App.formatCurrency(sale.total)}</td>
+                            <td><span class="badge bg-light text-dark border">${sale.payment_method}</span></td>
+                            <td><span class="badge bg-success-subtle text-success">Completed</span></td>
+                        </tr>
+                    `).join('');
+                }
+            }
+        } catch (error) {
+            historyBody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Failed to load history</td></tr>';
+        }
     }
 };
 

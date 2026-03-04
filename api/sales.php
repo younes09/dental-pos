@@ -75,14 +75,25 @@ try {
             break;
 
         case 'history':
-            $stmt = $pdo->prepare("
+            $customer_id = $_GET['customer_id'] ?? null;
+            $query = "
                 SELECT s.*, c.name as customer_name, u.name as user_name
                 FROM sales s
                 LEFT JOIN customers c ON s.customer_id = c.id
                 LEFT JOIN users u ON s.user_id = u.id
-                ORDER BY s.date DESC
-            ");
-            $stmt->execute();
+            ";
+            
+            if ($customer_id) {
+                $query .= " WHERE s.customer_id = ? ";
+                $query .= " ORDER BY s.date DESC";
+                $stmt = $pdo->prepare($query);
+                $stmt->execute([$customer_id]);
+            } else {
+                $query .= " ORDER BY s.date DESC";
+                $stmt = $pdo->prepare($query);
+                $stmt->execute();
+            }
+            
             $sales = $stmt->fetchAll();
             echo json_encode(['data' => $sales]);
             break;
