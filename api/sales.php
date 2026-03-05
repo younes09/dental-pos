@@ -9,16 +9,22 @@ try {
     switch ($action) {
         case 'list_products':
             $stmt = $pdo->prepare("
-                SELECT p.id, p.name, p.selling_price, p.stock_qty, p.image, p.category_id,
-                       (SELECT JSON_ARRAYAGG(JSON_OBJECT('type', purchase_type, 'qty', remaining_qty)) 
-                        FROM stock_batches 
-                        WHERE product_id = p.id AND remaining_qty > 0) as batches
-                FROM products p
-                WHERE p.status = 'Active' 
+                SELECT id, name, selling_price, stock_qty, image, category_id
+                FROM products 
+                WHERE status = 'Active' 
                 ORDER BY name ASC
             ");
             $stmt->execute();
-            $products = $stmt->fetchAll();
+            $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Fetch batches separately for compatibility instead of JSON_ARRAYAGG
+            $batch_stmt = $pdo->prepare("SELECT purchase_type as type, remaining_qty as qty FROM stock_batches WHERE product_id = ? AND remaining_qty > 0 ORDER BY created_at ASC");
+            
+            foreach ($products as &$product) {
+                $batch_stmt->execute([$product['id']]);
+                $product['batches'] = json_encode($batch_stmt->fetchAll(PDO::FETCH_ASSOC));
+            }
+            
             echo json_encode(['products' => $products]);
             break;
 
