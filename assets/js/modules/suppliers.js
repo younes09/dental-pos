@@ -42,7 +42,7 @@ const suppliersModule = {
                     data: 'total_purchases',
                     render: (data) => {
                         const val = parseFloat(data || 0);
-                        return `<span class="fw-bold text-navy">$${val.toFixed(2)}</span>`;
+                        return `<span class="fw-bold text-navy">${App.formatCurrency(val)}</span>`;
                     }
                 },
                 {

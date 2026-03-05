@@ -121,14 +121,16 @@ const App = {
 
     async handleRouting() {
         const hash = window.location.hash || '#dashboard';
-        const route = hash.substring(1);
+        const fullRoute = hash.substring(1);
 
-        console.log('Handling route:', route);
+        // Split view name from query parameters (e.g., #pos?search=... -> pos)
+        const [viewName, queryStr] = fullRoute.split('?');
 
-        // Allow re-loading the same route if requested (e.g. clicking active link)
-        this.state.currentRoute = route;
-        this.updateActiveNavLink(hash);
-        await this.loadView(route);
+        console.log('Handling route:', viewName, 'with params:', queryStr);
+
+        this.state.currentRoute = viewName;
+        this.updateActiveNavLink(`#${viewName}`);
+        await this.loadView(viewName);
     },
 
     updateActiveNavLink(hash) {
