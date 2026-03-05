@@ -33,6 +33,24 @@ const purchase_ordersModule = {
             await this.savePO();
         };
 
+        // Toggle purchase type in create modal based on status
+        document.getElementById('po-status').onchange = (e) => {
+            const container = document.getElementById('po-purchase-type-container');
+            if (e.target.value === 'Received') {
+                container.classList.remove('d-none');
+                document.getElementById('po-purchase-type').required = true;
+            } else {
+                container.classList.add('d-none');
+                document.getElementById('po-purchase-type').required = false;
+            }
+        };
+
+        // Handle receive PO form submission
+        document.getElementById('receivePoForm').onsubmit = async (e) => {
+            e.preventDefault();
+            await this.submitReceivePO();
+        };
+
         // Delegate row calculations and removals
         document.querySelector('#po-items-table tbody').addEventListener('input', (e) => {
             if (e.target.classList.contains('item-qty') || e.target.classList.contains('item-cost')) {
@@ -84,16 +102,24 @@ const purchase_ordersModule = {
                 {
                     data: null,
                     orderable: false,
-                    render: (data) => `
+                    render: (data) => {
+                        let receiveBtn = '';
+                        if (data.status !== 'Received' && data.status !== 'Cancelled') {
+                            receiveBtn = `<li><a class="dropdown-item text-success" href="javascript:void(0)" onclick="purchase_ordersModule.openReceiveModal(${data.id})"><i class="fas fa-check-circle me-2"></i>Receive Order</a></li>`;
+                        }
+
+                        return `
                         <div class="dropdown">
                             <button class="btn btn-sm btn-light" data-bs-toggle="dropdown"><i class="fas fa-ellipsis-v"></i></button>
                             <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
                                 <li><a class="dropdown-item" href="javascript:void(0)" onclick="purchase_ordersModule.viewDetails(${data.id})"><i class="fas fa-eye me-2 text-info"></i>View Details</a></li>
+                                ${receiveBtn}
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item text-danger" href="javascript:void(0)" onclick="purchase_ordersModule.deletePO(${data.id})"><i class="fas fa-trash me-2"></i>Delete</a></li>
                             </ul>
                         </div>
-                    `
+                        `;
+                    }
                 }
             ],
             language: {
@@ -207,12 +233,22 @@ const purchase_ordersModule = {
             items
         };
 
+        if (status === 'Received') {
+            data.purchase_type = document.getElementById('po-purchase-type').value;
+        }
+
         const result = await App.api('purchase_orders.php?action=save', 'POST', data);
         if (result && result.success) {
             App.toast('success', result.success);
             bootstrap.Modal.getInstance(document.getElementById('poModal')).hide();
             this.table.ajax.reload();
             document.getElementById('poForm').reset();
+
+            // Reset fields
+            document.getElementById('po-status').value = 'Pending';
+            document.getElementById('po-purchase-type-container').classList.add('d-none');
+            document.getElementById('po-purchase-type').required = false;
+
             document.querySelector('#po-items-table tbody').innerHTML = '';
             document.getElementById('po-total-display').textContent = App.formatCurrency(0);
         }
@@ -235,6 +271,34 @@ const purchase_ordersModule = {
                 App.toast('success', result.success);
                 this.table.ajax.reload();
             }
+        }
+    },
+
+    openReceiveModal(id) {
+        document.getElementById('receive-po-id').value = id;
+        document.getElementById('receivePoForm').reset();
+        new bootstrap.Modal(document.getElementById('receivePoModal')).show();
+    },
+
+    async submitReceivePO() {
+        const id = document.getElementById('receive-po-id').value;
+        const purchaseType = document.getElementById('receive-po-purchase-type').value;
+
+        if (!id || !purchaseType) return;
+
+        const data = {
+            po_id: id,
+            purchase_type: purchaseType
+        };
+
+        const result = await App.api('purchase_orders.php?action=receive_order', 'POST', data);
+
+        if (result && result.success) {
+            App.toast('success', 'Purchase order received successfully!');
+            bootstrap.Modal.getInstance(document.getElementById('receivePoModal')).hide();
+            this.table.ajax.reload();
+        } else if (result && result.error) {
+            App.toast('error', result.error);
         }
     },
 

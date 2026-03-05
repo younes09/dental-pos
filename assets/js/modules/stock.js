@@ -105,7 +105,14 @@ const stockModule = {
             adjForm.onsubmit = async (e) => {
                 e.preventDefault();
                 const formData = new FormData(adjForm);
-                const result = await App.api(`products.php?action=adjust_stock&id=${formData.get('id')}&type=${formData.get('adjustment_type')}&qty=${formData.get('quantity')}`);
+                const queryParams = new URLSearchParams({
+                    action: 'adjust_stock',
+                    id: formData.get('id'),
+                    type: formData.get('adjustment_type'),
+                    qty: formData.get('quantity'),
+                    purchase_type: formData.get('purchase_type') || 'BA'
+                });
+                const result = await App.api(`products.php?${queryParams.toString()}`);
 
                 if (result && result.success) {
                     App.toast('success', result.success);

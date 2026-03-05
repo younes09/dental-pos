@@ -20,7 +20,6 @@ try {
             break;
 
         case 'save':
-            // Get raw POST data
             $json = file_get_contents('php://input');
             $data = json_decode($json, true);
 
@@ -36,6 +35,7 @@ try {
             $status = $data['status'] ?? 'Pending';
             $total = $data['total'];
             $items = $data['items'];
+            $purchase_type = $data['purchase_type'] ?? 'BA'; // Default to BA if not provided
 
             $stmt = $pdo->prepare("INSERT INTO purchase_orders (supplier_id, date, status, total) VALUES (?, ?, ?, ?)");
             $stmt->execute([$supplier_id, $date, $status, $total]);
@@ -43,18 +43,62 @@ try {
 
             $stmtItem = $pdo->prepare("INSERT INTO purchase_order_items (po_id, product_id, qty, unit_cost) VALUES (?, ?, ?, ?)");
             $stmtUpdateProduct = $pdo->prepare("UPDATE products SET stock_qty = stock_qty + ?, purchase_price = ? WHERE id = ?");
+            $stmtBatch = $pdo->prepare("INSERT INTO stock_batches (product_id, purchase_type, initial_qty, remaining_qty) VALUES (?, ?, ?, ?)");
 
             foreach ($items as $item) {
                 $stmtItem->execute([$po_id, $item['product_id'], $item['qty'], $item['unit_cost']]);
                 
-                // If the status is received, update product stock and price
                 if ($status === 'Received') {
                     $stmtUpdateProduct->execute([$item['qty'], $item['unit_cost'], $item['product_id']]);
+                    $stmtBatch->execute([$item['product_id'], $purchase_type, $item['qty'], $item['qty']]);
                 }
             }
 
             $pdo->commit();
             echo json_encode(['success' => 'Purchase order saved successfully', 'id' => $po_id]);
+            break;
+
+        case 'receive_order':
+            $json = file_get_contents('php://input');
+            $data = json_decode($json, true);
+
+            if (!$data || !isset($data['po_id']) || !isset($data['purchase_type'])) {
+                echo json_encode(['error' => 'Invalid data']);
+                exit;
+            }
+
+            $pdo->beginTransaction();
+
+            $po_id = $data['po_id'];
+            $purchase_type = $data['purchase_type'];
+
+            // Check if PO exists and is not already received
+            $stmt = $pdo->prepare("SELECT status FROM purchase_orders WHERE id = ?");
+            $stmt->execute([$po_id]);
+            $po = $stmt->fetch();
+
+            if (!$po) throw new Exception("Order not found");
+            if ($po['status'] === 'Received') throw new Exception("Order already received");
+
+            // Update PO status
+            $stmt = $pdo->prepare("UPDATE purchase_orders SET status = 'Received' WHERE id = ?");
+            $stmt->execute([$po_id]);
+
+            // Get items to update stock and batches
+            $stmt = $pdo->prepare("SELECT product_id, qty, unit_cost FROM purchase_order_items WHERE po_id = ?");
+            $stmt->execute([$po_id]);
+            $items = $stmt->fetchAll();
+
+            $stmtUpdateProduct = $pdo->prepare("UPDATE products SET stock_qty = stock_qty + ?, purchase_price = ? WHERE id = ?");
+            $stmtBatch = $pdo->prepare("INSERT INTO stock_batches (product_id, purchase_type, initial_qty, remaining_qty) VALUES (?, ?, ?, ?)");
+
+            foreach ($items as $item) {
+                $stmtUpdateProduct->execute([$item['qty'], $item['unit_cost'], $item['product_id']]);
+                $stmtBatch->execute([$item['product_id'], $purchase_type, $item['qty'], $item['qty']]);
+            }
+
+            $pdo->commit();
+            echo json_encode(['success' => 'Order received successfully']);
             break;
 
         case 'get_details':
