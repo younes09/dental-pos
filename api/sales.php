@@ -9,9 +9,12 @@ try {
     switch ($action) {
         case 'list_products':
             $stmt = $pdo->prepare("
-                SELECT id, name, selling_price, stock_qty, image, category_id, purchase_type 
-                FROM products 
-                WHERE status = 'Active' 
+                SELECT p.id, p.name, p.selling_price, p.stock_qty, p.image, p.category_id,
+                       (SELECT JSON_ARRAYAGG(JSON_OBJECT('type', purchase_type, 'qty', remaining_qty)) 
+                        FROM stock_batches 
+                        WHERE product_id = p.id AND remaining_qty > 0) as batches
+                FROM products p
+                WHERE p.status = 'Active' 
                 ORDER BY name ASC
             ");
             $stmt->execute();
@@ -72,6 +75,28 @@ try {
                 ]);
 
                 $stock_stmt->execute([$item['qty'], $item['id']]);
+                
+                // FIFO Batch Deduction
+                $remaining_to_deduct = $item['qty'];
+                $batches_stmt = $pdo->prepare("SELECT id, remaining_qty FROM stock_batches WHERE product_id = ? AND remaining_qty > 0 ORDER BY created_at ASC");
+                $batches_stmt->execute([$item['id']]);
+                $batches = $batches_stmt->fetchAll();
+                
+                $update_batch_stmt = $pdo->prepare("UPDATE stock_batches SET remaining_qty = ? WHERE id = ?");
+                
+                foreach ($batches as $batch) {
+                    if ($remaining_to_deduct <= 0) break;
+                    
+                    $available = (int)$batch['remaining_qty'];
+                    if ($available >= $remaining_to_deduct) {
+                        $new_qty = $available - $remaining_to_deduct;
+                        $update_batch_stmt->execute([$new_qty, $batch['id']]);
+                        $remaining_to_deduct = 0;
+                    } else {
+                        $update_batch_stmt->execute([0, $batch['id']]);
+                        $remaining_to_deduct -= $available;
+                    }
+                }
             }
 
             // 3. Update customer loyalty points

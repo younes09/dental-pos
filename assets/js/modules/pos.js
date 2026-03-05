@@ -350,33 +350,72 @@ const posModule = {
         if (!product) return;
 
         const cartItem = this.cart.find(item => item.id === productId);
+        const newQty = cartItem ? cartItem.qty + 1 : 1;
 
-        // BA/BL Check
-        if (!cartItem && product.purchase_type === 'BL') {
-            const confirm = await Swal.fire({
-                title: 'Attention !',
-                text: `Le produit "${product.name}" a été acheté avec un Bon de Livraison (BL). Voulez-vous vraiment l'ajouter à la facturation ?`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#ffc107',
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: 'Oui, ajouter au panier',
-                cancelButtonText: 'Annuler',
-                reverseButtons: true
-            });
+        if (newQty > product.stock_qty) {
+            App.toast('warning', 'Exceeds available stock');
+            return;
+        }
 
-            if (!confirm.isConfirmed) {
-                return;
+        // Check Batch FIFO for BL Warning
+        let remainingToCheck = newQty;
+        let hitsBL = false;
+
+        try {
+            const batches = typeof product.batches === 'string' ? JSON.parse(product.batches) : (product.batches || []);
+            for (let batch of batches) {
+                if (remainingToCheck <= 0) break;
+                if (batch.type === 'BL') {
+                    hitsBL = true;
+                    break;
+                }
+                remainingToCheck -= batch.qty;
+            }
+        } catch (e) {
+            console.error('Error parsing batches', e);
+        }
+
+        if (hitsBL && (!cartItem || cartItem.qty < newQty)) {
+            // Only warn if they haven't already acknowledged BL for this item
+            // Or if we need a strategy where we warn again, we can just warn.
+            // Let's warn if it's the first time they hit a BL unit for this product.
+            let alreadyHitBL = false;
+            if (cartItem) {
+                let oldRemaining = cartItem.qty;
+                try {
+                    const batches = typeof product.batches === 'string' ? JSON.parse(product.batches) : (product.batches || []);
+                    for (let batch of batches) {
+                        if (oldRemaining <= 0) break;
+                        if (batch.type === 'BL') {
+                            alreadyHitBL = true;
+                            break;
+                        }
+                        oldRemaining -= batch.qty;
+                    }
+                } catch (e) { }
+            }
+
+            if (!alreadyHitBL) {
+                const confirm = await Swal.fire({
+                    title: 'Attention !',
+                    text: `La quantité demandée pour "${product.name}" nécessite de piocher dans un stock "Bon de Livraison" (BL). Voulez-vous vraiment l'ajouter à la facturation ?`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#ffc107',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Oui, ajouter au panier',
+                    cancelButtonText: 'Annuler',
+                    reverseButtons: true
+                });
+
+                if (!confirm.isConfirmed) {
+                    return;
+                }
             }
         }
 
         if (cartItem) {
-            if (cartItem.qty < product.stock_qty) {
-                cartItem.qty++;
-            } else {
-                App.toast('warning', 'Exceeds available stock');
-                return;
-            }
+            cartItem.qty = newQty;
         } else {
             this.cart.push({
                 id: product.id,
@@ -391,17 +430,70 @@ const posModule = {
         this.calculateTotals();
     },
 
-    updateQty(productId, delta) {
+    async updateQty(productId, delta) {
         const item = this.cart.find(i => i.id === productId);
         const product = this.allProducts.find(p => p.id === productId);
 
         if (item) {
-            item.qty += delta;
-            if (item.qty <= 0) {
+            const newQty = item.qty + delta;
+
+            if (newQty <= 0) {
                 this.cart = this.cart.filter(i => i.id !== productId);
-            } else if (item.qty > product.stock_qty) {
-                item.qty = product.stock_qty;
+            } else if (newQty > product.stock_qty) {
                 App.toast('warning', 'Maximum available stock reached');
+            } else {
+                if (delta > 0) {
+                    // Check Batch FIFO for BL Warning
+                    let remainingToCheck = newQty;
+                    let hitsBL = false;
+
+                    try {
+                        const batches = typeof product.batches === 'string' ? JSON.parse(product.batches) : (product.batches || []);
+                        for (let batch of batches) {
+                            if (remainingToCheck <= 0) break;
+                            if (batch.type === 'BL') {
+                                hitsBL = true;
+                                break;
+                            }
+                            remainingToCheck -= batch.qty;
+                        }
+                    } catch (e) { }
+
+                    if (hitsBL) {
+                        let alreadyHitBL = false;
+                        let oldRemaining = item.qty;
+                        try {
+                            const batches = typeof product.batches === 'string' ? JSON.parse(product.batches) : (product.batches || []);
+                            for (let batch of batches) {
+                                if (oldRemaining <= 0) break;
+                                if (batch.type === 'BL') {
+                                    alreadyHitBL = true;
+                                    break;
+                                }
+                                oldRemaining -= batch.qty;
+                            }
+                        } catch (e) { }
+
+                        if (!alreadyHitBL) {
+                            const confirm = await Swal.fire({
+                                title: 'Attention !',
+                                text: `Cette quantité supplémentaire nécessite de piocher dans un stock "Bon de Livraison" (BL). Voulez-vous continuer ?`,
+                                icon: 'warning',
+                                showCancelButton: true,
+                                confirmButtonColor: '#ffc107',
+                                cancelButtonColor: '#6c757d',
+                                confirmButtonText: 'Oui, ajouter',
+                                cancelButtonText: 'Annuler',
+                                reverseButtons: true
+                            });
+
+                            if (!confirm.isConfirmed) {
+                                return;
+                            }
+                        }
+                    }
+                }
+                item.qty = newQty;
             }
         }
         this.renderCart();

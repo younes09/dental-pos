@@ -132,8 +132,7 @@ const stockModule = {
                     data: 'name',
                     className: 'fw-semibold',
                     render: (data, type, row) => {
-                        const badge = row.purchase_type === 'BL' ? ' <span class="badge bg-warning text-dark ms-1" title="Bon de Livraison">BL</span>' : '';
-                        return data + badge;
+                        return data;
                     }
                 },
                 { data: 'category_name', render: (data) => `<span class="badge bg-light text-dark border">${data || 'Uncategorized'}</span>` },
@@ -243,12 +242,17 @@ const stockModule = {
         document.getElementById('product-id').value = product.id;
         document.querySelector('[name="name"]').value = product.name;
         document.querySelector('[name="category_id"]').value = product.category_id;
-        document.querySelector('[name="purchase_type"]').value = product.purchase_type || 'BA';
         document.querySelector('[name="brand_id"]').value = product.brand_id;
         document.querySelector('[name="barcode"]').value = product.barcode;
         document.querySelector('[name="purchase_price"]').value = product.purchase_price;
         document.querySelector('[name="selling_price"]').value = product.selling_price;
-        document.querySelector('[name="stock_qty"]').value = product.stock_qty;
+
+        // Hide initial-only fields on edit
+        document.getElementById('product-stock-qty').value = product.stock_qty;
+        document.getElementById('product-stock-qty').readOnly = true;
+        document.getElementById('product-purchase-type').style.display = 'none';
+        document.getElementById('product-purchase-type-help').classList.remove('d-none');
+
         document.querySelector('[name="min_stock"]').value = product.min_stock;
         document.querySelector('[name="expiry_date"]').value = product.expiry_date;
 
@@ -294,6 +298,19 @@ const stockModule = {
         document.getElementById('adj-product-id').value = product.id;
         document.getElementById('adj-product-name').value = product.name;
         document.getElementById('adj-current-stock').value = `${product.stock_qty} units`;
+
+        // Bind adj-type toggle
+        const adjType = document.getElementById('adj-type');
+        const adjPurchaseTypeContainer = document.getElementById('adj-purchase-type-container');
+
+        adjType.onchange = (e) => {
+            if (e.target.value === 'add') {
+                adjPurchaseTypeContainer.classList.remove('d-none');
+            } else {
+                adjPurchaseTypeContainer.classList.add('d-none');
+            }
+        };
+        adjType.dispatchEvent(new Event('change'));
 
         new bootstrap.Modal(document.getElementById('adjustmentModal')).show();
     },

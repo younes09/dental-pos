@@ -132,12 +132,13 @@
                                     <label class="form-label fw-semibold">Expiry Date</label>
                                     <input type="date" name="expiry_date" class="form-control">
                                 </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">Purchase Type</label>
-                                    <select name="purchase_type" class="form-select" required>
+                                <div class="col-md-6" id="product-purchase-type-container">
+                                    <label class="form-label fw-semibold">Purchase Type (Initial Only)</label>
+                                    <select name="purchase_type" class="form-select" id="product-purchase-type">
                                         <option value="BA" selected>Bon d'Achat (BA)</option>
                                         <option value="BL">Bon de Livraison (BL)</option>
                                     </select>
+                                    <small class="text-muted d-none" id="product-purchase-type-help">Use "Adjust Stock" to add mixed types later.</small>
                                 </div>
                             </div>
                         </div>
@@ -170,7 +171,7 @@
                         </div>
                         <div class="col-md-3">
                             <label class="form-label fw-semibold">Current Stock</label>
-                            <input type="number" name="stock_qty" class="form-control" value="0" required>
+                            <input type="number" name="stock_qty" id="product-stock-qty" class="form-control" value="0" required>
                         </div>
                         <div class="col-md-3">
                             <label class="form-label fw-semibold">Min. Stock Level</label>
@@ -209,7 +210,7 @@
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label fw-semibold">Action</label>
-                            <select name="adjustment_type" class="form-select" required>
+                            <select name="adjustment_type" id="adj-type" class="form-select" required>
                                 <option value="add">Add (+)</option>
                                 <option value="subtract">Subtract (-)</option>
                             </select>
@@ -217,6 +218,13 @@
                         <div class="col-md-6">
                             <label class="form-label fw-semibold">Quantity</label>
                             <input type="number" name="quantity" class="form-control" min="1" value="1" required>
+                        </div>
+                        <div class="col-md-12" id="adj-purchase-type-container">
+                            <label class="form-label fw-semibold">Addition Type</label>
+                            <select name="purchase_type" class="form-select">
+                                <option value="BA" selected>Bon d'Achat (BA)</option>
+                                <option value="BL">Bon de Livraison (BL)</option>
+                            </select>
                         </div>
                     </div>
                     <div class="mt-3">
