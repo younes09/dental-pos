@@ -38,6 +38,7 @@ CREATE TABLE products (
     expiry_date DATE,
     image VARCHAR(255),
     status ENUM('Active', 'Inactive') DEFAULT 'Active',
+    purchase_type ENUM('BA', 'BL') DEFAULT 'BA',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL,
     FOREIGN KEY (brand_id) REFERENCES brands(id) ON DELETE SET NULL

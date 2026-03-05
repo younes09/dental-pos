@@ -345,11 +345,31 @@ const posModule = {
         this.renderProducts(filtered);
     },
 
-    addToCart(productId) {
+    async addToCart(productId) {
         const product = this.allProducts.find(p => p.id === productId);
         if (!product) return;
 
         const cartItem = this.cart.find(item => item.id === productId);
+
+        // BA/BL Check
+        if (!cartItem && product.purchase_type === 'BL') {
+            const confirm = await Swal.fire({
+                title: 'Attention !',
+                text: `Le produit "${product.name}" a été acheté avec un Bon de Livraison (BL). Voulez-vous vraiment l'ajouter à la facturation ?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ffc107',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Oui, ajouter au panier',
+                cancelButtonText: 'Annuler',
+                reverseButtons: true
+            });
+
+            if (!confirm.isConfirmed) {
+                return;
+            }
+        }
+
         if (cartItem) {
             if (cartItem.qty < product.stock_qty) {
                 cartItem.qty++;

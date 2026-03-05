@@ -53,6 +53,7 @@ try {
             $category_id = $_POST['category_id'];
             $brand_id = $_POST['brand_id'];
             $barcode = $_POST['barcode'];
+            $purchase_type = $_POST['purchase_type'] ?? 'BA';
             $purchase_price = $_POST['purchase_price'];
             $selling_price = $_POST['selling_price'];
             $stock_qty = $_POST['stock_qty'];
@@ -73,20 +74,20 @@ try {
             if ($id) {
                 $stmt = $pdo->prepare("
                     UPDATE products SET 
-                    name=?, category_id=?, brand_id=?, barcode=?, 
+                    name=?, category_id=?, brand_id=?, barcode=?, purchase_type=?, 
                     purchase_price=?, selling_price=?, stock_qty=?, 
                     min_stock=?, expiry_date=?, image=?
                     WHERE id=?
                 ");
-                $stmt->execute([$name, $category_id, $brand_id, $barcode, $purchase_price, $selling_price, $stock_qty, $min_stock, $expiry_date, $image, $id]);
+                $stmt->execute([$name, $category_id, $brand_id, $barcode, $purchase_type, $purchase_price, $selling_price, $stock_qty, $min_stock, $expiry_date, $image, $id]);
                 echo json_encode(['success' => 'Product updated successfully']);
             } else {
                 $stmt = $pdo->prepare("
                     INSERT INTO products 
-                    (name, category_id, brand_id, barcode, purchase_price, selling_price, stock_qty, min_stock, expiry_date, image) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    (name, category_id, brand_id, barcode, purchase_type, purchase_price, selling_price, stock_qty, min_stock, expiry_date, image) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ");
-                $stmt->execute([$name, $category_id, $brand_id, $barcode, $purchase_price, $selling_price, $stock_qty, $min_stock, $expiry_date, $image]);
+                $stmt->execute([$name, $category_id, $brand_id, $barcode, $purchase_type, $purchase_price, $selling_price, $stock_qty, $min_stock, $expiry_date, $image]);
                 echo json_encode(['success' => 'Product added successfully']);
             }
             break;
@@ -192,8 +193,8 @@ try {
                     // Insert product
                     $stmt = $pdo->prepare("
                         INSERT INTO products 
-                        (name, category_id, brand_id, barcode, purchase_price, selling_price, stock_qty, min_stock, expiry_date, image) 
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        (name, category_id, brand_id, barcode, purchase_type, purchase_price, selling_price, stock_qty, min_stock, expiry_date, image) 
+                        VALUES (?, ?, ?, ?, 'BA', ?, ?, ?, ?, ?, ?)
                     ");
                     $stmt->execute([$name, $category_id, $brand_id, $barcode, $purchase_price, $selling_price, $stock_qty, $min_stock, $expiry_date, 'default.png']);
                     $success_count++;

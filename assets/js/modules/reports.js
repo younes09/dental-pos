@@ -65,10 +65,10 @@ const reportsModule = {
                         <td>#${r.id}</td>
                         <td>${r.customer || 'Walking'}</td>
                         <td>${new Date(r.date).toLocaleDateString()}</td>
-                        <td>$${r.subtotal}</td>
-                        <td class="text-danger">-$${r.discount}</td>
-                        <td>$${r.tax}</td>
-                        <td class="fw-bold">$${r.total}</td>
+                        <td>${r.subtotal} ${App.state.settings.currency}</td>
+                        <td class="text-danger">-${r.discount} ${App.state.settings.currency}</td>
+                        <td>${r.tax} ${App.state.settings.currency}</td>
+                        <td class="fw-bold">${r.total} ${App.state.settings.currency}</td>
                         <td><span class="badge bg-light text-dark">${r.payment_method}</span></td>
                     </tr>
                 `).join('');
@@ -81,10 +81,10 @@ const reportsModule = {
                     <tr>
                         <td class="fw-bold">${r.name}</td>
                         <td>${r.category || 'N/A'}</td>
-                        <td>$${r.purchase_price}</td>
-                        <td>$${r.selling_price}</td>
+                        <td>${r.purchase_price} ${App.state.settings.currency}</td>
+                        <td>${r.selling_price} ${App.state.settings.currency}</td>
                         <td><span class="badge bg-navy">${r.stock_qty}</span></td>
-                        <td class="fw-bold text-teal">$${parseFloat(r.inventory_value).toFixed(2)}</td>
+                        <td class="fw-bold text-teal">${parseFloat(r.inventory_value).toFixed(2)} ${App.state.settings.currency}</td>
                     </tr>
                 `).join('');
                 break;
@@ -97,8 +97,8 @@ const reportsModule = {
                         <td class="fw-bold">${r.name}</td>
                         <td>${r.phone || 'N/A'}</td>
                         <td>${r.total_orders}</td>
-                        <td class="fw-bold text-teal">$${parseFloat(r.total_spent || 0).toFixed(2)}</td>
-                        <td class="text-danger">$${r.balance}</td>
+                        <td class="fw-bold text-teal">${parseFloat(r.total_spent || 0).toFixed(2)} ${App.state.settings.currency}</td>
+                        <td class="text-danger">${r.balance} ${App.state.settings.currency}</td>
                         <td><span class="badge bg-info">${r.loyalty_points}</span></td>
                     </tr>
                 `).join('');

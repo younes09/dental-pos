@@ -128,7 +128,14 @@ const stockModule = {
                     data: 'image',
                     render: (data) => `<img src="assets/img/products/${data || 'default.png'}" class="rounded" width="40" height="40" onerror="this.src='https://ui-avatars.com/api/?name=Product&background=random'">`
                 },
-                { data: 'name', className: 'fw-semibold' },
+                {
+                    data: 'name',
+                    className: 'fw-semibold',
+                    render: (data, type, row) => {
+                        const badge = row.purchase_type === 'BL' ? ' <span class="badge bg-warning text-dark ms-1" title="Bon de Livraison">BL</span>' : '';
+                        return data + badge;
+                    }
+                },
                 { data: 'category_name', render: (data) => `<span class="badge bg-light text-dark border">${data || 'Uncategorized'}</span>` },
                 { data: 'brand_name', render: (data) => `<span class="badge bg-light text-dark border">${data || 'Generic'}</span>` },
                 {
@@ -236,6 +243,7 @@ const stockModule = {
         document.getElementById('product-id').value = product.id;
         document.querySelector('[name="name"]').value = product.name;
         document.querySelector('[name="category_id"]').value = product.category_id;
+        document.querySelector('[name="purchase_type"]').value = product.purchase_type || 'BA';
         document.querySelector('[name="brand_id"]').value = product.brand_id;
         document.querySelector('[name="barcode"]').value = product.barcode;
         document.querySelector('[name="purchase_price"]').value = product.purchase_price;
