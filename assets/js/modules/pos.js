@@ -320,12 +320,37 @@ const posModule = {
             return;
         }
 
-        grid.innerHTML = products.map(p => `
+        grid.innerHTML = products.map(p => {
+            let badges = '';
+
+            if (p.stock_qty <= 0) {
+                badges += '<span class="badge bg-danger px-2">Out of Stock</span>';
+            } else if (p.stock_qty <= 5) {
+                badges += '<span class="badge bg-warning text-dark px-2">Low Stock</span>';
+            }
+
+            if (p.expiry_date) {
+                const expDate = new Date(p.expiry_date);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const nextMonth = new Date(today);
+                nextMonth.setMonth(nextMonth.getMonth() + 1);
+
+                if (expDate < today) {
+                    badges += '<span class="badge bg-danger px-2">Expired</span>';
+                } else if (expDate <= nextMonth) {
+                    badges += '<span class="badge bg-warning text-dark px-2">Expiring Soon</span>';
+                }
+            }
+
+            return `
             <div class="col-md-4 col-xl-3">
                 <div class="card product-card border-0 shadow-sm h-100 rounded-4 pointer" onclick="posModule.addToCart(${p.id})">
                     <div class="p-3 position-relative">
                         <img src="assets/img/products/${p.image || 'default.jpg'}" class="card-img-top rounded-4" style="height: 120px; object-fit: contain;" onerror="this.src='https://ui-avatars.com/api/?name=P&background=random'">
-                        ${p.stock_qty <= 5 ? '<span class="badge bg-danger position-absolute top-0 end-0 m-3 px-2">Low Stock</span>' : ''}
+                        <div class="position-absolute top-0 end-0 m-3 d-flex flex-column gap-1 align-items-end">
+                            ${badges}
+                        </div>
                     </div>
                     <div class="card-body pt-0 text-center">
                         <h6 class="fw-bold mb-1 text-truncate">${p.name}</h6>
@@ -333,7 +358,8 @@ const posModule = {
                     </div>
                 </div>
             </div>
-        `).join('');
+            `;
+        }).join('');
     },
 
     filterProducts(query, category) {

@@ -9,7 +9,7 @@ try {
     switch ($action) {
         case 'list_products':
             $stmt = $pdo->prepare("
-                SELECT id, name, selling_price, stock_qty, image, category_id
+                SELECT id, name, selling_price, stock_qty, expiry_date, image, category_id
                 FROM products 
                 WHERE status = 'Active' 
                 ORDER BY name ASC
