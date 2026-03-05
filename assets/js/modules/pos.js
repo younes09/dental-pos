@@ -41,6 +41,7 @@ const posModule = {
         // Cart controls
         document.getElementById('btn-clear-cart').onclick = () => this.clearCart();
         document.getElementById('cart-discount').oninput = () => this.calculateTotals();
+        document.getElementById('cart-points-redeem').oninput = () => this.calculateTotals();
 
         document.getElementById('btn-checkout').onclick = () => this.processCheckout();
 
@@ -129,6 +130,7 @@ const posModule = {
             customer: this.selectedCustomer,
             cart: [...this.cart],
             discount: parseFloat(document.getElementById('cart-discount').value) || 0,
+            points_redeemed: parseInt(document.getElementById('cart-points-redeem').value) || 0,
             total: totals.total
         };
 
@@ -138,6 +140,7 @@ const posModule = {
         this.clearCart();
         this.selectCustomer(null);
         document.getElementById('cart-discount').value = 0;
+        document.getElementById('cart-points-redeem').value = 0;
 
         App.toast('success', 'Sale held successfully');
         this.renderHeldSales();
@@ -198,11 +201,18 @@ const posModule = {
         if (this.selectedCustomer) {
             document.getElementById('pos-selected-customer-name').textContent = this.selectedCustomer.name;
             document.getElementById('pos-selected-customer-phone').textContent = this.selectedCustomer.phone || '';
+            document.getElementById('pos-selected-customer-points-container').classList.remove('d-none');
+            document.getElementById('pos-selected-customer-points').textContent = this.selectedCustomer.loyalty_points || 0;
+            document.getElementById('cart-points-row').classList.remove('d-none');
+
+            const ptVal = App.state.settings.loyalty_point_value || 1;
+            document.getElementById('points-value-hint').textContent = `(1 pt = ${App.formatCurrency(ptVal)})`;
         } else {
             this.selectCustomer(null);
         }
 
-        document.getElementById('cart-discount').value = sale.discount;
+        document.getElementById('cart-discount').value = sale.discount || 0;
+        document.getElementById('cart-points-redeem').value = sale.points_redeemed || 0;
 
         // Remove from held sales
         heldSales.splice(saleIndex, 1);
@@ -265,14 +275,25 @@ const posModule = {
             this.selectedCustomer = null;
             document.getElementById('pos-selected-customer-name').textContent = 'Walking Customer';
             document.getElementById('pos-selected-customer-phone').textContent = '';
+            document.getElementById('pos-selected-customer-points-container').classList.add('d-none');
+            document.getElementById('cart-points-row').classList.add('d-none');
+            document.getElementById('cart-points-redeem').value = 0;
         } else {
             const customer = this.allCustomers.find(c => c.id == customerId);
             if (customer) {
                 this.selectedCustomer = customer;
                 document.getElementById('pos-selected-customer-name').textContent = customer.name;
                 document.getElementById('pos-selected-customer-phone').textContent = customer.phone || '';
+                document.getElementById('pos-selected-customer-points-container').classList.remove('d-none');
+                document.getElementById('pos-selected-customer-points').textContent = customer.loyalty_points || 0;
+                document.getElementById('cart-points-row').classList.remove('d-none');
+
+                const ptVal = App.state.settings.loyalty_point_value || 1;
+                document.getElementById('points-value-hint').textContent = `(1 pt = ${App.formatCurrency(ptVal)})`;
             }
         }
+
+        this.calculateTotals();
 
         // Close modal
         const modal = bootstrap.Modal.getInstance(document.getElementById('posCustomerModal'));
@@ -416,17 +437,54 @@ const posModule = {
 
     calculateTotals() {
         const subtotal = this.cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+
+        // Manual Discount
         const discountPercent = parseFloat(document.getElementById('cart-discount').value) || 0;
-        const discountAmount = subtotal * (discountPercent / 100);
-        const taxableAmount = subtotal - discountAmount;
+        let discountAmount = subtotal * (discountPercent / 100);
+
+        // Points Discount
+        let pointsRedeemed = 0;
+        let pointsDiscount = 0;
+        if (this.selectedCustomer) {
+            const maxPoints = parseInt(this.selectedCustomer.loyalty_points || 0);
+            let inputPoints = parseInt(document.getElementById('cart-points-redeem').value) || 0;
+
+            if (inputPoints > maxPoints) {
+                inputPoints = maxPoints;
+                document.getElementById('cart-points-redeem').value = maxPoints;
+            }
+            if (inputPoints < 0) {
+                inputPoints = 0;
+                document.getElementById('cart-points-redeem').value = 0;
+            }
+
+            const ptVal = parseFloat(App.state.settings.loyalty_point_value || 1);
+            pointsDiscount = inputPoints * ptVal;
+
+            // Ensure points discount doesn't exceed subtotal after manual discount
+            if (pointsDiscount > (subtotal - discountAmount)) {
+                pointsDiscount = subtotal - discountAmount;
+                inputPoints = Math.floor(pointsDiscount / ptVal);
+                document.getElementById('cart-points-redeem').value = inputPoints;
+            }
+
+            pointsRedeemed = inputPoints;
+            discountAmount += pointsDiscount;
+        }
+
+        const taxableAmount = Math.max(0, subtotal - discountAmount);
         const tax = taxableAmount * this.taxRate;
         const total = taxableAmount + tax;
+
+        // Calculate potential points earned
+        const earningRate = parseFloat(App.state.settings.loyalty_earning_rate || 100);
+        const pointsEarned = earningRate > 0 ? Math.floor(total / earningRate) : 0;
 
         document.getElementById('cart-subtotal').textContent = App.formatCurrency(subtotal);
         document.getElementById('cart-tax').textContent = App.formatCurrency(tax);
         document.getElementById('cart-total').textContent = App.formatCurrency(total);
 
-        return { subtotal, discountAmount, tax, total };
+        return { subtotal, discountAmount, tax, total, pointsRedeemed, pointsEarned };
     },
 
     async processCheckout() {
@@ -444,6 +502,8 @@ const posModule = {
             discount_amount: totals.discountAmount,
             tax: totals.tax,
             total: totals.total,
+            points_redeemed: totals.pointsRedeemed,
+            points_earned: totals.pointsEarned,
             payment_method: paymentMethod,
             items: this.cart
         };
@@ -451,8 +511,13 @@ const posModule = {
         const result = await App.api('sales.php?action=process_sale', 'POST', saleData);
         if (result && result.success) {
             App.toast('success', 'Sale completed!');
+            document.getElementById('cart-points-redeem').value = 0;
             this.clearCart();
             await this.loadProducts(); // Refresh stock in local state
+            if (this.selectedCustomer) {
+                await this.loadCustomers(); // Refresh loyalty points
+                this.selectCustomer(this.selectedCustomer.id);
+            }
         }
     }
 };

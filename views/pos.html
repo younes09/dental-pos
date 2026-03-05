@@ -1,7 +1,7 @@
 <div class="row g-4 h-100">
     <!-- Left Pane: Product Search & Grid -->
     <div class="col-lg-8">
-        <div class="card border-0 shadow-sm rounded-4 h-100">
+        <div class="card border-0 shadow-sm rounded-4 h-80">
             <div class="card-body p-4 d-flex flex-column">
                 <!-- Search & Filters -->
                 <div class="row g-3 mb-4">
@@ -43,6 +43,9 @@
                         <label class="form-label small fw-bold text-muted text-uppercase mb-1">Customer</label>
                         <h6 class="mb-0 fw-bold" id="pos-selected-customer-name">Walking Customer</h6>
                         <small class="text-muted" id="pos-selected-customer-phone"></small>
+                        <div class="mt-1 d-none" id="pos-selected-customer-points-container">
+                            <span class="badge bg-info-subtle text-info fw-bold border border-info-subtle"><i class="fas fa-star me-1"></i><span id="pos-selected-customer-points">0</span> pts</span>
+                        </div>
                     </div>
                     <button class="btn btn-sm btn-outline-teal rounded-pill" data-bs-toggle="modal" data-bs-target="#posCustomerModal">
                         <i class="fas fa-user-plus me-1"></i>Change
@@ -78,6 +81,18 @@
                             <div class="input-group input-group-sm">
                                 <input type="number" id="cart-discount" class="form-control text-end" value="0">
                                 <span class="input-group-text">%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row g-2 mb-2 align-items-center d-none" id="cart-points-row">
+                        <div class="col-6">
+                            <span class="text-muted">Redeem Points</span>
+                            <small class="d-block text-teal" style="font-size: 0.7rem;" id="points-value-hint"></small>
+                        </div>
+                        <div class="col-6">
+                            <div class="input-group input-group-sm">
+                                <input type="number" id="cart-points-redeem" class="form-control text-end" value="0" min="0">
+                                <span class="input-group-text">pts</span>
                             </div>
                         </div>
                     </div>

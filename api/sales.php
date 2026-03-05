@@ -25,6 +25,10 @@ try {
 
             $pdo->beginTransaction();
 
+            $points_earned = isset($data['points_earned']) ? (int)$data['points_earned'] : 0;
+            $points_redeemed = isset($data['points_redeemed']) ? (int)$data['points_redeemed'] : 0;
+            $customer_id = $data['customer_id'] ?? null;
+
             // 1. Insert into sales table
             $stmt = $pdo->prepare("
                 INSERT INTO sales 
@@ -68,6 +72,12 @@ try {
                 ]);
 
                 $stock_stmt->execute([$item['qty'], $item['id']]);
+            }
+
+            // 3. Update customer loyalty points
+            if ($customer_id && ($points_earned > 0 || $points_redeemed > 0)) {
+                $points_stmt = $pdo->prepare("UPDATE customers SET loyalty_points = loyalty_points + ? - ? WHERE id = ?");
+                $points_stmt->execute([$points_earned, $points_redeemed, $customer_id]);
             }
 
             $pdo->commit();

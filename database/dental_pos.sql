@@ -140,7 +140,9 @@ INSERT IGNORE INTO settings (setting_key, setting_value) VALUES
 ('tax_number', 'VAT-12345678'),
 ('currency', 'DZD'),
 ('address', '123 Clinical Way, Medical District'),
-('vat_rate', '0');
+('vat_rate', '0'),
+('loyalty_earning_rate', '100'),
+('loyalty_point_value', '1');
 
 
 -- Insert a default admin user (password: admin123)
