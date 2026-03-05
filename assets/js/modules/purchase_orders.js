@@ -274,9 +274,65 @@ const purchase_ordersModule = {
         }
     },
 
-    openReceiveModal(id) {
+    async openReceiveModal(id) {
         document.getElementById('receive-po-id').value = id;
         document.getElementById('receivePoForm').reset();
+
+        // Fetch details to populate the items table
+        const result = await App.api(`purchase_orders.php?action=get_details&id=${id}`);
+        const tbody = document.querySelector('#receive-po-items-table tbody');
+
+        if (!result || !result.items) {
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Error loading items</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = result.items.map(item => {
+            const remaining = item.qty - (item.received_qty || 0);
+
+            if (remaining <= 0) {
+                return `
+                    <tr class="bg-light opacity-75">
+                        <td>${item.product_name} <br><small class="text-muted">Barcode: ${item.barcode || 'N/A'}</small></td>
+                        <td class="text-center">${item.qty}</td>
+                        <td class="text-center text-success"><i class="fas fa-check-circle me-1"></i>${item.received_qty}</td>
+                        <td class="text-center"><span class="badge bg-success">Fully Received</span></td>
+                    </tr>
+                `;
+            }
+
+            return `
+                <tr>
+                    <td>${item.product_name} <br><small class="text-muted">Barcode: ${item.barcode || 'N/A'}</small></td>
+                    <td class="text-center">${item.qty}</td>
+                    <td class="text-center">${item.received_qty || 0}</td>
+                    <td>
+                        <input type="number" class="form-control form-control-sm text-center receive-item-input" 
+                            data-item-id="${item.id}" 
+                            data-product-id="${item.product_id}"
+                            data-max="${remaining}" 
+                            max="${remaining}" 
+                            min="0" 
+                            value="${remaining}">
+                        <div class="invalid-feedback" style="font-size: 0.7rem;">Max: ${remaining}</div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+        // Add validation styling on input
+        document.querySelectorAll('.receive-item-input').forEach(input => {
+            input.addEventListener('input', (e) => {
+                const max = parseInt(e.target.dataset.max);
+                const val = parseInt(e.target.value) || 0;
+                if (val > max || val < 0) {
+                    e.target.classList.add('is-invalid');
+                } else {
+                    e.target.classList.remove('is-invalid');
+                }
+            });
+        });
+
         new bootstrap.Modal(document.getElementById('receivePoModal')).show();
     },
 
@@ -286,15 +342,48 @@ const purchase_ordersModule = {
 
         if (!id || !purchaseType) return;
 
+        // Gather items
+        const receivedItems = [];
+        let hasErrors = false;
+        let totalReceivingNow = 0;
+
+        document.querySelectorAll('.receive-item-input').forEach(input => {
+            const max = parseInt(input.dataset.max);
+            const val = parseInt(input.value) || 0;
+
+            if (val > max || val < 0) {
+                input.classList.add('is-invalid');
+                hasErrors = true;
+            } else if (val > 0) {
+                receivedItems.push({
+                    item_id: input.dataset.itemId,
+                    product_id: input.dataset.productId,
+                    receiving_qty: val
+                });
+                totalReceivingNow += val;
+            }
+        });
+
+        if (hasErrors) {
+            App.toast('error', 'Please fix the quantity errors before submitting.');
+            return;
+        }
+
+        if (totalReceivingNow === 0) {
+            App.toast('warning', 'You must receive at least 1 unit to submit this form.');
+            return;
+        }
+
         const data = {
             po_id: id,
-            purchase_type: purchaseType
+            purchase_type: purchaseType,
+            items: receivedItems
         };
 
         const result = await App.api('purchase_orders.php?action=receive_order', 'POST', data);
 
         if (result && result.success) {
-            App.toast('success', 'Purchase order received successfully!');
+            App.toast('success', 'Purchase order status updated successfully!');
             bootstrap.Modal.getInstance(document.getElementById('receivePoModal')).hide();
             this.table.ajax.reload();
         } else if (result && result.error) {

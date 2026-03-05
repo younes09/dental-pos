@@ -41,12 +41,13 @@ try {
             $stmt->execute([$supplier_id, $date, $status, $total]);
             $po_id = $pdo->lastInsertId();
 
-            $stmtItem = $pdo->prepare("INSERT INTO purchase_order_items (po_id, product_id, qty, unit_cost) VALUES (?, ?, ?, ?)");
+            $stmtItem = $pdo->prepare("INSERT INTO purchase_order_items (po_id, product_id, qty, received_qty, unit_cost) VALUES (?, ?, ?, ?, ?)");
             $stmtUpdateProduct = $pdo->prepare("UPDATE products SET stock_qty = stock_qty + ?, purchase_price = ? WHERE id = ?");
             $stmtBatch = $pdo->prepare("INSERT INTO stock_batches (product_id, purchase_type, initial_qty, remaining_qty) VALUES (?, ?, ?, ?)");
 
             foreach ($items as $item) {
-                $stmtItem->execute([$po_id, $item['product_id'], $item['qty'], $item['unit_cost']]);
+                $received_qty = ($status === 'Received') ? $item['qty'] : 0;
+                $stmtItem->execute([$po_id, $item['product_id'], $item['qty'], $received_qty, $item['unit_cost']]);
                 
                 if ($status === 'Received') {
                     $stmtUpdateProduct->execute([$item['qty'], $item['unit_cost'], $item['product_id']]);
@@ -62,7 +63,7 @@ try {
             $json = file_get_contents('php://input');
             $data = json_decode($json, true);
 
-            if (!$data || !isset($data['po_id']) || !isset($data['purchase_type'])) {
+            if (!$data || !isset($data['po_id']) || !isset($data['purchase_type']) || !isset($data['items'])) {
                 echo json_encode(['error' => 'Invalid data']);
                 exit;
             }
@@ -71,8 +72,9 @@ try {
 
             $po_id = $data['po_id'];
             $purchase_type = $data['purchase_type'];
+            $items_to_receive = $data['items'];
 
-            // Check if PO exists and is not already received
+            // Check if PO exists and is not already fully received
             $stmt = $pdo->prepare("SELECT status FROM purchase_orders WHERE id = ?");
             $stmt->execute([$po_id]);
             $po = $stmt->fetch();
@@ -80,25 +82,52 @@ try {
             if (!$po) throw new Exception("Order not found");
             if ($po['status'] === 'Received') throw new Exception("Order already received");
 
-            // Update PO status
-            $stmt = $pdo->prepare("UPDATE purchase_orders SET status = 'Received' WHERE id = ?");
-            $stmt->execute([$po_id]);
-
-            // Get items to update stock and batches
-            $stmt = $pdo->prepare("SELECT product_id, qty, unit_cost FROM purchase_order_items WHERE po_id = ?");
-            $stmt->execute([$po_id]);
-            $items = $stmt->fetchAll();
-
+            // Prepare statements
+            $stmtUpdateItemRow = $pdo->prepare("UPDATE purchase_order_items SET received_qty = received_qty + ? WHERE id = ? AND po_id = ?");
+            $stmtGetItemCost = $pdo->prepare("SELECT unit_cost FROM purchase_order_items WHERE id = ?");
             $stmtUpdateProduct = $pdo->prepare("UPDATE products SET stock_qty = stock_qty + ?, purchase_price = ? WHERE id = ?");
             $stmtBatch = $pdo->prepare("INSERT INTO stock_batches (product_id, purchase_type, initial_qty, remaining_qty) VALUES (?, ?, ?, ?)");
 
-            foreach ($items as $item) {
-                $stmtUpdateProduct->execute([$item['qty'], $item['unit_cost'], $item['product_id']]);
-                $stmtBatch->execute([$item['product_id'], $purchase_type, $item['qty'], $item['qty']]);
+            foreach ($items_to_receive as $recv_item) {
+                $item_id = $recv_item['item_id'];
+                $product_id = $recv_item['product_id'];
+                $recv_qty_now = (int)$recv_item['receiving_qty'];
+
+                if ($recv_qty_now <= 0) continue;
+
+                // Update the PO item's received qty
+                $stmtUpdateItemRow->execute([$recv_qty_now, $item_id, $po_id]);
+
+                // Get unit cost to update product purchase price
+                $stmtGetItemCost->execute([$item_id]);
+                $item_cost = $stmtGetItemCost->fetchColumn();
+
+                // Update product stock and creation batch
+                $stmtUpdateProduct->execute([$recv_qty_now, $item_cost, $product_id]);
+                $stmtBatch->execute([$product_id, $purchase_type, $recv_qty_now, $recv_qty_now]);
             }
 
+            // Check if all items are fully received
+            $stmtCheck = $pdo->prepare("
+                SELECT SUM(qty) as total_qty, SUM(received_qty) as total_received 
+                FROM purchase_order_items 
+                WHERE po_id = ?
+            ");
+            $stmtCheck->execute([$po_id]);
+            $qty_data = $stmtCheck->fetch();
+
+            $new_status = 'Partial';
+            if ($qty_data && $qty_data['total_received'] >= $qty_data['total_qty']) {
+                $new_status = 'Received';
+            }
+
+            // Update PO status
+            $stmt = $pdo->prepare("UPDATE purchase_orders SET status = ? WHERE id = ?");
+            $stmt->execute([$new_status, $po_id]);
+
             $pdo->commit();
-            echo json_encode(['success' => 'Order received successfully']);
+            $msg = ($new_status === 'Received') ? 'Order fully received' : 'Order partially received';
+            echo json_encode(['success' => $msg]);
             break;
 
         case 'get_details':

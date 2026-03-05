@@ -92,6 +92,7 @@ CREATE TABLE purchase_order_items (
     po_id INT,
     product_id INT,
     qty INT NOT NULL,
+    received_qty INT NOT NULL DEFAULT 0,
     unit_cost DECIMAL(10, 2) NOT NULL,
     FOREIGN KEY (po_id) REFERENCES purchase_orders(id) ON DELETE CASCADE,
     FOREIGN KEY (product_id) REFERENCES products(id)
