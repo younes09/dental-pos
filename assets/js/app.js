@@ -20,11 +20,25 @@ const App = {
     },
 
     async init() {
+        this.applyTheme();
         await this.loadAppSettings();
         this.bindEvents();
         this.handleRouting();
         this.applySettings();
         console.log('DentalPOS Initialized');
+    },
+
+    applyTheme() {
+        const theme = localStorage.getItem('theme');
+        const icon = document.querySelector('#darkModeToggle i');
+
+        if (theme === 'dark') {
+            document.body.classList.add('dark-mode');
+            if (icon) icon.classList.replace('fa-moon', 'fa-sun');
+        } else {
+            document.body.classList.remove('dark-mode');
+            if (icon) icon.classList.replace('fa-sun', 'fa-moon');
+        }
     },
 
     async loadAppSettings() {
@@ -243,6 +257,9 @@ const App = {
             icon.classList.replace('fa-sun', 'fa-moon');
             localStorage.setItem('theme', 'light');
         }
+
+        // Notify modules of theme change
+        window.dispatchEvent(new Event('themeChanged'));
     },
 
     // Global API Utility

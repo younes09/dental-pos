@@ -27,12 +27,19 @@ const dashboardModule = {
                 this.fetchData(range);
             });
         });
+
+        window.addEventListener('themeChanged', () => {
+            if (this.currentData) {
+                this.renderCharts(this.currentData.chart, this.currentData.top_products);
+            }
+        });
     },
 
     async fetchData(range = 'daily') {
         const data = await App.api(`dashboard.php?filter=${range}`);
         if (!data) return;
 
+        this.currentData = data;
         this.updateKPIs(data.kpis);
         this.renderCharts(data.chart, data.top_products);
         this.renderTransactions(data.recent_sales);
@@ -66,6 +73,11 @@ const dashboardModule = {
     },
 
     renderCharts(salesData, productsData) {
+        const isDark = document.body.classList.contains('dark-mode');
+        const textColor = isDark ? '#e1e7ed' : '#6c757d';
+        const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+        const barColor = isDark ? '#1e2d41' : '#0A1628';
+
         // Line Chart
         const ctxSales = document.getElementById('salesChart').getContext('2d');
 
@@ -101,9 +113,11 @@ const dashboardModule = {
                 scales: {
                     y: {
                         beginAtZero: true,
-                        grid: { borderDash: [5, 5] }
+                        ticks: { color: textColor },
+                        grid: { color: gridColor, borderDash: [5, 5] }
                     },
                     x: {
+                        ticks: { color: textColor },
                         grid: { display: false }
                     }
                 }
@@ -125,7 +139,7 @@ const dashboardModule = {
                 datasets: [{
                     label: 'Qty Sold',
                     data: productsData.map(p => p.total_sold),
-                    backgroundColor: '#0A1628',
+                    backgroundColor: barColor,
                     borderRadius: 8,
                     barThickness: 20
                 }]
@@ -138,8 +152,15 @@ const dashboardModule = {
                     legend: { display: false }
                 },
                 scales: {
-                    x: { beginAtZero: true },
-                    y: { grid: { display: false } }
+                    x: {
+                        beginAtZero: true,
+                        ticks: { color: textColor },
+                        grid: { color: gridColor }
+                    },
+                    y: {
+                        ticks: { color: textColor },
+                        grid: { display: false }
+                    }
                 }
             }
         });
