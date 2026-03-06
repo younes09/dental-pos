@@ -60,6 +60,22 @@ const posModule = {
             e.preventDefault();
             this.saveQuickCustomer(new FormData(e.target));
         };
+
+        // Invoice type change handler
+        const invoiceTypeRadios = document.querySelectorAll('input[name="invoice-type"]');
+        invoiceTypeRadios.forEach(radio => {
+            radio.addEventListener('change', (e) => this.handleInvoiceTypeChange(e.target.value));
+        });
+    },
+
+    handleInvoiceTypeChange(type) {
+        if (type === 'BL') {
+            document.getElementById('pay-credit').checked = true;
+            App.toast('info', 'Bon de Livraison sélectionné. Taxe mise à 0 et paiement défini sur Crédit.');
+        } else {
+            document.getElementById('pay-cash').checked = true;
+        }
+        this.calculateTotals();
     },
 
     async saveQuickCustomer(formData) {
@@ -617,8 +633,11 @@ const posModule = {
             discountAmount += pointsDiscount;
         }
 
+        const invoiceType = document.querySelector('input[name="invoice-type"]:checked')?.value || 'BV';
+        const currentTaxRate = invoiceType === 'BL' ? 0 : this.taxRate;
+
         const taxableAmount = Math.max(0, subtotal - discountAmount);
-        const tax = taxableAmount * this.taxRate;
+        const tax = taxableAmount * currentTaxRate;
         const total = taxableAmount + tax;
 
         // Calculate potential points earned
@@ -627,6 +646,13 @@ const posModule = {
 
         document.getElementById('cart-subtotal').textContent = App.formatCurrency(subtotal);
         document.getElementById('cart-tax').textContent = App.formatCurrency(tax);
+
+        // Update vat label visually
+        const vatRateDisplay = document.getElementById('vat-rate-display');
+        if (vatRateDisplay) {
+            vatRateDisplay.textContent = invoiceType === 'BL' ? 0 : (this.taxRate * 100);
+        }
+
         document.getElementById('cart-total').textContent = App.formatCurrency(total);
 
         return { subtotal, discountAmount, tax, total, pointsRedeemed, pointsEarned };

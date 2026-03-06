@@ -113,6 +113,16 @@ try {
             }
 
             $taxable = max(0, $subtotal - $discount_amount);
+            
+            // Check invoice type for special BL rules
+            $invoice_type = $data['invoice_type'] ?? 'BV';
+            $payment_method = $data['payment_method'] ?? 'Cash';
+            
+            // Force tax to 0 for BL
+            if ($invoice_type === 'BL') {
+                $tax_rate = 0;
+            }
+
             $tax = round($taxable * $tax_rate, 2);
             $total = round($taxable + $tax, 2);
 
@@ -131,8 +141,8 @@ try {
                 $discount_amount,
                 $tax,
                 $total,
-                $data['payment_method'] ?? 'Cash',
-                $data['invoice_type'] ?? 'BV'
+                $payment_method,
+                $invoice_type
             ]);
             $sale_id = $pdo->lastInsertId();
 
@@ -177,10 +187,18 @@ try {
                 }
             }
 
-            // 3. Update customer loyalty points
-            if ($customer_id && ($points_earned > 0 || $points_redeemed > 0)) {
-                $points_stmt = $pdo->prepare("UPDATE customers SET loyalty_points = loyalty_points + ? - ? WHERE id = ?");
-                $points_stmt->execute([$points_earned, $points_redeemed, $customer_id]);
+            // 3. Update customer loyalty points and balance
+            if ($customer_id) {
+                if ($points_earned > 0 || $points_redeemed > 0) {
+                    $points_stmt = $pdo->prepare("UPDATE customers SET loyalty_points = loyalty_points + ? - ? WHERE id = ?");
+                    $points_stmt->execute([$points_earned, $points_redeemed, $customer_id]);
+                }
+                
+                // If payment method is Credit, increase customer balance (debt)
+                if ($payment_method === 'Credit') {
+                    $balance_stmt = $pdo->prepare("UPDATE customers SET balance = balance + ? WHERE id = ?");
+                    $balance_stmt->execute([$total, $customer_id]);
+                }
             }
 
             $pdo->commit();

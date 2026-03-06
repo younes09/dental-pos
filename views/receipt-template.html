@@ -1,10 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Receipt - DentalPOS</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
@@ -21,15 +24,18 @@
                 size: A4;
                 margin: 15mm;
             }
+
             body {
                 background: white !important;
                 padding: 0 !important;
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
+
             .no-print {
                 display: none !important;
             }
+
             .receipt-container {
                 box-shadow: none !important;
                 border: none !important;
@@ -38,14 +44,18 @@
                 width: 100% !important;
                 max-width: 100% !important;
                 background: white !important;
-                min-height: auto !important; /* Allow single page for short receipts */
+                min-height: auto !important;
+                /* Allow single page for short receipts */
             }
+
             .items-table thead {
                 display: table-header-group;
             }
+
             .items-table tr {
                 page-break-inside: avoid;
             }
+
             .totals-section {
                 page-break-inside: avoid;
             }
@@ -66,14 +76,15 @@
             background: var(--glass-bg);
             width: 100%;
             max-width: 800px;
-            min-height: 297mm; /* Standard A4 height for better preview */
+            min-height: 297mm;
+            /* Standard A4 height for better preview */
             padding: 60px;
             border-radius: 24px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
             position: relative;
             display: flex;
             flex-direction: column;
-            border: 1px solid rgba(255,255,255,0.3);
+            border: 1px solid rgba(255, 255, 255, 0.3);
             backdrop-filter: blur(10px);
         }
 
@@ -273,10 +284,16 @@
             background: #00A690;
         }
 
-        .text-end { text-align: right !important; }
-        .text-center { text-align: center !important; }
+        .text-end {
+            text-align: right !important;
+        }
+
+        .text-center {
+            text-align: center !important;
+        }
     </style>
 </head>
+
 <body>
     <button class="print-btn no-print" onclick="window.print()">
         <i class="fas fa-print"></i> Print Receipt
@@ -289,7 +306,7 @@
                 <div class="brand-sub" id="receipt-brand-sub">Premium Dental store Management</div>
             </div>
             <div class="invoice-meta">
-                <h2>Receipt</h2>
+                <h2 id="receipt-title">Receipt</h2>
                 <div class="meta-item">
                     <span class="meta-label">Invoice Number</span>
                     <span class="meta-value" id="receipt-id">#INV-0000</span>
@@ -371,14 +388,14 @@
             function formatCurrency(amount) {
                 return `${parseFloat(amount).toFixed(2)} ${currency}`;
             }
-            
+
             // Set Shop Info
             if (settings) {
                 document.getElementById('receipt-brand-name').innerHTML = settings.store_name.replace('POS', '<span>POS</span>') || 'Dental<span>POS</span>';
                 document.getElementById('shop-name').textContent = settings.store_name || 'DentalPOS Premium';
                 document.getElementById('shop-address').textContent = settings.address || '';
                 document.getElementById('shop-tax').textContent = settings.tax_number || '';
-                
+
                 // Set dynamic VAT label if exists
                 const taxLabel = document.getElementById('receipt-tax-label');
                 if (taxLabel) {
@@ -387,6 +404,13 @@
             }
 
             // Set Header Info
+            const receiptTitle = document.getElementById('receipt-title');
+            if (receiptTitle) {
+                receiptTitle.textContent = sale.invoice_type === 'BL' ? 'Bon de Livraison' : 'Receipt';
+                // Adjust font size slightly if it's long
+                if (sale.invoice_type === 'BL') receiptTitle.style.fontSize = '24px';
+            }
+
             document.getElementById('receipt-id').textContent = `#INV-${sale.id}`;
             document.getElementById('receipt-date').textContent = new Date(sale.date).toLocaleDateString('en-US', {
                 year: 'numeric', month: 'long', day: 'numeric'
@@ -420,7 +444,7 @@
         }
 
         // Listen for data from parent window
-        window.addEventListener('message', function(event) {
+        window.addEventListener('message', function (event) {
             if (event.data && event.data.type === 'POPULATE_RECEIPT') {
                 populateReceipt(event.data.payload);
                 // Optional: Auto-trigger print after a short delay
@@ -429,4 +453,5 @@
         });
     </script>
 </body>
+
 </html>
