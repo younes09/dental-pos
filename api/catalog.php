@@ -1,13 +1,7 @@
 <?php
 require_once 'config/db.php';
-session_start();
 
 header('Content-Type: application/json');
-
-if (!isset($_SESSION['user_id'])) {
-    echo json_encode(['error' => 'Unauthorized']);
-    exit;
-}
 
 $action = $_GET['action'] ?? 'list';
 $type = $_GET['type'] ?? 'categories'; // 'categories' or 'brands'

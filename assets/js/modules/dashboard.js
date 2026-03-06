@@ -45,7 +45,24 @@ const dashboardModule = {
         document.getElementById('kpi-low-stock').textContent = kpis.low_stock;
         document.getElementById('kpi-customers').textContent = kpis.customers;
         document.getElementById('kpi-pending-po').textContent = kpis.pending_po;
-        document.getElementById('kpi-profit').textContent = `${kpis.profit}%`;
+        document.getElementById('kpi-profit').textContent = App.formatCurrency(kpis.profit);
+
+        this.updateGrowthIndicator('today-revenue-growth', kpis.revenue_growth, 'vs yesterday');
+        this.updateGrowthIndicator('monthly-sales-growth', kpis.sales_growth, 'vs last month');
+        this.updateGrowthIndicator('profit-growth', kpis.profit_growth);
+    },
+
+    updateGrowthIndicator(elementId, growth, suffix = '') {
+        const element = document.getElementById(elementId);
+        if (!element) return;
+
+        const isPositive = growth >= 0;
+        const absGrowth = Math.abs(growth).toFixed(1);
+        const icon = isPositive ? 'fa-arrow-up' : 'fa-arrow-down';
+        const colorClass = isPositive ? 'text-success' : 'text-danger';
+
+        element.className = colorClass;
+        element.innerHTML = `<i class="fas ${icon}"></i> ${absGrowth}% ${suffix}`;
     },
 
     renderCharts(salesData, productsData) {
@@ -147,8 +164,8 @@ const dashboardModule = {
                     </span>
                 </td>
                 <td>
-                    <button class="btn btn-sm btn-link text-teal p-0"><i class="fas fa-eye"></i></button>
-                    <button class="btn btn-sm btn-link text-dark p-0 ms-2"><i class="fas fa-print"></i></button>
+                    <button class="btn btn-sm btn-link text-teal p-0" onclick="dashboardModule.viewDetails(${t.id})"><i class="fas fa-eye"></i></button>
+                    <button class="btn btn-sm btn-link text-dark p-0 ms-2" onclick="dashboardModule.directPrint(${t.id})"><i class="fas fa-print"></i></button>
                 </td>
             </tr>
         `).join('');
@@ -172,6 +189,89 @@ const dashboardModule = {
                 </div>
             </div>
         `).join('');
+    },
+
+    async directPrint(id) {
+        const result = await App.api(`sales.php?action=sale_details&id=${id}`);
+        if (result) this.printReceipt(result);
+    },
+
+    async viewDetails(id) {
+        const result = await App.api(`sales.php?action=sale_details&id=${id}`);
+        if (!result) return;
+
+        const { sale, items } = result;
+
+        // Populate Modal Header
+        document.getElementById('sale-details-subtitle').textContent = `Invoice #INV-${sale.id} | ${new Date(sale.date).toLocaleString()}`;
+
+        // Populate Customer Info
+        document.getElementById('sale-details-customer-info').innerHTML = `
+            <div class="fw-bold fs-5 text-teal mb-1">${sale.customer_name || 'Walk-in Customer'}</div>
+            <div class="small mb-1"><i class="fas fa-phone me-2 text-muted"></i>${sale.customer_phone || 'No phone provided'}</div>
+            <div class="small"><i class="fas fa-user-tag me-2 text-muted"></i>Payment: <strong>${sale.payment_method}</strong></div>
+        `;
+
+        // Populate Sale Metadata
+        document.getElementById('sale-details-meta-info').innerHTML = `
+            <div class="d-flex justify-content-between mb-2">
+                <span>Cashier:</span>
+                <span class="fw-bold">${sale.user_name}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+                <span>Status:</span>
+                <span class="badge bg-success px-2">Completed</span>
+            </div>
+            <div class="d-flex justify-content-between">
+                <span>Date:</span>
+                <span class="fw-bold text-nowrap">${new Date(sale.date).toLocaleDateString()}</span>
+            </div>
+        `;
+
+        // Populate Item Table
+        const tbody = document.querySelector('#sale-details-items-table tbody');
+        tbody.innerHTML = items.map(item => `
+            <tr>
+                <td>
+                    <div class="fw-medium">${item.product_name}</div>
+                    <small class="text-muted small">${item.barcode || ''}</small>
+                </td>
+                <td class="text-center">${item.qty}</td>
+                <td class="text-end">${App.formatCurrency(item.unit_price)}</td>
+                <td class="text-end fw-bold">${App.formatCurrency(item.total)}</td>
+            </tr>
+        `).join('');
+
+        // Populate Totals
+        document.getElementById('sale-details-subtotal').textContent = App.formatCurrency(sale.subtotal);
+        document.getElementById('sale-details-discount').textContent = `-${App.formatCurrency(sale.discount)}`;
+        document.getElementById('sale-details-tax').textContent = App.formatCurrency(sale.tax);
+        document.getElementById('sale-details-total').textContent = App.formatCurrency(sale.total);
+
+        // Update VAT Percentage label
+        const vatDisplays = document.querySelectorAll('.vat-rate-display');
+        const vatRate = App.state.settings.vat_rate || 15;
+        vatDisplays.forEach(el => el.textContent = vatRate);
+
+        // Show Modal
+        new bootstrap.Modal(document.getElementById('saleDetailsModal')).show();
+
+        // Bind Print Receipt button in modal to this specific sale
+        document.getElementById('btn-print-receipt').onclick = () => {
+            this.printReceipt(result);
+        };
+    },
+
+    printReceipt(data) {
+        const printWindow = window.open('views/receipt-template.html', '_blank', 'width=900,height=800');
+
+        // Wait for window to load then send data
+        printWindow.onload = function () {
+            printWindow.postMessage({
+                type: 'POPULATE_RECEIPT',
+                payload: { ...data, settings: App.state.settings }
+            }, window.location.origin);
+        };
     },
 
     getStatusBadgeClass(status) {

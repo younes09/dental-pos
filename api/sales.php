@@ -30,28 +30,109 @@ try {
 
         case 'process_sale':
             $data = json_decode(file_get_contents('php://input'), true);
-            if (!$data) throw new Exception('Invalid data');
+            if (!$data || empty($data['items'])) throw new Exception('Invalid data or empty cart');
 
             $pdo->beginTransaction();
 
-            $points_earned = isset($data['points_earned']) ? (int)$data['points_earned'] : 0;
-            $points_redeemed = isset($data['points_redeemed']) ? (int)$data['points_redeemed'] : 0;
             $customer_id = $data['customer_id'] ?? null;
+            $user_id = $_SESSION['user_id'] ?? 1;
+
+            // Recalculate totals server-side
+            $subtotal = 0;
+            
+            // Get tax rate and point value from settings
+            $stmt = $pdo->query("SELECT setting_key, setting_value FROM settings WHERE setting_key IN ('vat_rate', 'loyalty_point_value', 'loyalty_earning_rate')");
+            $settings = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+            $tax_rate = (float)($settings['vat_rate'] ?? 0) / 100;
+            $point_value = (float)($settings['loyalty_point_value'] ?? 1);
+            $earning_rate = (float)($settings['loyalty_earning_rate'] ?? 100);
+
+            // Fetch products and lock them for update to prevent race conditions
+            $product_ids = array_column($data['items'], 'id');
+            if (empty($product_ids)) throw new Exception('No items provided');
+            $placeholders = str_repeat('?,', count($product_ids) - 1) . '?';
+            $prod_stmt = $pdo->prepare("SELECT id, name, selling_price, stock_qty FROM products WHERE id IN ($placeholders) FOR UPDATE");
+            $prod_stmt->execute($product_ids);
+            
+            $db_products = [];
+            while ($row = $prod_stmt->fetch()) {
+                $db_products[$row['id']] = $row;
+            }
+
+            // Calculate subtotal
+            $processed_items = [];
+            foreach ($data['items'] as $item) {
+                $qty = (int)$item['qty'];
+                $item_id = (int)$item['id'];
+                
+                if ($qty <= 0) {
+                    throw new Exception("Invalid quantity for product ID: " . $item_id);
+                }
+                if (!isset($db_products[$item_id])) {
+                    throw new Exception("Product not found: " . $item_id);
+                }
+                
+                $db_prod = $db_products[$item_id];
+                if ($db_prod['stock_qty'] < $qty) {
+                    throw new Exception("Insufficient stock for: " . $db_prod['name']);
+                }
+                
+                $price = (float)$db_prod['selling_price'];
+                $item_total = $price * $qty;
+                $subtotal += $item_total;
+                
+                $processed_items[] = [
+                    'id' => $item_id,
+                    'qty' => $qty,
+                    'price' => $price,
+                    'total' => $item_total
+                ];
+            }
+
+            // Trust but verify discount logic
+            $discount_amount = max(0, min($subtotal, (float)($data['discount_amount'] ?? 0)));
+            $points_redeemed = max(0, (int)($data['points_redeemed'] ?? 0));
+            
+            // Points validation
+            if ($customer_id && $points_redeemed > 0) {
+                $cust_stmt = $pdo->prepare("SELECT loyalty_points FROM customers WHERE id = ? FOR UPDATE");
+                $cust_stmt->execute([$customer_id]);
+                $customer_pts = $cust_stmt->fetchColumn() ?: 0;
+                
+                if ($points_redeemed > $customer_pts) {
+                    $points_redeemed = $customer_pts;
+                }
+                
+                $points_discount = $points_redeemed * $point_value;
+                $discount_amount += $points_discount;
+                if ($discount_amount > $subtotal) {
+                    $discount_amount = $subtotal; // Cap it
+                }
+            } else {
+                $points_redeemed = 0;
+            }
+
+            $taxable = max(0, $subtotal - $discount_amount);
+            $tax = round($taxable * $tax_rate, 2);
+            $total = round($taxable + $tax, 2);
+
+            $points_earned = ($earning_rate > 0) ? floor($total / $earning_rate) : 0;
 
             // 1. Insert into sales table
             $stmt = $pdo->prepare("
                 INSERT INTO sales 
-                (customer_id, user_id, subtotal, discount, tax, total, payment_method) 
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                (customer_id, user_id, subtotal, discount, tax, total, payment_method, invoice_type) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             ");
             $stmt->execute([
-                $data['customer_id'] ?? null,
-                1, // Default Admin for now
-                $data['subtotal'],
-                $data['discount_amount'],
-                $data['tax'],
-                $data['total'],
-                $data['payment_method']
+                $customer_id,
+                $user_id,
+                $subtotal,
+                $discount_amount,
+                $tax,
+                $total,
+                $data['payment_method'] ?? 'Cash',
+                $data['invoice_type'] ?? 'BV'
             ]);
             $sale_id = $pdo->lastInsertId();
 
@@ -62,29 +143,20 @@ try {
             ");
             $stock_stmt = $pdo->prepare("UPDATE products SET stock_qty = stock_qty - ? WHERE id = ?");
 
-            foreach ($data['items'] as $item) {
-                // Check stock availability
-                $chk_stmt = $pdo->prepare("SELECT stock_qty FROM products WHERE id = ?");
-                $chk_stmt->execute([$item['id']]);
-                $current_stock = $chk_stmt->fetch()['stock_qty'];
-
-                if ($current_stock < $item['qty']) {
-                    throw new Exception("Insufficient stock for product ID: " . $item['id']);
-                }
-
+            foreach ($processed_items as $item) {
                 $item_stmt->execute([
                     $sale_id,
                     $item['id'],
                     $item['qty'],
                     $item['price'],
-                    $item['qty'] * $item['price']
+                    $item['total']
                 ]);
 
                 $stock_stmt->execute([$item['qty'], $item['id']]);
                 
                 // FIFO Batch Deduction
                 $remaining_to_deduct = $item['qty'];
-                $batches_stmt = $pdo->prepare("SELECT id, remaining_qty FROM stock_batches WHERE product_id = ? AND remaining_qty > 0 ORDER BY created_at ASC");
+                $batches_stmt = $pdo->prepare("SELECT id, remaining_qty FROM stock_batches WHERE product_id = ? AND remaining_qty > 0 ORDER BY created_at ASC FOR UPDATE");
                 $batches_stmt->execute([$item['id']]);
                 $batches = $batches_stmt->fetchAll();
                 
@@ -112,7 +184,46 @@ try {
             }
 
             $pdo->commit();
-            echo json_encode(['success' => 'Sale completed successfully', 'sale_id' => $sale_id]);
+            echo json_encode(['success' => 'Sale completed successfully', 'sale_id' => $sale_id, 'total' => $total]);
+            break;
+
+        case 'cancel_sale':
+            if (($_SESSION['user_role'] ?? '') === 'Cashier') {
+                throw new Exception('Only Admins or Managers can cancel sales.');
+            }
+            $data = json_decode(file_get_contents('php://input'), true);
+            $sale_id = $data['sale_id'] ?? null;
+            if (!$sale_id) throw new Exception('Sale ID required');
+            
+            $pdo->beginTransaction();
+            
+            $stmt = $pdo->prepare("SELECT * FROM sales WHERE id = ? FOR UPDATE");
+            $stmt->execute([$sale_id]);
+            $sale = $stmt->fetch();
+            
+            if (!$sale) throw new Exception('Sale not found');
+            if ($sale['status'] === 'Cancelled') throw new Exception('Sale is already cancelled');
+            
+            // Mark as cancelled
+            $pdo->prepare("UPDATE sales SET status = 'Cancelled' WHERE id = ?")->execute([$sale_id]);
+            
+            // Restore stock
+            $items_stmt = $pdo->prepare("SELECT * FROM sale_items WHERE sale_id = ?");
+            $items_stmt->execute([$sale_id]);
+            $items = $items_stmt->fetchAll();
+            
+            $restore_stmt = $pdo->prepare("UPDATE products SET stock_qty = stock_qty + ? WHERE id = ?");
+            $batch_stmt = $pdo->prepare("INSERT INTO stock_batches (product_id, purchase_type, initial_qty, remaining_qty) VALUES (?, 'BA', ?, ?)");
+            
+            foreach ($items as $item) {
+                // Restore stock
+                $restore_stmt->execute([$item['qty'], $item['product_id']]);
+                // Restore into a new valid batch
+                $batch_stmt->execute([$item['product_id'], $item['qty'], $item['qty']]);
+            }
+            
+            $pdo->commit();
+            echo json_encode(['success' => 'Sale cancelled and stock restored']);
             break;
 
         case 'history':
@@ -182,4 +293,4 @@ try {
     if ($pdo->inTransaction()) $pdo->rollBack();
     echo json_encode(['error' => $e->getMessage()]);
 }
-?>
+// Removed closing tag

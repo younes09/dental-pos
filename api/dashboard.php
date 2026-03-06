@@ -5,15 +5,66 @@ header('Content-Type: application/json');
 
 try {
     // 1. KPI Data
-    // Today's Revenue
+    // Today's Revenue & Profit
     $stmt = $pdo->prepare("SELECT SUM(total) as revenue FROM sales WHERE DATE(date) = CURDATE() AND status = 'Completed'");
     $stmt->execute();
     $today_revenue = $stmt->fetch()['revenue'] ?? 0;
 
-    // Monthly Sales Count
+    // Yesterday's Revenue
+    $stmt = $pdo->prepare("SELECT SUM(total) as revenue FROM sales WHERE DATE(date) = DATE_SUB(CURDATE(), INTERVAL 1 DAY) AND status = 'Completed'");
+    $stmt->execute();
+    $yesterday_revenue = $stmt->fetch()['revenue'] ?? 0;
+
+    $stmt = $pdo->prepare("
+        SELECT SUM(si.qty * p.purchase_price) as cogs
+        FROM sale_items si
+        JOIN sales s ON si.sale_id = s.id
+        JOIN products p ON si.product_id = p.id
+        WHERE DATE(s.date) = CURDATE() AND s.status = 'Completed'
+    ");
+    $stmt->execute();
+    $today_cogs = $stmt->fetch()['cogs'] ?? 0;
+    
+    $today_profit = max(0, $today_revenue - $today_cogs);
+
+    // Yesterday's Profit
+    $stmt = $pdo->prepare("
+        SELECT SUM(si.qty * p.purchase_price) as cogs
+        FROM sale_items si
+        JOIN sales s ON si.sale_id = s.id
+        JOIN products p ON si.product_id = p.id
+        WHERE DATE(s.date) = DATE_SUB(CURDATE(), INTERVAL 1 DAY) AND s.status = 'Completed'
+    ");
+    $stmt->execute();
+    $yesterday_cogs = $stmt->fetch()['cogs'] ?? 0;
+    
+    $yesterday_profit = max(0, $yesterday_revenue - $yesterday_cogs);
+
+    // Monthly Sales Count (This Month)
     $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM sales WHERE MONTH(date) = MONTH(CURDATE()) AND YEAR(date) = YEAR(CURDATE()) AND status = 'Completed'");
     $stmt->execute();
     $monthly_sales = $stmt->fetch()['count'] ?? 0;
+
+    // Last Month's Sales Count
+    $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM sales WHERE MONTH(date) = MONTH(DATE_SUB(CURDATE(), INTERVAL 1 MONTH)) AND YEAR(date) = YEAR(DATE_SUB(CURDATE(), INTERVAL 1 MONTH)) AND status = 'Completed'");
+    $stmt->execute();
+    $last_month_sales = $stmt->fetch()['count'] ?? 0;
+
+    // Calculate Growth Percentages
+    $revenue_growth = 0;
+    if ($yesterday_revenue > 0) {
+        $revenue_growth = (($today_revenue - $yesterday_revenue) / $yesterday_revenue) * 100;
+    }
+
+    $profit_growth = 0;
+    if ($yesterday_profit > 0) {
+        $profit_growth = (($today_profit - $yesterday_profit) / $yesterday_profit) * 100;
+    }
+
+    $sales_count_growth = 0;
+    if ($last_month_sales > 0) {
+        $sales_count_growth = (($monthly_sales - $last_month_sales) / $last_month_sales) * 100;
+    }
 
     // Low Stock Items
     $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM products WHERE stock_qty <= min_stock AND status = 'Active'");
@@ -106,12 +157,15 @@ try {
 
     echo json_encode([
         'kpis' => [
-            'revenue' => number_format($today_revenue, 2),
+            'revenue' => (float)$today_revenue,
             'sales' => $monthly_sales,
             'low_stock' => $low_stock,
             'customers' => $customers,
             'pending_po' => $pending_po,
-            'profit' => '24.5' // Static for now, can be calculated
+            'profit' => (float)$today_profit,
+            'revenue_growth' => round($revenue_growth, 2),
+            'profit_growth' => round($profit_growth, 2),
+            'sales_growth' => round($sales_count_growth, 2)
         ],
         'chart' => $chart_data,
         'top_products' => $top_products,
@@ -122,4 +176,4 @@ try {
 } catch (PDOException $e) {
     echo json_encode(['error' => $e->getMessage()]);
 }
-?>
+// Removed closing tag

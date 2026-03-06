@@ -23,7 +23,7 @@ try {
             $json = file_get_contents('php://input');
             $data = json_decode($json, true);
 
-            if (!$data) {
+            if (!$data || empty($data['items'])) {
                 echo json_encode(['error' => 'Invalid data received']);
                 exit;
             }
@@ -33,9 +33,23 @@ try {
             $supplier_id = $data['supplier_id'];
             $date = $data['date'] ?? date('Y-m-d');
             $status = $data['status'] ?? 'Pending';
-            $total = $data['total'];
             $items = $data['items'];
             $purchase_type = $data['purchase_type'] ?? 'BA'; // Default to BA if not provided
+            
+            // Recalculate total server-side
+            $total = 0;
+            $items_clean = [];
+            foreach ($items as $item) {
+                $qty = (int)$item['qty'];
+                $cost = (float)$item['unit_cost'];
+                if ($qty <= 0) throw new Exception("Invalid PO quantity");
+                if ($cost < 0) throw new Exception("Invalid unit cost");
+                $total += ($qty * $cost);
+                $item['qty'] = $qty;
+                $item['unit_cost'] = $cost;
+                $items_clean[] = $item;
+            }
+            $items = $items_clean;
 
             $stmt = $pdo->prepare("INSERT INTO purchase_orders (supplier_id, date, status, total) VALUES (?, ?, ?, ?)");
             $stmt->execute([$supplier_id, $date, $status, $total]);
@@ -194,4 +208,4 @@ try {
     }
     echo json_encode(['error' => $e->getMessage()]);
 }
-?>
+// Removed closing tag

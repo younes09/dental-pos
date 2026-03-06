@@ -8,7 +8,9 @@
                 </div>
                 <h6 class="text-muted mb-1">Today's Revenue</h6>
                 <h4 class="fw-bold mb-0" id="kpi-revenue">0.00 <span class="currency-symbol">$</span></h4>
-                <small class="text-success"><i class="fas fa-arrow-up"></i> 12% vs yesterday</small>
+                <div class="mt-2" id="today-revenue-growth-container">
+                    <small class="text-muted" id="today-revenue-growth">-- vs yesterday</small>
+                </div>
             </div>
         </div>
         <div class="col-md-4 col-xl-2">
@@ -18,7 +20,9 @@
                 </div>
                 <h6 class="text-muted mb-1">Monthly Sales</h6>
                 <h4 class="fw-bold mb-0" id="kpi-sales">0</h4>
-                <small class="text-success"><i class="fas fa-arrow-up"></i> 5% vs last month</small>
+                <div class="mt-2" id="monthly-sales-growth-container">
+                    <small class="text-muted" id="monthly-sales-growth">-- vs last month</small>
+                </div>
             </div>
         </div>
         <div class="col-md-4 col-xl-2">
@@ -58,7 +62,9 @@
                 </div>
                 <h6 class="text-muted mb-1">Profit Margin</h6>
                 <h4 class="fw-bold mb-0" id="kpi-profit">0%</h4>
-                <small class="text-success"><i class="fas fa-arrow-up"></i> 2.4%</small>
+                <div class="mt-2" id="profit-growth-container">
+                    <small class="text-muted" id="profit-growth">--</small>
+                </div>
             </div>
         </div>
     </div>
@@ -82,7 +88,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Top Products -->
         <div class="col-lg-4">
             <div class="card border-0 shadow-sm rounded-4 h-100">
@@ -128,7 +134,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Stock Alerts -->
         <div class="col-lg-4">
             <div class="card border-0 shadow-sm rounded-4">
@@ -141,9 +147,91 @@
                         </div>
                     </div>
                     <div class="text-center mt-3">
-                        <a href="#stock" class="text-teal text-decoration-none small fw-bold">View Inventory <i class="fas fa-arrow-right"></i></a>
+                        <a href="#stock" class="text-teal text-decoration-none small fw-bold">View Inventory <i
+                                class="fas fa-arrow-right"></i></a>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sale Details Modal -->
+<div class="modal fade" id="saleDetailsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-bottom-0 p-4">
+                <div>
+                    <h5 class="modal-title fw-bold">Sale Transaction Details</h5>
+                    <p class="text-muted small mb-0" id="sale-details-subtitle">Invoice information</p>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4 pt-0">
+                <div class="row g-4 mb-4">
+                    <div class="col-md-6">
+                        <div class="p-3 bg-light rounded-4 h-100">
+                            <h6 class="fw-bold mb-2 small text-uppercase text-muted">Customer Information</h6>
+                            <div id="sale-details-customer-info">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-3 bg-navy text-white rounded-4 h-100">
+                            <h6 class="fw-bold mb-2 small text-uppercase opacity-75">Sale Metadata</h6>
+                            <div id="sale-details-meta-info">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h6 class="fw-bold mb-3">Itemized Receipt</h6>
+                <div class="table-responsive rounded-4 border">
+                    <table class="table table-hover align-middle mb-0" id="sale-details-items-table">
+                        <thead class="table-light small">
+                            <tr>
+                                <th>Product</th>
+                                <th class="text-center">Qty</th>
+                                <th class="text-end">Unit Price</th>
+                                <th class="text-end">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Populated by JS -->
+                        </tbody>
+                        <tfoot class="table-light small">
+                            <tr>
+                                <td colspan="3" class="text-end">Subtotal</td>
+                                <td class="text-end fw-bold" id="sale-details-subtotal">0.00 <span
+                                        class="currency-symbol">$</span></td>
+                            </tr>
+                            <tr>
+                                <td colspan="3" class="text-end">Discount</td>
+                                <td class="text-end text-danger fw-bold" id="sale-details-discount">0.00 <span
+                                        class="currency-symbol">$</span></td>
+                            </tr>
+                            <tr>
+                                <td colspan="3" class="text-end">Tax (VAT <span class="vat-rate-display">15</span>%)
+                                </td>
+                                <td class="text-end fw-bold" id="sale-details-tax">0.00 <span
+                                        class="currency-symbol">$</span></td>
+                            </tr>
+                            <tr class="fw-bold fs-5">
+                                <td colspan="3" class="text-end text-navy">Grand Total</td>
+                                <td class="text-end text-navy" id="sale-details-total">0.00 <span
+                                        class="currency-symbol">$</span></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer border-top-0 p-4">
+                <button type="button" class="btn btn-outline-teal px-4 me-auto" id="btn-print-receipt">
+                    <i class="fas fa-print me-2"></i>Print Receipt
+                </button>
+                <button type="button" class="btn btn-navy px-4" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>

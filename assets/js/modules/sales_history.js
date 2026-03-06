@@ -50,6 +50,13 @@ const sales_historyModule = {
                     }
                 },
                 {
+                    data: 'invoice_type',
+                    render: (data) => {
+                        const style = data === 'BV' ? 'bg-primary-subtle text-primary' : 'bg-warning-subtle text-warning';
+                        return `<span class="badge ${style} px-3 rounded-pill">${data || 'BV'}</span>`;
+                    }
+                },
+                {
                     data: 'total',
                     render: (data) => `<span class="fw-bold text-navy">${App.formatCurrency(data)}</span>`
                 },
@@ -106,6 +113,10 @@ const sales_historyModule = {
             <div class="d-flex justify-content-between mb-2">
                 <span>Status:</span>
                 <span class="badge bg-success px-2">Completed</span>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+                <span>Doc Type:</span>
+                <span class="badge ${sale.invoice_type === 'BL' ? 'bg-warning text-dark' : 'bg-primary'} px-2">${sale.invoice_type || 'BV'}</span>
             </div>
             <div class="d-flex justify-content-between">
                 <span>Date:</span>

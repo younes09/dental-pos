@@ -131,6 +131,7 @@ const posModule = {
             cart: [...this.cart],
             discount: parseFloat(document.getElementById('cart-discount').value) || 0,
             points_redeemed: parseInt(document.getElementById('cart-points-redeem').value) || 0,
+            invoice_type: document.querySelector('input[name="invoice-type"]:checked')?.value || 'BV',
             total: totals.total
         };
 
@@ -213,6 +214,12 @@ const posModule = {
 
         document.getElementById('cart-discount').value = sale.discount || 0;
         document.getElementById('cart-points-redeem').value = sale.points_redeemed || 0;
+
+        // Restore invoice type if saved
+        if (sale.invoice_type) {
+            const invoiceRadio = document.querySelector(`input[name="invoice-type"][value="${sale.invoice_type}"]`);
+            if (invoiceRadio) invoiceRadio.checked = true;
+        }
 
         // Remove from held sales
         heldSales.splice(saleIndex, 1);
@@ -633,6 +640,7 @@ const posModule = {
 
         const totals = this.calculateTotals();
         const paymentMethod = document.querySelector('input[name="payment-method"]:checked').value;
+        const invoiceType = document.querySelector('input[name="invoice-type"]:checked')?.value || 'BV';
 
         const saleData = {
             customer_id: this.selectedCustomer ? this.selectedCustomer.id : null,
@@ -643,6 +651,7 @@ const posModule = {
             points_redeemed: totals.pointsRedeemed,
             points_earned: totals.pointsEarned,
             payment_method: paymentMethod,
+            invoice_type: invoiceType,
             items: this.cart
         };
 

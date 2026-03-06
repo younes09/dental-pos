@@ -1,4 +1,14 @@
 <?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+$current_file = basename($_SERVER['PHP_SELF']);
+if ($current_file !== 'auth.php' && !isset($_SESSION['user_id'])) {
+    http_response_code(401);
+    die(json_encode(['error' => 'Unauthorized access. Please log in.']));
+}
+
 define('DB_HOST', 'localhost');
 define('DB_NAME', 'dental_pos');
 define('DB_USER', 'root');
@@ -11,4 +21,4 @@ try {
 } catch (PDOException $e) {
     die(json_encode(['error' => 'Database connection failed: ' . $e->getMessage()]));
 }
-?>
+// Removed closing tag to prevent accidental whitespace/output before headers sent

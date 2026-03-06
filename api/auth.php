@@ -1,6 +1,5 @@
 <?php
 require_once 'config/db.php';
-session_start();
 
 header('Content-Type: application/json');
 
@@ -52,4 +51,4 @@ try {
 } catch (PDOException $e) {
     echo json_encode(['error' => $e->getMessage()]);
 }
-?>
+// Removed closing tag

@@ -109,6 +109,7 @@ CREATE TABLE sales (
     tax DECIMAL(10, 2) DEFAULT 0.00,
     total DECIMAL(10, 2) NOT NULL,
     payment_method ENUM('Cash', 'Card', 'Insurance') DEFAULT 'Cash',
+    invoice_type ENUM('BV', 'BL') DEFAULT 'BV',
     status ENUM('Completed', 'Hold', 'Cancelled') DEFAULT 'Completed',
     FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE SET NULL,
     FOREIGN KEY (user_id) REFERENCES users(id)

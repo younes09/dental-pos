@@ -32,15 +32,15 @@ INSERT INTO brands (name) VALUES
 -- 3. Users (10 total - 1 already exists via admin@dentalpos.com)
 -- Note: All passwords are set to 'admin123' hashed (approx. same as default)
 INSERT INTO users (name, email, password, role) VALUES
-('Dr. Sarah Ahmed', 'sarah@dentalpos.com', '$2a$12$Zka66PNoO.Ryd5K.993dtuZBiZw7IJr3Fs1Q3UdyW78umKIrdF/2q', 'Admin'),
-('John Smith', 'john@dentalpos.com', '$2a$12$Zka66PNoO.Ryd5K.993dtuZBiZw7IJr3Fs1Q3UdyW78umKIrdF/2q', 'Cashier'),
-('Mary Johnson', 'mary@dentalpos.com', '$2a$12$Zka66PNoO.Ryd5K.993dtuZBiZw7IJr3Fs1Q3UdyW78umKIrdF/2q', 'Stock Manager'),
-('David Wilson', 'david@dentalpos.com', '$2a$12$Zka66PNoO.Ryd5K.993dtuZBiZw7IJr3Fs1Q3UdyW78umKIrdF/2q', 'Cashier'),
-('Emily Brown', 'emily@dentalpos.com', '$2a$12$Zka66PNoO.Ryd5K.993dtuZBiZw7IJr3Fs1Q3UdyW78umKIrdF/2q', 'Cashier'),
-('Michael Davis', 'michael@dentalpos.com', '$2a$12$Zka66PNoO.Ryd5K.993dtuZBiZw7IJr3Fs1Q3UdyW78umKIrdF/2q', 'Stock Manager'),
-('Jessica Miller', 'jessica@dentalpos.com', '$2a$12$Zka66PNoO.Ryd5K.993dtuZBiZw7IJr3Fs1Q3UdyW78umKIrdF/2q', 'Cashier'),
-('Chris Taylor', 'chris@dentalpos.com', '$2a$12$Zka66PNoO.Ryd5K.993dtuZBiZw7IJr3Fs1Q3UdyW78umKIrdF/2q', 'Cashier'),
-('Amanda White', 'amanda@dentalpos.com', '$2a$12$Zka66PNoO.Ryd5K.993dtuZBiZw7IJr3Fs1Q3UdyW78umKIrdF/2q', 'Admin');
+('Sarah Jones', 'sarah@dentalpos.com', '$2a$12$Zka66PNoO.Ryd5K.993dtuZBiZw7IJr3Fs1Q3UdyW78umKIrdF/2q', 'Admin'),
+('Younes Sales', 'younes@dentalpos.com', '$2a$12$Zka66PNoO.Ryd5K.993dtuZBiZw7IJr3Fs1Q3UdyW78umKIrdF/2q', 'Cashier'),
+('Mark Warehouse', 'mark@dentalpos.com', '$2a$12$Zka66PNoO.Ryd5K.993dtuZBiZw7IJr3Fs1Q3UdyW78umKIrdF/2q', 'Stock Manager'),
+('David Roberts', 'david@dentalpos.com', '$2a$12$Zka66PNoO.Ryd5K.993dtuZBiZw7IJr3Fs1Q3UdyW78umKIrdF/2q', 'Cashier'),
+('Emily Clerk', 'emily@dentalpos.com', '$2a$12$Zka66PNoO.Ryd5K.993dtuZBiZw7IJr3Fs1Q3UdyW78umKIrdF/2q', 'Cashier'),
+('Michael Logistics', 'michael@dentalpos.com', '$2a$12$Zka66PNoO.Ryd5K.993dtuZBiZw7IJr3Fs1Q3UdyW78umKIrdF/2q', 'Stock Manager'),
+('Jessica Sales', 'jessica@dentalpos.com', '$2a$12$Zka66PNoO.Ryd5K.993dtuZBiZw7IJr3Fs1Q3UdyW78umKIrdF/2q', 'Cashier'),
+('Chris Store', 'chris@dentalpos.com', '$2a$12$Zka66PNoO.Ryd5K.993dtuZBiZw7IJr3Fs1Q3UdyW78umKIrdF/2q', 'Cashier'),
+('Amanda Admin', 'amanda@dentalpos.com', '$2a$12$Zka66PNoO.Ryd5K.993dtuZBiZw7IJr3Fs1Q3UdyW78umKIrdF/2q', 'Admin');
 
 -- 4. Products (20)
 INSERT INTO products (name, category_id, brand_id, barcode, purchase_price, selling_price, stock_qty, min_stock, expiry_date, image, status) VALUES
@@ -65,20 +65,20 @@ INSERT INTO products (name, category_id, brand_id, barcode, purchase_price, sell
 ('Lidocaine 2% Red', 7, 9, '710019', 38.00, 72.00, 20, 5, '2026-01-15', '19.jpg', 'Active'),
 ('Disposable Bibs (Blue, Box 500)', 10, 5, '710020', 18.00, 35.00, 80, 15, NULL, '20.jpg', 'Active');
 
--- 5. Customers (12)
+-- 5. Customers (12 - Clinics & Dentists)
 INSERT INTO customers (name, phone, email, balance, loyalty_points) VALUES
-('Abigail Thompson', '555-0101', 'abigail@example.com', 45.00, 120),
-('Benjamin Carter', '555-0102', 'ben@example.com', 0.00, 450),
-('Charlotte Green', '555-0103', 'charlotte@example.com', 250.00, 80),
-('Daniel White', '555-0104', 'daniel@example.com', 0.00, 15),
-('Elizabeth Baker', '555-0105', 'liz@example.com', 12.50, 300),
-('Franklin Harris', '555-0106', 'frank@example.com', 500.00, 0),
-('Grace Martin', '555-0107', 'grace@example.com', 0.00, 55),
-('Henry Adams', '555-0108', 'henry@example.com', 0.00, 920),
-('Isabella Reed', '555-0109', 'bella@example.com', 15.00, 40),
-('James Cooper', '555-0110', 'james@example.com', 0.00, 210),
-('Katherine Hill', '555-0111', 'kath@example.com', 0.00, 8),
-('Liam Ward', '555-0112', 'liam@example.com', 75.00, 125);
+('Dr. Abigail Thompson - Clinic', '555-0101', 'abigail@clinic.com', 45.00, 120),
+('Elite Dental Care', '555-0102', 'contact@elitedental.com', 0.00, 450),
+('Dr. Charlotte Green', '555-0103', 'charlotte@dentist.com', 250.00, 80),
+('White Smile Center', '555-0104', 'info@whitesmile.com', 0.00, 15),
+('City Oral Surgery', '555-0105', 'admin@cityoral.com', 12.50, 300),
+('Dr. Franklin Harris', '555-0106', 'frank@dentist.com', 500.00, 0),
+('Modern Orthodontics', '555-0107', 'office@modernortho.com', 0.00, 55),
+('Dr. Henry Adams', '555-0108', 'henry@dentalcare.com', 0.00, 920),
+('Premium Implant Center', '555-0109', 'info@premiumimplants.com', 15.00, 40),
+('Dr. James Cooper', '555-0110', 'james@dentist.com', 0.00, 210),
+('Family Dental Group', '555-0111', 'hello@familydental.com', 0.00, 8),
+('Dr. Liam Ward - Specialist', '555-0112', 'liam@ward-dental.com', 75.00, 125);
 
 -- 6. Suppliers (10)
 INSERT INTO suppliers (name, company, phone, email) VALUES
@@ -107,37 +107,60 @@ INSERT INTO purchase_orders (supplier_id, date, status, total) VALUES
 (10, '2026-03-25', 'Received', 500.00);
 
 -- 8. Purchase Order Items (at least 1 per PO)
-INSERT INTO purchase_order_items (po_id, product_id, qty, unit_cost) VALUES
-(1, 1, 20, 35.50),
-(1, 2, 10, 12.00),
-(2, 4, 12, 45.00),
-(3, 5, 5, 15.00),
-(3, 6, 100, 8.50),
-(4, 10, 5, 22.00),
-(5, 14, 10, 55.00),
-(6, 15, 2, 75.00),
-(7, 19, 10, 38.00),
-(8, 20, 5, 18.00),
-(9, 7, 10, 42.00),
-(10, 13, 5, 28.00);
+INSERT INTO purchase_order_items (po_id, product_id, qty, received_qty, unit_cost) VALUES
+(1, 1, 20, 20, 35.50),
+(1, 2, 10, 10, 12.00),
+(2, 4, 12, 12, 45.00),
+(3, 5, 5, 0, 15.00),
+(3, 6, 100, 0, 8.50),
+(4, 10, 5, 5, 22.00),
+(5, 14, 10, 5, 55.00),
+(6, 15, 2, 0, 75.00),
+(7, 19, 10, 10, 38.00),
+(8, 20, 5, 0, 18.00),
+(9, 7, 10, 10, 42.00),
+(10, 13, 5, 5, 28.00);
+
+-- 8a. Stock Batches (Seeding initial stock for consistency)
+INSERT INTO stock_batches (product_id, purchase_type, initial_qty, remaining_qty) VALUES
+(1, 'BA', 50, 50),
+(2, 'BA', 30, 30),
+(3, 'BA', 100, 100),
+(4, 'BA', 24, 24),
+(5, 'BA', 15, 15),
+(6, 'BA', 200, 200),
+(7, 'BA', 40, 40),
+(8, 'BA', 12, 12),
+(9, 'BA', 500, 500),
+(10, 'BA', 25, 25),
+(11, 'BA', 60, 60),
+(12, 'BA', 48, 48),
+(13, 'BA', 20, 20),
+(14, 'BA', 30, 30),
+(15, 'BA', 15, 15),
+(16, 'BA', 8, 8),
+(17, 'BA', 12, 12),
+(18, 'BA', 100, 100),
+(19, 'BA', 20, 20),
+(20, 'BA', 80, 80);
 
 -- 9. Sales (15)
-INSERT INTO sales (customer_id, user_id, date, subtotal, discount, tax, total, payment_method, status) VALUES
-(1, 2, '2026-03-26 09:15:00', 130.00, 0, 19.50, 149.50, 'Cash', 'Completed'),
-(2, 2, '2026-03-26 10:20:00', 65.00, 5.00, 9.00, 69.00, 'Card', 'Completed'),
-(3, 4, '2026-03-26 11:45:00', 25.00, 0, 3.75, 28.75, 'Cash', 'Completed'),
-(null, 4, '2026-03-26 13:10:00', 42.00, 0, 6.30, 48.30, 'Cash', 'Completed'),
-(4, 5, '2026-03-26 14:30:00', 85.00, 0, 12.75, 97.75, 'Insurance', 'Completed'),
-(5, 5, '2026-03-27 09:00:00', 18.00, 0, 2.70, 20.70, 'Cash', 'Completed'),
-(6, 7, '2026-03-27 10:15:00', 89.00, 10.00, 11.85, 90.85, 'Card', 'Completed'),
-(7, 7, '2026-03-27 11:30:00', 125.00, 0, 18.75, 143.75, 'Cash', 'Completed'),
-(8, 8, '2026-03-27 14:00:00', 28.00, 0, 4.20, 32.20, 'Card', 'Completed'),
-(null, 8, '2026-03-27 15:20:00', 45.00, 0, 6.75, 51.75, 'Cash', 'Completed'),
-(9, 2, '2026-03-28 09:45:00', 12.00, 0, 1.80, 13.80, 'Cash', 'Completed'),
-(10, 2, '2026-03-28 10:10:00', 24.00, 2.00, 3.30, 25.30, 'Card', 'Completed'),
-(11, 4, '2026-03-28 11:20:00', 55.00, 0, 8.25, 63.25, 'Cash', 'Completed'),
-(12, 4, '2026-03-28 12:40:00', 95.00, 0, 14.25, 109.25, 'Insurance', 'Completed'),
-(1, 5, '2026-03-28 14:50:00', 145.00, 15.00, 19.50, 149.50, 'Card', 'Completed');
+INSERT INTO sales (customer_id, user_id, date, subtotal, discount, tax, total, payment_method, invoice_type, status) VALUES
+(1, 2, '2026-03-26 09:15:00', 130.00, 0, 19.50, 149.50, 'Cash', 'BV', 'Completed'),
+(2, 2, '2026-03-26 10:20:00', 65.00, 5.00, 9.00, 69.00, 'Card', 'BV', 'Completed'),
+(3, 4, '2026-03-26 11:45:00', 25.00, 0, 3.75, 28.75, 'Cash', 'BV', 'Completed'),
+(null, 4, '2026-03-26 13:10:00', 42.00, 0, 6.30, 48.30, 'Cash', 'BV', 'Completed'),
+(4, 5, '2026-03-26 14:30:00', 85.00, 0, 12.75, 97.75, 'Insurance', 'BV', 'Completed'),
+(5, 5, '2026-03-27 09:00:00', 18.00, 0, 2.70, 20.70, 'Cash', 'BV', 'Completed'),
+(6, 7, '2026-03-27 10:15:00', 89.00, 10.00, 11.85, 90.85, 'Card', 'BV', 'Completed'),
+(7, 7, '2026-03-27 11:30:00', 125.00, 0, 18.75, 143.75, 'Cash', 'BV', 'Completed'),
+(8, 8, '2026-03-27 14:00:00', 28.00, 0, 4.20, 32.20, 'Card', 'BV', 'Completed'),
+(null, 8, '2026-03-27 15:20:00', 45.00, 0, 6.75, 51.75, 'Cash', 'BV', 'Completed'),
+(9, 2, '2026-03-28 09:45:00', 12.00, 0, 1.80, 13.80, 'Cash', 'BV', 'Completed'),
+(10, 2, '2026-03-28 10:10:00', 24.00, 2.00, 3.30, 25.30, 'Card', 'BV', 'Completed'),
+(11, 4, '2026-03-28 11:20:00', 55.00, 0, 8.25, 63.25, 'Cash', 'BV', 'Completed'),
+(12, 4, '2026-03-28 12:40:00', 95.00, 0, 14.25, 109.25, 'Insurance', 'BV', 'Completed'),
+(1, 5, '2026-03-28 14:50:00', 145.00, 15.00, 19.50, 149.50, 'Card', 'BV', 'Completed');
 
 -- 10. Sale Items (at least 1 per sale)
 INSERT INTO sale_items (sale_id, product_id, qty, unit_price, total) VALUES
