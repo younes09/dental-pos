@@ -36,12 +36,16 @@ const purchase_ordersModule = {
         // Toggle purchase type in create modal based on status
         document.getElementById('po-status').onchange = (e) => {
             const container = document.getElementById('po-purchase-type-container');
+            const paidContainer = document.getElementById('po-paid-amount-container');
+
             if (e.target.value === 'Received') {
                 container.classList.remove('d-none');
                 document.getElementById('po-purchase-type').required = true;
+                paidContainer.classList.remove('d-none');
             } else {
                 container.classList.add('d-none');
                 document.getElementById('po-purchase-type').required = false;
+                paidContainer.classList.add('d-none');
             }
         };
 
@@ -88,6 +92,10 @@ const purchase_ordersModule = {
                     render: (data) => `<span class="fw-bold text-navy">${App.formatCurrency(data)}</span>`
                 },
                 {
+                    data: 'paid_amount',
+                    render: (data) => `<span class="fw-bold text-success">${App.formatCurrency(data || 0)}</span>`
+                },
+                {
                     data: 'status',
                     render: (data) => {
                         const badges = {
@@ -97,6 +105,17 @@ const purchase_ordersModule = {
                             'Cancelled': 'bg-danger-subtle text-danger'
                         };
                         return `<span class="badge ${badges[data] || 'bg-secondary'} px-3 rounded-pill">${data}</span>`;
+                    }
+                },
+                {
+                    data: 'payment_status',
+                    render: (data) => {
+                        const badges = {
+                            'Unpaid': 'bg-danger-subtle text-danger',
+                            'Paid': 'bg-success-subtle text-success',
+                            'Partial': 'bg-info-subtle text-info'
+                        };
+                        return `<span class="badge ${badges[data] || 'bg-secondary'} px-3 rounded-pill">${data || 'Unpaid'}</span>`;
                     }
                 },
                 {
@@ -235,6 +254,7 @@ const purchase_ordersModule = {
 
         if (status === 'Received') {
             data.purchase_type = document.getElementById('po-purchase-type').value;
+            data.paid_amount = document.getElementById('po-paid-amount').value || 0;
         }
 
         const result = await App.api('purchase_orders.php?action=save', 'POST', data);
@@ -248,6 +268,8 @@ const purchase_ordersModule = {
             document.getElementById('po-status').value = 'Pending';
             document.getElementById('po-purchase-type-container').classList.add('d-none');
             document.getElementById('po-purchase-type').required = false;
+            document.getElementById('po-paid-amount-container').classList.add('d-none');
+            document.getElementById('po-paid-amount').value = '';
 
             document.querySelector('#po-items-table tbody').innerHTML = '';
             document.getElementById('po-total-display').textContent = App.formatCurrency(0);
@@ -374,9 +396,12 @@ const purchase_ordersModule = {
             return;
         }
 
+        const paidAmount = document.getElementById('receive-po-paid-amount').value || 0;
+
         const data = {
             po_id: id,
             purchase_type: purchaseType,
+            paid_amount: paidAmount,
             items: receivedItems
         };
 

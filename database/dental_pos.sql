@@ -72,7 +72,21 @@ CREATE TABLE suppliers (
     company VARCHAR(100),
     phone VARCHAR(20),
     email VARCHAR(100),
+    balance DECIMAL(10, 2) DEFAULT 0.00,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Supplier Payments table
+CREATE TABLE supplier_payments (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    supplier_id INT NOT NULL,
+    amount DECIMAL(10, 2) NOT NULL,
+    payment_method ENUM('Cash', 'Bank Transfer', 'Cheque') DEFAULT 'Cash',
+    notes TEXT,
+    date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    user_id INT,
+    FOREIGN KEY (supplier_id) REFERENCES suppliers(id),
+    FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
 -- Purchase Orders table
@@ -82,6 +96,8 @@ CREATE TABLE purchase_orders (
     date DATE NOT NULL,
     status ENUM('Pending', 'Partial', 'Received') DEFAULT 'Pending',
     total DECIMAL(10, 2) DEFAULT 0.00,
+    paid_amount DECIMAL(10, 2) DEFAULT 0.00,
+    payment_status ENUM('Unpaid', 'Partial', 'Paid') DEFAULT 'Unpaid',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (supplier_id) REFERENCES suppliers(id)
 );

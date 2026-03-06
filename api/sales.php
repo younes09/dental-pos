@@ -128,13 +128,19 @@ try {
             $tax = round($taxable * $tax_rate, 2);
             $total = round($taxable + $tax, 2);
 
+            $paid_amount = (float)($data['paid_amount'] ?? $total);
+            $payment_status = 'Paid';
+            if ($paid_amount < $total) {
+                $payment_status = ($paid_amount > 0) ? 'Partial' : 'Unpaid';
+            }
+
             $points_earned = ($earning_rate > 0) ? floor($total / $earning_rate) : 0;
 
             // 1. Insert into sales table (F2.4: store points for reversal)
             $stmt = $pdo->prepare("
                 INSERT INTO sales 
-                (customer_id, user_id, subtotal, discount, tax, total, payment_method, invoice_type, points_earned, points_redeemed) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                (customer_id, user_id, subtotal, discount, tax, total, paid_amount, payment_status, payment_method, invoice_type, points_earned, points_redeemed) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ");
             $stmt->execute([
                 $customer_id,
@@ -143,6 +149,8 @@ try {
                 $discount_amount,
                 $tax,
                 $total,
+                $paid_amount,
+                $payment_status,
                 $payment_method,
                 $invoice_type,
                 $points_earned,
@@ -199,10 +207,12 @@ try {
                     $points_stmt->execute([$points_earned, $points_redeemed, $customer_id]);
                 }
                 
-                // If payment method is Credit, increase customer balance (debt)
-                if ($payment_method === 'Credit') {
+                
+                // If there is debt (total > paid_amount), increase customer balance
+                $debt = $total - $paid_amount;
+                if ($debt > 0) {
                     $balance_stmt = $pdo->prepare("UPDATE customers SET balance = balance + ? WHERE id = ?");
-                    $balance_stmt->execute([$total, $customer_id]);
+                    $balance_stmt->execute([$debt, $customer_id]);
                 }
             }
 
@@ -239,10 +249,11 @@ try {
                     $pts_stmt = $pdo->prepare("UPDATE customers SET loyalty_points = GREATEST(0, loyalty_points - ? + ?) WHERE id = ?");
                     $pts_stmt->execute([$pts_earned, $pts_redeemed, $sale['customer_id']]);
                 }
-                // If payment was Credit, reverse the balance increase
-                if ($sale['payment_method'] === 'Credit') {
+                // Reverse debt balance
+                $debt = $sale['total'] - $sale['paid_amount'];
+                if ($debt > 0) {
                     $bal_stmt = $pdo->prepare("UPDATE customers SET balance = GREATEST(0, balance - ?) WHERE id = ?");
-                    $bal_stmt->execute([$sale['total'], $sale['customer_id']]);
+                    $bal_stmt->execute([$debt, $sale['customer_id']]);
                 }
             }
             

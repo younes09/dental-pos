@@ -22,6 +22,14 @@ const customersModule = {
             document.getElementById('customer-id').value = '';
             document.getElementById('customerModalLabel').textContent = 'Add New Customer';
         };
+
+        const settleDebtForm = document.getElementById('settleDebtForm');
+        if (settleDebtForm) {
+            settleDebtForm.onsubmit = async (e) => {
+                e.preventDefault();
+                await this.submitSettleDebt();
+            };
+        }
     },
 
     initDataTable() {
@@ -53,6 +61,7 @@ const customersModule = {
                             <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
                                 <li><a class="dropdown-item" href="javascript:void(0)" onclick="customersModule.editCustomer(${data.id})"><i class="fas fa-edit me-2 text-primary"></i>Edit Profile</a></li>
                                 <li><a class="dropdown-item" href="javascript:void(0)" onclick="customersModule.viewHistory(${data.id})"><i class="fas fa-history me-2 text-teal"></i>Purchase History</a></li>
+                                <li><a class="dropdown-item" href="javascript:void(0)" onclick="customersModule.openSettleDebt(${data.id})"><i class="fas fa-money-bill-wave me-2 text-success"></i>Settle Debt</a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item text-danger" href="javascript:void(0)" onclick="customersModule.deleteCustomer(${data.id})"><i class="fas fa-trash me-2"></i>Delete</a></li>
                             </ul>
@@ -157,6 +166,57 @@ const customersModule = {
             }
         } catch (error) {
             historyBody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Failed to load history</td></tr>';
+        }
+    },
+
+    openSettleDebt(id) {
+        const customer = this.table.rows().data().toArray().find(c => c.id == id);
+        if (!customer) return;
+
+        document.getElementById('debt-customer-id').value = customer.id;
+        document.getElementById('debt-customer-name').value = customer.name;
+        document.getElementById('debt-current-balance').textContent = App.formatCurrency(customer.balance || 0);
+
+        const amountInput = document.getElementById('debt-payment-amount');
+        amountInput.value = '';
+        amountInput.max = customer.balance || 0;
+        amountInput.dataset.max = customer.balance || 0;
+
+        new bootstrap.Modal(document.getElementById('settleDebtModal')).show();
+    },
+
+    async submitSettleDebt() {
+        const amountInput = document.getElementById('debt-payment-amount');
+        const amount = parseFloat(amountInput.value) || 0;
+        const maxAmount = parseFloat(amountInput.dataset.max) || 0;
+
+        if (amount > maxAmount) {
+            App.toast('error', `Payment cannot exceed the current debt of ${App.formatCurrency(maxAmount)}`);
+            amountInput.classList.add('is-invalid');
+            return;
+        }
+
+        amountInput.classList.remove('is-invalid');
+
+        const form = document.getElementById('settleDebtForm');
+        const formData = new FormData(form);
+
+        try {
+            const response = await fetch('api/customers.php?action=add_payment', {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+
+            if (result.success) {
+                App.toast('success', result.success);
+                bootstrap.Modal.getInstance(document.getElementById('settleDebtModal')).hide();
+                this.table.ajax.reload();
+            } else {
+                App.toast('error', result.error);
+            }
+        } catch (error) {
+            App.toast('error', 'Failed to settle debt: ' + error.message);
         }
     }
 };

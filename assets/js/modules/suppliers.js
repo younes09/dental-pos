@@ -22,6 +22,14 @@ const suppliersModule = {
             document.getElementById('supplier-id').value = '';
             document.getElementById('supplierModalLabel').textContent = 'Add New Supplier';
         };
+
+        const settleDebtForm = document.getElementById('settleDebtForm');
+        if (settleDebtForm) {
+            settleDebtForm.onsubmit = async (e) => {
+                e.preventDefault();
+                await this.submitSettleDebt();
+            };
+        }
     },
 
     initDataTable() {
@@ -42,7 +50,15 @@ const suppliersModule = {
                     data: 'total_purchases',
                     render: (data) => {
                         const val = parseFloat(data || 0);
-                        return `<span class="fw-bold text-navy">${App.formatCurrency(val)}</span>`;
+                        return `<span class="fw-bold text-muted">${App.formatCurrency(val)}</span>`;
+                    }
+                },
+                {
+                    data: 'balance',
+                    render: (data) => {
+                        const val = parseFloat(data || 0);
+                        const colorClass = val > 0 ? 'text-danger' : 'text-success';
+                        return `<span class="fw-bold ${colorClass}">${App.formatCurrency(val)}</span>`;
                     }
                 },
                 {
@@ -54,6 +70,7 @@ const suppliersModule = {
                             <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
                                 <li><a class="dropdown-item" href="javascript:void(0)" onclick="suppliersModule.editSupplier(${data.id})"><i class="fas fa-edit me-2 text-primary"></i>Edit Supplier</a></li>
                                 <li><a class="dropdown-item" href="javascript:void(0)" onclick="suppliersModule.createPO(${data.id})"><i class="fas fa-cart-plus me-2 text-teal"></i>Create Purchase Order</a></li>
+                                <li><a class="dropdown-item" href="javascript:void(0)" onclick="suppliersModule.openSettleDebt(${data.id})"><i class="fas fa-money-bill-wave me-2 text-success"></i>Settle Debt</a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item text-danger" href="javascript:void(0)" onclick="suppliersModule.deleteSupplier(${data.id})"><i class="fas fa-trash me-2"></i>Delete</a></li>
                             </ul>
@@ -129,6 +146,57 @@ const suppliersModule = {
 
     createPO(id) {
         window.location.hash = `#purchase_orders?supplier_id=${id}`;
+    },
+
+    openSettleDebt(id) {
+        const supplier = this.table.rows().data().toArray().find(s => s.id == id);
+        if (!supplier) return;
+
+        document.getElementById('debt-supplier-id').value = supplier.id;
+        document.getElementById('debt-supplier-name').value = supplier.name;
+        document.getElementById('debt-current-balance').textContent = App.formatCurrency(supplier.balance || 0);
+
+        const amountInput = document.getElementById('debt-payment-amount');
+        amountInput.value = '';
+        amountInput.max = supplier.balance || 0;
+        amountInput.dataset.max = supplier.balance || 0;
+
+        new bootstrap.Modal(document.getElementById('settleDebtModal')).show();
+    },
+
+    async submitSettleDebt() {
+        const amountInput = document.getElementById('debt-payment-amount');
+        const amount = parseFloat(amountInput.value) || 0;
+        const maxAmount = parseFloat(amountInput.dataset.max) || 0;
+
+        if (amount > maxAmount) {
+            App.toast('error', `Payment cannot exceed the current debt of ${App.formatCurrency(maxAmount)}`);
+            amountInput.classList.add('is-invalid');
+            return;
+        }
+
+        amountInput.classList.remove('is-invalid');
+
+        const form = document.getElementById('settleDebtForm');
+        const formData = new FormData(form);
+
+        try {
+            const response = await fetch('api/suppliers.php?action=add_payment', {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+
+            if (result.success) {
+                App.toast('success', result.success);
+                bootstrap.Modal.getInstance(document.getElementById('settleDebtModal')).hide();
+                this.table.ajax.reload();
+            } else {
+                App.toast('error', result.error);
+            }
+        } catch (error) {
+            App.toast('error', 'Failed to settle debt: ' + error.message);
+        }
     }
 };
 

@@ -40,8 +40,8 @@ const posModule = {
 
         // Cart controls
         document.getElementById('btn-clear-cart').onclick = () => this.clearCart();
-        document.getElementById('cart-discount').oninput = () => this.calculateTotals();
         document.getElementById('cart-points-redeem').oninput = () => this.calculateTotals();
+        document.getElementById('cart-paid-amount').oninput = () => this.calculateTotals();
 
         document.getElementById('btn-checkout').onclick = () => this.processCheckout();
 
@@ -301,6 +301,8 @@ const posModule = {
             document.getElementById('pos-selected-customer-points-container').classList.add('d-none');
             document.getElementById('cart-points-row').classList.add('d-none');
             document.getElementById('cart-points-redeem').value = 0;
+            // Also reset paid amount for walking customer to avoid accidental debt
+            document.getElementById('cart-paid-amount').value = '';
         } else {
             const customer = this.allCustomers.find(c => c.id == customerId);
             if (customer) {
@@ -557,6 +559,7 @@ const posModule = {
 
     clearCart() {
         this.cart = [];
+        document.getElementById('cart-paid-amount').value = '';
         this.renderCart();
         this.calculateTotals();
     },
@@ -655,7 +658,33 @@ const posModule = {
 
         document.getElementById('cart-total').textContent = App.formatCurrency(total);
 
-        return { subtotal, discountAmount, tax, total, pointsRedeemed, pointsEarned };
+        // Handle Paid Amount / Change / Debt
+        const paidInput = document.getElementById('cart-paid-amount');
+        const paidVal = parseFloat(paidInput.value);
+        const changeDebtLabel = document.getElementById('change-debt-label');
+        const changeDebtDisplay = document.getElementById('cart-change-debt');
+
+        if (isNaN(paidVal)) {
+            changeDebtDisplay.textContent = App.formatCurrency(0);
+            changeDebtLabel.textContent = 'Change';
+            changeDebtDisplay.className = 'fw-bold mb-0 text-navy';
+            paidInput.placeholder = total.toFixed(2);
+        } else {
+            const diff = paidVal - total;
+            changeDebtDisplay.textContent = App.formatCurrency(Math.abs(diff));
+            if (diff >= 0) {
+                changeDebtLabel.textContent = 'Change';
+                changeDebtDisplay.className = 'fw-bold mb-0 text-success';
+            } else {
+                changeDebtLabel.textContent = 'Debt';
+                changeDebtDisplay.className = 'fw-bold mb-0 text-danger';
+                if (!this.selectedCustomer) {
+                    App.toast('warning', 'Debt is only allowed for registered customers.');
+                }
+            }
+        }
+
+        return { subtotal, discountAmount, tax, total, pointsRedeemed, pointsEarned, paidAmount: isNaN(paidVal) ? total : paidVal };
     },
 
     async processCheckout() {
@@ -681,6 +710,7 @@ const posModule = {
                 discount_amount: totals.discountAmount,
                 tax: totals.tax,
                 total: totals.total,
+                paid_amount: totals.paidAmount,
                 points_redeemed: totals.pointsRedeemed,
                 points_earned: totals.pointsEarned,
                 payment_method: paymentMethod,

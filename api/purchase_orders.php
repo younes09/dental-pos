@@ -35,6 +35,7 @@ try {
             $status = $data['status'] ?? 'Pending';
             $items = $data['items'];
             $purchase_type = $data['purchase_type'] ?? 'BA'; // Default to BA if not provided
+            $paid_amount = isset($data['paid_amount']) ? (float)$data['paid_amount'] : 0;
             
             // Recalculate total server-side
             $total = 0;
@@ -51,8 +52,20 @@ try {
             }
             $items = $items_clean;
 
-            $stmt = $pdo->prepare("INSERT INTO purchase_orders (supplier_id, date, status, total) VALUES (?, ?, ?, ?)");
-            $stmt->execute([$supplier_id, $date, $status, $total]);
+            // Determine payment_status
+            $payment_status = 'Unpaid';
+            if ($status === 'Received') {
+                if ($paid_amount >= $total && $total > 0) {
+                    $payment_status = 'Paid';
+                } elseif ($paid_amount > 0) {
+                    $payment_status = 'Partial';
+                }
+            } else {
+                $paid_amount = 0; // Don't allow prepayments for pending orders (keep it simple for now)
+            }
+
+            $stmt = $pdo->prepare("INSERT INTO purchase_orders (supplier_id, date, status, total, paid_amount, payment_status) VALUES (?, ?, ?, ?, ?, ?)");
+            $stmt->execute([$supplier_id, $date, $status, $total, $paid_amount, $payment_status]);
             $po_id = $pdo->lastInsertId();
 
             $stmtItem = $pdo->prepare("INSERT INTO purchase_order_items (po_id, product_id, qty, received_qty, unit_cost) VALUES (?, ?, ?, ?, ?)");
@@ -66,6 +79,15 @@ try {
                 if ($status === 'Received') {
                     $stmtUpdateProduct->execute([$item['qty'], $item['unit_cost'], $item['product_id']]);
                     $stmtBatch->execute([$item['product_id'], $purchase_type, $item['qty'], $item['qty']]);
+                }
+            }
+
+            // If received, update supplier balance based on unpaid amount
+            if ($status === 'Received') {
+                $debt = $total - $paid_amount;
+                if ($debt > 0) {
+                    $stmtSupplier = $pdo->prepare("UPDATE suppliers SET balance = balance + ? WHERE id = ?");
+                    $stmtSupplier->execute([$debt, $supplier_id]);
                 }
             }
 
@@ -87,9 +109,10 @@ try {
             $po_id = $data['po_id'];
             $purchase_type = $data['purchase_type'];
             $items_to_receive = $data['items'];
+            $paid_amount = isset($data['paid_amount']) ? (float)$data['paid_amount'] : 0;
 
             // Check if PO exists and is not already fully received
-            $stmt = $pdo->prepare("SELECT status FROM purchase_orders WHERE id = ?");
+            $stmt = $pdo->prepare("SELECT supplier_id, status, total, paid_amount FROM purchase_orders WHERE id = ?");
             $stmt->execute([$po_id]);
             $po = $stmt->fetch();
 
@@ -101,6 +124,8 @@ try {
             $stmtGetItemCost = $pdo->prepare("SELECT unit_cost FROM purchase_order_items WHERE id = ?");
             $stmtUpdateProduct = $pdo->prepare("UPDATE products SET stock_qty = stock_qty + ?, purchase_price = ? WHERE id = ?");
             $stmtBatch = $pdo->prepare("INSERT INTO stock_batches (product_id, purchase_type, initial_qty, remaining_qty) VALUES (?, ?, ?, ?)");
+
+            $total_received_value = 0;
 
             foreach ($items_to_receive as $recv_item) {
                 $item_id = $recv_item['item_id'];
@@ -131,6 +156,8 @@ try {
                 // Update product stock and creation batch
                 $stmtUpdateProduct->execute([$recv_qty_now, $item_cost, $product_id]);
                 $stmtBatch->execute([$product_id, $purchase_type, $recv_qty_now, $recv_qty_now]);
+
+                $total_received_value += ($recv_qty_now * $item_cost);
             }
 
             // Check if all items are fully received
@@ -147,9 +174,24 @@ try {
                 $new_status = 'Received';
             }
 
-            // Update PO status
-            $stmt = $pdo->prepare("UPDATE purchase_orders SET status = ? WHERE id = ?");
-            $stmt->execute([$new_status, $po_id]);
+            // Update PO status, paid amount
+            $new_total_paid = $po['paid_amount'] + $paid_amount;
+            $payment_status = 'Unpaid';
+            if ($new_total_paid >= $po['total'] && $po['total'] > 0) {
+                $payment_status = 'Paid';
+            } elseif ($new_total_paid > 0) {
+                $payment_status = 'Partial';
+            }
+
+            $stmt = $pdo->prepare("UPDATE purchase_orders SET status = ?, paid_amount = ?, payment_status = ? WHERE id = ?");
+            $stmt->execute([$new_status, $new_total_paid, $payment_status, $po_id]);
+
+            // Update supplier balance
+            $net_debt_increase = $total_received_value - $paid_amount;
+            if ($net_debt_increase != 0) {
+                $stmtSupplier = $pdo->prepare("UPDATE suppliers SET balance = balance + ? WHERE id = ?");
+                $stmtSupplier->execute([$net_debt_increase, $po['supplier_id']]);
+            }
 
             $pdo->commit();
             $msg = ($new_status === 'Received') ? 'Order fully received' : 'Order partially received';

@@ -46,10 +46,42 @@ try {
                 echo json_encode(['error' => 'Only Admins can delete customers.']);
                 exit;
             }
-            $id = $_GET['id'];
             $stmt = $pdo->prepare("DELETE FROM customers WHERE id = ?");
             $stmt->execute([$id]);
             echo json_encode(['success' => 'Customer deleted successfully']);
+            break;
+
+        case 'add_payment':
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception("Invalid request method");
+            
+            $customer_id = $_POST['customer_id'] ?? null;
+            $amount = (float)($_POST['amount'] ?? 0);
+            $method = $_POST['payment_method'] ?? 'Cash';
+            $notes = $_POST['notes'] ?? '';
+            $user_id = $_SESSION['user_id'] ?? 1;
+
+            if (!$customer_id) throw new Exception("Customer ID required");
+            if ($amount <= 0) throw new Exception("Invalid payment amount");
+
+            $pdo->beginTransaction();
+
+            // Check current balance
+            $stmtBal = $pdo->prepare("SELECT balance FROM customers WHERE id = ? FOR UPDATE");
+            $stmtBal->execute([$customer_id]);
+            $currentBalance = (float)$stmtBal->fetchColumn();
+
+            if ($amount > $currentBalance) {
+                throw new Exception("Payment amount (" . number_format($amount, 2) . ") exceeds current debt (" . number_format($currentBalance, 2) . ")");
+            }
+
+            $stmt = $pdo->prepare("INSERT INTO customer_payments (customer_id, amount, payment_method, notes, user_id) VALUES (?, ?, ?, ?, ?)");
+            $stmt->execute([$customer_id, $amount, $method, $notes, $user_id]);
+
+            $stmtUpdate = $pdo->prepare("UPDATE customers SET balance = balance - ? WHERE id = ?");
+            $stmtUpdate->execute([$amount, $customer_id]);
+
+            $pdo->commit();
+            echo json_encode(['success' => 'Debt payment recorded successfully']);
             break;
 
         default:
