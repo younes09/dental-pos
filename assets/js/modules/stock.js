@@ -164,8 +164,21 @@ const stockModule = {
                         if (!data) return '<small class="text-muted">N/A</small>';
                         const today = new Date();
                         const expiry = new Date(data);
-                        const isExpired = expiry <= today;
-                        return `<span class="text-${isExpired ? 'danger' : 'dark'} small">${data}</span>`;
+
+                        // Expired
+                        if (expiry <= today) {
+                            return `<span class="badge bg-danger-subtle text-danger border border-danger p-1 small" style="font-size: 0.75rem;"><i class="fas fa-exclamation-circle me-1"></i>Expired (${data})</span>`;
+                        }
+
+                        // Near Expiry (within 30 days)
+                        const oneMonthFromNow = new Date();
+                        oneMonthFromNow.setMonth(today.getMonth() + 1);
+
+                        if (expiry <= oneMonthFromNow) {
+                            return `<span class="badge bg-warning-subtle text-warning-emphasis border border-warning p-1 small" style="font-size: 0.75rem;"><i class="fas fa-clock me-1"></i>Near (${data})</span>`;
+                        }
+
+                        return `<span class="text-dark small">${data}</span>`;
                     }
                 },
                 {

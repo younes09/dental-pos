@@ -27,7 +27,7 @@ try {
             $stmt = $pdo->query("SELECT COUNT(*) as low FROM products WHERE stock_qty <= min_stock");
             $low = $stmt->fetch()['low'];
             
-            $stmt = $pdo->query("SELECT COUNT(*) as expired FROM products WHERE expiry_date <= CURDATE() AND expiry_date IS NOT NULL");
+            $stmt = $pdo->query("SELECT COUNT(*) as expired FROM products WHERE expiry_date <= DATE_ADD(CURDATE(), INTERVAL 1 MONTH) AND expiry_date IS NOT NULL");
             $expired = $stmt->fetch()['expired'];
             
             $stmt = $pdo->query("SELECT SUM(stock_qty * purchase_price) as value FROM products");
@@ -54,11 +54,15 @@ try {
             $brand_id = $_POST['brand_id'];
             $barcode = $_POST['barcode'];
             $purchase_type = $_POST['purchase_type'] ?? 'BA';
-            $purchase_price = $_POST['purchase_price'];
-            $selling_price = $_POST['selling_price'];
-            $stock_qty = $_POST['stock_qty'];
+            $purchase_price = (float)$_POST['purchase_price'];
+            $selling_price = (float)$_POST['selling_price'];
+            $stock_qty = (int)$_POST['stock_qty'];
             $min_stock = $_POST['min_stock'];
             $expiry_date = $_POST['expiry_date'] ?: null;
+            
+            // F4.2: Validate prices
+            if ($purchase_price < 0) throw new Exception('Purchase price cannot be negative');
+            if ($selling_price <= 0) throw new Exception('Selling price must be greater than zero');
             
             // Image handling (simplified)
             $image = $_POST['existing_image'] ?? 'default.jpg';
@@ -102,6 +106,10 @@ try {
             break;
 
         case 'delete':
+            // F4.1: Only Admin can delete products
+            if (($_SESSION['user_role'] ?? '') !== 'Admin') {
+                throw new Exception('Only Admins can delete products.');
+            }
             $id = $_GET['id'];
             $stmt = $pdo->prepare("DELETE FROM products WHERE id = ?");
             $stmt->execute([$id]);
@@ -109,10 +117,17 @@ try {
             break;
 
         case 'adjust_stock':
+            // F4.1: Only Admin or Stock Manager can adjust stock
+            $user_role = $_SESSION['user_role'] ?? '';
+            if (!in_array($user_role, ['Admin', 'Stock Manager'])) {
+                throw new Exception('Only Admins or Stock Managers can adjust stock.');
+            }
             $id = $_GET['id'];
             $type = $_GET['type'];
             $qty = (int)$_GET['qty'];
-            $purchase_type = $_GET['purchase_type'] ?? 'BA'; // Get purchase type from request
+            $purchase_type = $_GET['purchase_type'] ?? 'BA';
+            
+            if ($qty <= 0) throw new Exception('Adjustment quantity must be positive');
             
             $pdo->beginTransaction();
             
@@ -127,14 +142,22 @@ try {
                     $batch_stmt->execute([$id, $purchase_type, $qty, $qty]);
                     
                 } else if ($type === 'subtract') {
+                    // F2.1 + F2.2: Lock row and validate stock before subtract
+                    $check_stmt = $pdo->prepare("SELECT stock_qty FROM products WHERE id = ? FOR UPDATE");
+                    $check_stmt->execute([$id]);
+                    $current_stock = (int)$check_stmt->fetchColumn();
+                    
+                    if ($current_stock < $qty) {
+                        throw new Exception("Cannot subtract $qty units. Current stock is only $current_stock.");
+                    }
+                    
                     // 1. Subtract from products table
                     $stmt = $pdo->prepare("UPDATE products SET stock_qty = stock_qty - ? WHERE id = ?");
                     $stmt->execute([$qty, $id]);
                     
-                    // 2. Subtract from oldest active batches (FIFO)
+                    // 2. Subtract from oldest active batches (FIFO) with FOR UPDATE
                     $remaining_to_deduct = $qty;
-                    // Get batches sorted by oldest first
-                    $batches_stmt = $pdo->prepare("SELECT id, remaining_qty FROM stock_batches WHERE product_id = ? AND remaining_qty > 0 ORDER BY created_at ASC");
+                    $batches_stmt = $pdo->prepare("SELECT id, remaining_qty FROM stock_batches WHERE product_id = ? AND remaining_qty > 0 ORDER BY created_at ASC FOR UPDATE");
                     $batches_stmt->execute([$id]);
                     $batches = $batches_stmt->fetchAll();
                     
@@ -154,6 +177,13 @@ try {
                         }
                     }
                 }
+                
+                // F5.3: Write to stock_adjustments audit trail
+                $user_id = $_SESSION['user_id'] ?? null;
+                $adj_type = ($type === 'add') ? 'Add Stock' : 'Write-off';
+                $reason = $_GET['reason'] ?? 'Manual adjustment';
+                $adj_stmt = $pdo->prepare("INSERT INTO stock_adjustments (product_id, type, qty, reason, user_id) VALUES (?, ?, ?, ?, ?)");
+                $adj_stmt->execute([$id, $adj_type, $qty, $reason, $user_id]);
                 
                 $pdo->commit();
                 echo json_encode(['success' => 'Stock adjusted successfully']);

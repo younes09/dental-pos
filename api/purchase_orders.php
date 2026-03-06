@@ -109,6 +109,18 @@ try {
 
                 if ($recv_qty_now <= 0) continue;
 
+                // F5.4: Cap over-receiving — check remaining receivable
+                $cap_stmt = $pdo->prepare("SELECT qty, received_qty FROM purchase_order_items WHERE id = ? FOR UPDATE");
+                $cap_stmt->execute([$item_id]);
+                $cap_data = $cap_stmt->fetch();
+                if (!$cap_data) continue;
+                
+                $max_receivable = (int)$cap_data['qty'] - (int)$cap_data['received_qty'];
+                if ($max_receivable <= 0) continue; // Already fully received
+                if ($recv_qty_now > $max_receivable) {
+                    $recv_qty_now = $max_receivable; // Cap to remaining
+                }
+
                 // Update the PO item's received qty
                 $stmtUpdateItemRow->execute([$recv_qty_now, $item_id, $po_id]);
 
@@ -179,7 +191,22 @@ try {
             break;
 
         case 'delete':
+            // F4.1: Only Admin can delete purchase orders
+            if (($_SESSION['user_role'] ?? '') !== 'Admin') {
+                throw new Exception('Only Admins can delete purchase orders.');
+            }
             $id = $_GET['id'];
+            
+            // F2.3: Prevent deletion of POs that have received stock
+            $status_stmt = $pdo->prepare("SELECT status FROM purchase_orders WHERE id = ?");
+            $status_stmt->execute([$id]);
+            $po_status = $status_stmt->fetchColumn();
+            
+            if ($po_status === 'Received' || $po_status === 'Partial') {
+                echo json_encode(['error' => 'Cannot delete a purchase order that has received stock. Cancel it instead.']);
+                exit;
+            }
+            
             // purchase_order_items has ON DELETE CASCADE in schema
             $stmt = $pdo->prepare("DELETE FROM purchase_orders WHERE id = ?");
             $stmt->execute([$id]);

@@ -16,29 +16,27 @@ try {
     $yesterday_revenue = $stmt->fetch()['revenue'] ?? 0;
 
     $stmt = $pdo->prepare("
-        SELECT SUM(si.qty * p.purchase_price) as cogs
+        SELECT SUM(si.qty * si.cost_price) as cogs
         FROM sale_items si
         JOIN sales s ON si.sale_id = s.id
-        JOIN products p ON si.product_id = p.id
         WHERE DATE(s.date) = CURDATE() AND s.status = 'Completed'
     ");
     $stmt->execute();
     $today_cogs = $stmt->fetch()['cogs'] ?? 0;
     
-    $today_profit = max(0, $today_revenue - $today_cogs);
+    $today_profit = $today_revenue - $today_cogs;
 
     // Yesterday's Profit
     $stmt = $pdo->prepare("
-        SELECT SUM(si.qty * p.purchase_price) as cogs
+        SELECT SUM(si.qty * si.cost_price) as cogs
         FROM sale_items si
         JOIN sales s ON si.sale_id = s.id
-        JOIN products p ON si.product_id = p.id
         WHERE DATE(s.date) = DATE_SUB(CURDATE(), INTERVAL 1 DAY) AND s.status = 'Completed'
     ");
     $stmt->execute();
     $yesterday_cogs = $stmt->fetch()['cogs'] ?? 0;
     
-    $yesterday_profit = max(0, $yesterday_revenue - $yesterday_cogs);
+    $yesterday_profit = $yesterday_revenue - $yesterday_cogs;
 
     // Monthly Sales Count (This Month)
     $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM sales WHERE MONTH(date) = MONTH(CURDATE()) AND YEAR(date) = YEAR(CURDATE()) AND status = 'Completed'");
@@ -101,8 +99,8 @@ try {
                 SELECT DATE_FORMAT(date, '%b %Y') as day, SUM(total) as total 
                 FROM sales 
                 WHERE date >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH) AND status = 'Completed'
-                GROUP BY MONTH(date)
-                ORDER BY date ASC
+                GROUP BY YEAR(date), MONTH(date)
+                ORDER BY YEAR(date) ASC, MONTH(date) ASC
             ");
             break;
         case 'daily':
@@ -126,6 +124,8 @@ try {
         SELECT p.name, SUM(si.qty) as total_sold
         FROM sale_items si
         JOIN products p ON si.product_id = p.id
+        JOIN sales s ON si.sale_id = s.id
+        WHERE s.status = 'Completed'
         GROUP BY si.product_id
         ORDER BY total_sold DESC
         LIMIT 5

@@ -39,6 +39,11 @@ try {
             break;
 
         case 'delete':
+            // F4.1: Only Admin can delete suppliers
+            if (($_SESSION['user_role'] ?? '') !== 'Admin') {
+                echo json_encode(['error' => 'Only Admins can delete suppliers.']);
+                exit;
+            }
             $id = $_GET['id'];
             $stmt = $pdo->prepare("DELETE FROM suppliers WHERE id = ?");
             $stmt->execute([$id]);

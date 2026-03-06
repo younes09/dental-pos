@@ -51,7 +51,7 @@ try {
             $product_ids = array_column($data['items'], 'id');
             if (empty($product_ids)) throw new Exception('No items provided');
             $placeholders = str_repeat('?,', count($product_ids) - 1) . '?';
-            $prod_stmt = $pdo->prepare("SELECT id, name, selling_price, stock_qty FROM products WHERE id IN ($placeholders) FOR UPDATE");
+            $prod_stmt = $pdo->prepare("SELECT id, name, selling_price, purchase_price, stock_qty FROM products WHERE id IN ($placeholders) FOR UPDATE");
             $prod_stmt->execute($product_ids);
             
             $db_products = [];
@@ -78,6 +78,7 @@ try {
                 }
                 
                 $price = (float)$db_prod['selling_price'];
+                $cost = (float)$db_prod['purchase_price'];
                 $item_total = $price * $qty;
                 $subtotal += $item_total;
                 
@@ -85,6 +86,7 @@ try {
                     'id' => $item_id,
                     'qty' => $qty,
                     'price' => $price,
+                    'cost' => $cost,
                     'total' => $item_total
                 ];
             }
@@ -128,11 +130,11 @@ try {
 
             $points_earned = ($earning_rate > 0) ? floor($total / $earning_rate) : 0;
 
-            // 1. Insert into sales table
+            // 1. Insert into sales table (F2.4: store points for reversal)
             $stmt = $pdo->prepare("
                 INSERT INTO sales 
-                (customer_id, user_id, subtotal, discount, tax, total, payment_method, invoice_type) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                (customer_id, user_id, subtotal, discount, tax, total, payment_method, invoice_type, points_earned, points_redeemed) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ");
             $stmt->execute([
                 $customer_id,
@@ -142,14 +144,16 @@ try {
                 $tax,
                 $total,
                 $payment_method,
-                $invoice_type
+                $invoice_type,
+                $points_earned,
+                $points_redeemed
             ]);
             $sale_id = $pdo->lastInsertId();
 
-            // 2. Insert items and update stock
+            // 2. Insert items (F1.2: snapshot cost_price) and update stock
             $item_stmt = $pdo->prepare("
-                INSERT INTO sale_items (sale_id, product_id, qty, unit_price, total) 
-                VALUES (?, ?, ?, ?, ?)
+                INSERT INTO sale_items (sale_id, product_id, qty, unit_price, cost_price, total) 
+                VALUES (?, ?, ?, ?, ?, ?)
             ");
             $stock_stmt = $pdo->prepare("UPDATE products SET stock_qty = stock_qty - ? WHERE id = ?");
 
@@ -159,6 +163,7 @@ try {
                     $item['id'],
                     $item['qty'],
                     $item['price'],
+                    $item['cost'],
                     $item['total']
                 ]);
 
@@ -225,6 +230,22 @@ try {
             // Mark as cancelled
             $pdo->prepare("UPDATE sales SET status = 'Cancelled' WHERE id = ?")->execute([$sale_id]);
             
+            // F2.4: Reverse loyalty points
+            if ($sale['customer_id']) {
+                $pts_earned = (int)($sale['points_earned'] ?? 0);
+                $pts_redeemed = (int)($sale['points_redeemed'] ?? 0);
+                if ($pts_earned > 0 || $pts_redeemed > 0) {
+                    // Subtract earned, add back redeemed
+                    $pts_stmt = $pdo->prepare("UPDATE customers SET loyalty_points = GREATEST(0, loyalty_points - ? + ?) WHERE id = ?");
+                    $pts_stmt->execute([$pts_earned, $pts_redeemed, $sale['customer_id']]);
+                }
+                // If payment was Credit, reverse the balance increase
+                if ($sale['payment_method'] === 'Credit') {
+                    $bal_stmt = $pdo->prepare("UPDATE customers SET balance = GREATEST(0, balance - ?) WHERE id = ?");
+                    $bal_stmt->execute([$sale['total'], $sale['customer_id']]);
+                }
+            }
+            
             // Restore stock
             $items_stmt = $pdo->prepare("SELECT * FROM sale_items WHERE sale_id = ?");
             $items_stmt->execute([$sale_id]);
@@ -269,7 +290,8 @@ try {
             break;
 
         case 'sale_details':
-            $id = $_GET['id'];
+            $id = $_GET['id'] ?? null;
+            if (!$id) throw new Exception('Sale ID is required');
             
             // Get Sale Header
             $stmt = $pdo->prepare("

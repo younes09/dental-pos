@@ -33,7 +33,7 @@ CREATE TABLE products (
     barcode VARCHAR(100) UNIQUE,
     purchase_price DECIMAL(10, 2) NOT NULL,
     selling_price DECIMAL(10, 2) NOT NULL,
-    stock_qty INT DEFAULT 0,
+    stock_qty INT DEFAULT 0 CHECK (stock_qty >= 0),
     min_stock INT DEFAULT 5,
     expiry_date DATE,
     image VARCHAR(255),
@@ -93,6 +93,7 @@ CREATE TABLE purchase_order_items (
     product_id INT,
     qty INT NOT NULL,
     received_qty INT NOT NULL DEFAULT 0,
+    CONSTRAINT chk_received_lte_qty CHECK (received_qty <= qty),
     unit_cost DECIMAL(10, 2) NOT NULL,
     FOREIGN KEY (po_id) REFERENCES purchase_orders(id) ON DELETE CASCADE,
     FOREIGN KEY (product_id) REFERENCES products(id)
@@ -111,6 +112,8 @@ CREATE TABLE sales (
     payment_method ENUM('Cash', 'Card', 'Insurance') DEFAULT 'Cash',
     invoice_type ENUM('BV', 'BL') DEFAULT 'BV',
     status ENUM('Completed', 'Hold', 'Cancelled') DEFAULT 'Completed',
+    points_earned INT NOT NULL DEFAULT 0,
+    points_redeemed INT NOT NULL DEFAULT 0,
     FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE SET NULL,
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
@@ -122,6 +125,7 @@ CREATE TABLE sale_items (
     product_id INT,
     qty INT NOT NULL,
     unit_price DECIMAL(10, 2) NOT NULL,
+    cost_price DECIMAL(10, 2) NOT NULL DEFAULT 0,
     total DECIMAL(10, 2) NOT NULL,
     FOREIGN KEY (sale_id) REFERENCES sales(id) ON DELETE CASCADE,
     FOREIGN KEY (product_id) REFERENCES products(id)

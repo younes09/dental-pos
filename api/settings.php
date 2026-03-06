@@ -20,6 +20,12 @@ switch ($method) {
         break;
 
     case 'POST':
+        // F4.1: Only Admin can modify settings
+        if (($_SESSION['user_role'] ?? '') !== 'Admin') {
+            http_response_code(403);
+            echo json_encode(['error' => 'Only Admins can modify settings.']);
+            exit;
+        }
         $data = json_decode(file_get_contents('php://input'), true);
         if (!$data) {
             http_response_code(400);

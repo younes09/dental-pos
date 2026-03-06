@@ -7,7 +7,7 @@ const posModule = {
     allCustomers: [],
     selectedCustomer: null,
     cart: [],
-    taxRate: 0.15,
+    taxRate: 0, // F1.5: Default to 0, will be loaded from settings
 
     init() {
         this.loadSettings();
@@ -664,33 +664,44 @@ const posModule = {
             return;
         }
 
-        const totals = this.calculateTotals();
-        const paymentMethod = document.querySelector('input[name="payment-method"]:checked').value;
-        const invoiceType = document.querySelector('input[name="invoice-type"]:checked')?.value || 'BV';
+        // F4.7: Prevent double-submit
+        const btn = document.getElementById('btn-checkout');
+        if (btn.disabled) return;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
 
-        const saleData = {
-            customer_id: this.selectedCustomer ? this.selectedCustomer.id : null,
-            subtotal: totals.subtotal,
-            discount_amount: totals.discountAmount,
-            tax: totals.tax,
-            total: totals.total,
-            points_redeemed: totals.pointsRedeemed,
-            points_earned: totals.pointsEarned,
-            payment_method: paymentMethod,
-            invoice_type: invoiceType,
-            items: this.cart
-        };
+        try {
+            const totals = this.calculateTotals();
+            const paymentMethod = document.querySelector('input[name="payment-method"]:checked').value;
+            const invoiceType = document.querySelector('input[name="invoice-type"]:checked')?.value || 'BV';
 
-        const result = await App.api('sales.php?action=process_sale', 'POST', saleData);
-        if (result && result.success) {
-            App.toast('success', 'Sale completed!');
-            document.getElementById('cart-points-redeem').value = 0;
-            this.clearCart();
-            await this.loadProducts(); // Refresh stock in local state
-            if (this.selectedCustomer) {
-                await this.loadCustomers(); // Refresh loyalty points
-                this.selectCustomer(this.selectedCustomer.id);
+            const saleData = {
+                customer_id: this.selectedCustomer ? this.selectedCustomer.id : null,
+                subtotal: totals.subtotal,
+                discount_amount: totals.discountAmount,
+                tax: totals.tax,
+                total: totals.total,
+                points_redeemed: totals.pointsRedeemed,
+                points_earned: totals.pointsEarned,
+                payment_method: paymentMethod,
+                invoice_type: invoiceType,
+                items: this.cart
+            };
+
+            const result = await App.api('sales.php?action=process_sale', 'POST', saleData);
+            if (result && result.success) {
+                App.toast('success', 'Sale completed!');
+                document.getElementById('cart-points-redeem').value = 0;
+                this.clearCart();
+                await this.loadProducts(); // Refresh stock in local state
+                if (this.selectedCustomer) {
+                    await this.loadCustomers(); // Refresh loyalty points
+                    this.selectCustomer(this.selectedCustomer.id);
+                }
             }
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-check-circle me-2"></i>Complete Sale';
         }
     }
 };

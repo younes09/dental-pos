@@ -41,6 +41,11 @@ try {
             break;
 
         case 'delete':
+            // F4.1: Only Admin can delete catalog items
+            if (($_SESSION['user_role'] ?? '') !== 'Admin') {
+                echo json_encode(['error' => 'Only Admins can delete catalog items.']);
+                exit;
+            }
             $id = $_GET['id'] ?? null;
             if (!$id) {
                 echo json_encode(['error' => 'ID is required']);
