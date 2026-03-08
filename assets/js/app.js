@@ -39,6 +39,7 @@ const App = {
         this.bindEvents();
         this.handleRouting();
         this.applySettings();
+        this.loadSidebarState();
         console.log('DentalPOS Initialized');
     },
 
@@ -90,6 +91,10 @@ const App = {
 
         document.getElementById('sidebarCollapse')?.addEventListener('click', () => {
             this.toggleSidebar();
+        });
+
+        document.getElementById('sidebarCollapseDesktop')?.addEventListener('click', () => {
+            this.toggleSidebarCollapse();
         });
 
         // Navigation clicks
@@ -151,6 +156,35 @@ const App = {
         // So on mobile, 'active' means SHOWN. To CLOSE it, we REMOVE 'active'.
         document.getElementById('sidebar').classList.remove('active');
         document.getElementById('content').classList.remove('active');
+    },
+
+    toggleSidebarCollapse() {
+        const sidebar = document.getElementById('sidebar');
+        const content = document.getElementById('content');
+        const icon = document.querySelector('#sidebarCollapseDesktop i');
+
+        sidebar.classList.toggle('collapsed');
+        content.classList.toggle('sidebar-collapsed');
+
+        const isCollapsed = sidebar.classList.contains('collapsed');
+        localStorage.setItem('sidebarCollapsed', isCollapsed);
+
+        if (icon) {
+            icon.classList.replace(isCollapsed ? 'fa-angles-left' : 'fa-angles-right', isCollapsed ? 'fa-angles-right' : 'fa-angles-left');
+        }
+    },
+
+    loadSidebarState() {
+        const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+        if (isCollapsed) {
+            const sidebar = document.getElementById('sidebar');
+            const content = document.getElementById('content');
+            const icon = document.querySelector('#sidebarCollapseDesktop i');
+
+            sidebar.classList.add('collapsed');
+            content.classList.add('sidebar-collapsed');
+            if (icon) icon.classList.replace('fa-angles-left', 'fa-angles-right');
+        }
     },
 
     async handleRouting() {

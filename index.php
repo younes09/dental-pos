@@ -51,7 +51,10 @@ if (!isset($_SESSION['user_id'])) {
                 <i class="fas fa-tooth text-teal"></i>
                 <span>Dental<span>POS</span></span>
             </div>
-            <button id="sidebarCollapse" class="btn btn-link d-md-none">
+            <button id="sidebarCollapseDesktop" class="btn btn-link d-none d-md-block text-white p-0">
+                <i class="fas fa-angles-left"></i>
+            </button>
+            <button id="sidebarCollapse" class="btn btn-link d-md-none text-white p-0">
                 <i class="fas fa-bars"></i>
             </button>
         </div>
