@@ -28,7 +28,8 @@ const App = {
             'suppliers': ['Admin', 'Stock Manager'],
             'users': ['Admin'],
             'reports': ['Admin'],
-            'settings': ['Admin']
+            'settings': ['Admin'],
+            'profile': ['Admin', 'Cashier', 'Stock Manager']
         }
     },
 

@@ -374,6 +374,13 @@ body.dark-mode .kpi-card {
     color: #e1e7ed;
 }
 
+body.dark-mode .card-header,
+body.dark-mode .modal-header {
+    background-color: rgba(255, 255, 255, 0.03) !important;
+    border-bottom: 1px solid #1e2d41 !important;
+    color: #fff;
+}
+
 body.dark-mode .table {
     --bs-table-bg: transparent;
     --bs-table-color: #e1e7ed;

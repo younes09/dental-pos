@@ -1,0 +1,107 @@
+<div class="container-fluid py-4">
+    <div class="row">
+        <!-- Profile Header/Card -->
+        <div class="col-lg-4 mb-4">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden text-center p-4">
+                <div class="profile-avatar-container mb-3">
+                    <img id="profileAvatar" src="" alt="Avatar" class="rounded-circle shadow-sm" style="width: 120px; height: 120px; border: 4px solid var(--primary-teal);">
+                </div>
+                <h3 id="profileNameDisplay" class="fw-bold mb-0">---</h3>
+                <p id="profileRoleDisplay" class="badge bg-teal-subtle text-teal rounded-pill px-3 py-2 mt-2">---</p>
+                <hr class="my-4 opacity-10">
+                <div class="text-start">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="icon-circle bg-light me-3">
+                            <i class="fas fa-envelope text-muted"></i>
+                        </div>
+                        <div>
+                            <small class="text-muted d-block">Email Address</small>
+                            <span id="profileEmailDisplay" class="fw-medium">---</span>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <div class="icon-circle bg-light me-3">
+                            <i class="fas fa-phone text-muted"></i>
+                        </div>
+                        <div>
+                            <small class="text-muted d-block">Phone Number</small>
+                            <span id="profilePhoneDisplay" class="fw-medium">---</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Forms Column -->
+        <div class="col-lg-8">
+            <!-- Basic Information -->
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+                <div class="card-header border-0 py-3">
+                    <h5 class="mb-0 fw-bold">Basic Information</h5>
+                </div>
+                <div class="card-body p-4">
+                    <form id="profileInfoForm">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Full Name</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-0"><i class="fas fa-user"></i></span>
+                                    <input type="text" name="name" id="nameInput" class="form-control border-0 bg-light rounded-end-2" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Email</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-0"><i class="fas fa-at"></i></span>
+                                    <input type="email" name="email" id="emailInput" class="form-control border-0 bg-light rounded-end-2" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Phone</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-0"><i class="fas fa-phone"></i></span>
+                                    <input type="text" name="phone" id="phoneInput" class="form-control border-0 bg-light rounded-end-2">
+                                </div>
+                            </div>
+                            <div class="col-12 mt-4 text-end">
+                                <button type="submit" class="btn btn-teal px-4 rounded-pill">
+                                    <i class="fas fa-save me-2"></i>Save Changes
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Password Change -->
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-header border-0 py-3">
+                    <h5 class="mb-0 fw-bold text-danger">Security & Password</h5>
+                </div>
+                <div class="card-body p-4">
+                    <form id="passwordChangeForm">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">Current Password</label>
+                                <input type="password" name="current_password" id="currentPassword" class="form-control border-0 bg-light" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">New Password</label>
+                                <input type="password" name="new_password" id="newPassword" class="form-control border-0 bg-light" required minlength="6">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Confirm New Password</label>
+                                <input type="password" name="confirm_password" id="confirmPassword" class="form-control border-0 bg-light" required minlength="6">
+                            </div>
+                            <div class="col-12 mt-4 text-end">
+                                <button type="submit" class="btn btn-danger px-4 rounded-pill">
+                                    <i class="fas fa-key me-2"></i>Update Password
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

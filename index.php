@@ -136,13 +136,13 @@ if (!isset($_SESSION['user_id'])) {
         </ul>
         
         <div class="sidebar-footer">
-            <div class="user-info">
+            <a href="#profile" class="user-info text-decoration-none">
                 <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($_SESSION['user_name'] ?? 'User'); ?>&background=00BFA6&color=fff" alt="User" class="rounded-circle">
                 <div class="ms-2">
-                    <p class="mb-0 fw-bold text-truncate"><?php echo htmlspecialchars($_SESSION['user_name'] ?? 'User'); ?></p>
+                    <p class="mb-0 fw-bold text-truncate text-white"><?php echo htmlspecialchars($_SESSION['user_name'] ?? 'User'); ?></p>
                     <small class="text-primary"><?php echo htmlspecialchars($_SESSION['user_role'] ?? 'User'); ?></small>
                 </div>
-            </div>
+            </a>
             <a href="api/auth.php?action=logout" class="logout-btn" title="Logout">
                 <i class="fas fa-sign-out-alt"></i>
             </a>
