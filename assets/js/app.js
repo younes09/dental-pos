@@ -96,13 +96,19 @@ const App = {
         document.querySelectorAll('.nav-link').forEach(link => {
             link.addEventListener('click', (e) => {
                 const href = link.getAttribute('href');
+
+                // If it's a dropdown toggle (submenu trigger), handled by Bootstrap data-attributes
+                if (link.classList.contains('dropdown-toggle')) {
+                    return;
+                }
+
                 if (href && href.startsWith('#')) {
-                    // Force navigation if it's the same hash (optional but helps refresh)
+                    // Force navigation if it's the same hash
                     if (window.location.hash === href) {
                         this.handleRouting();
                     }
 
-                    // Close sidebar on small screens after clicking a link
+                    // Close sidebar on small screens after clicking a final link
                     if (window.innerWidth <= 992) {
                         this.closeSidebar();
                     }
@@ -176,20 +182,29 @@ const App = {
         console.log('Updating active nav link for:', hash);
         let found = false;
 
-        document.querySelectorAll('.sidebar ul li').forEach(li => {
-            li.classList.remove('active');
-            const link = li.querySelector('a');
+        // Clear all active states first
+        document.querySelectorAll('.sidebar ul li').forEach(li => li.classList.remove('active'));
 
-            if (link && link.getAttribute('href') === hash) {
+        // Find and activate the link
+        document.querySelectorAll('.sidebar ul li a').forEach(link => {
+            if (link.getAttribute('href') === hash) {
+                const li = link.parentElement;
                 li.classList.add('active');
                 found = true;
 
                 // Update Page Title
-                const titleSpan = link.querySelector('span');
-                if (titleSpan) {
-                    const title = titleSpan.textContent;
-                    const titleEl = document.getElementById('currentViewTitle');
-                    if (titleEl) titleEl.textContent = title;
+                const titleText = link.querySelector('span')?.textContent || link.textContent.trim();
+                const titleEl = document.getElementById('currentViewTitle');
+                if (titleEl) titleEl.textContent = titleText;
+
+                // If it's a submenu link, make sure the parent is expanded
+                const parentSubmenu = link.closest('.submenu');
+                if (parentSubmenu) {
+                    const collapseInstance = bootstrap.Collapse.getOrCreateInstance(parentSubmenu, { toggle: false });
+                    collapseInstance.show();
+
+                    // Mark the parent trigger link parent as active too? 
+                    // Optional: parentSubmenu.parentElement.classList.add('active');
                 }
             }
         });
@@ -255,6 +270,8 @@ const App = {
     initModule(viewName) {
         // Load module-specific JS if exists
         const scriptId = `script-${viewName}`;
+        const moduleObjectName = `${viewName}Module`;
+
         if (!document.getElementById(scriptId)) {
             const script = document.createElement('script');
             script.id = scriptId;
@@ -264,10 +281,10 @@ const App = {
             };
             document.body.appendChild(script);
         } else {
-            // If already loaded, we might need to re-init some parts
-            // This depends on how module JS is structured
-            if (window[viewName + 'Module'] && window[viewName + 'Module'].init) {
-                window[viewName + 'Module'].init();
+            // If already loaded, re-initialize to refresh data
+            if (window[moduleObjectName] && typeof window[moduleObjectName].init === 'function') {
+                console.log(`Re-initializing module: ${moduleObjectName}`);
+                window[moduleObjectName].init();
             }
         }
     },

@@ -4,7 +4,11 @@
 
 const profileModule = {
     init() {
-        console.log('Profile Module Loaded');
+        if (!document.getElementById('profileNameDisplay')) {
+            console.warn('Profile view elements not found, skipping init');
+            return;
+        }
+        console.log('Profile Module Initialized');
         this.loadProfile();
         this.bindEvents();
     },
@@ -15,16 +19,26 @@ const profileModule = {
             const user = response.data;
 
             // Update Displays
-            document.getElementById('profileNameDisplay').textContent = user.name;
-            document.getElementById('profileRoleDisplay').textContent = user.role;
-            document.getElementById('profileEmailDisplay').textContent = user.email;
-            document.getElementById('profilePhoneDisplay').textContent = user.phone || 'Not set';
-            document.getElementById('profileAvatar').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=00BFA6&color=fff&size=128`;
+            const nameEl = document.getElementById('profileNameDisplay');
+            const roleEl = document.getElementById('profileRoleDisplay');
+            const emailEl = document.getElementById('profileEmailDisplay');
+            const phoneEl = document.getElementById('profilePhoneDisplay');
+            const avatarEl = document.getElementById('profileAvatar');
+
+            if (nameEl) nameEl.textContent = user.name;
+            if (roleEl) roleEl.textContent = user.role;
+            if (emailEl) emailEl.textContent = user.email;
+            if (phoneEl) phoneEl.textContent = user.phone || 'Not set';
+            if (avatarEl) avatarEl.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=00BFA6&color=fff&size=128`;
 
             // Fill Inputs
-            document.getElementById('nameInput').value = user.name;
-            document.getElementById('emailInput').value = user.email;
-            document.getElementById('phoneInput').value = user.phone || '';
+            const nameInput = document.getElementById('nameInput');
+            const emailInput = document.getElementById('emailInput');
+            const phoneInput = document.getElementById('phoneInput');
+
+            if (nameInput) nameInput.value = user.name;
+            if (emailInput) emailInput.value = user.email;
+            if (phoneInput) phoneInput.value = user.phone || '';
         }
     },
 
@@ -33,9 +47,13 @@ const profileModule = {
         const passwordForm = document.getElementById('passwordChangeForm');
 
         if (profileForm) {
-            profileForm.addEventListener('submit', async (e) => {
+            // Remove existing listener to avoid duplicates if re-initialized
+            const newForm = profileForm.cloneNode(true);
+            profileForm.parentNode.replaceChild(newForm, profileForm);
+
+            newForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const formData = new FormData(profileForm);
+                const formData = new FormData(newForm);
                 const data = {
                     name: formData.get('name'),
                     email: formData.get('email'),
@@ -44,7 +62,7 @@ const profileModule = {
 
                 const response = await App.api('profile.php?action=update', 'POST', data);
                 if (response && response.success) {
-                    App.state.user.name = data.name; // Sync local state
+                    if (App.state.user) App.state.user.name = data.name; // Sync local state
                     // Update sidebar if visible
                     const sidebarName = document.querySelector('.sidebar-footer .user-info p');
                     if (sidebarName) sidebarName.textContent = data.name;
@@ -56,7 +74,10 @@ const profileModule = {
         }
 
         if (passwordForm) {
-            passwordForm.addEventListener('submit', async (e) => {
+            const newPassForm = passwordForm.cloneNode(true);
+            passwordForm.parentNode.replaceChild(newPassForm, passwordForm);
+
+            newPassForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const currentPass = document.getElementById('currentPassword').value;
                 const newPass = document.getElementById('newPassword').value;
@@ -78,12 +99,16 @@ const profileModule = {
                 const response = await App.api('profile.php?action=update', 'POST', data);
                 if (response && response.success) {
                     App.toast('success', 'Password updated successfully');
-                    passwordForm.reset();
+                    newPassForm.reset();
                 }
             });
         }
     }
 };
 
-// Auto-init on load
-profileModule.init();
+// Initialize if view is already loaded or via App.initModule
+if (document.getElementById('profileNameDisplay')) {
+    profileModule.init();
+}
+
+window.profileModule = profileModule;

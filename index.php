@@ -57,80 +57,113 @@ if (!isset($_SESSION['user_id'])) {
         </div>
         
         <ul class="list-unstyled components">
+            <!-- Operations Section -->
+            <li class="sidebar-label">Operations</li>
             <li class="active">
                 <a href="#dashboard" class="nav-link">
                     <i class="fas fa-chart-line"></i>
                     <span>Dashboard</span>
                 </a>
             </li>
+
             <?php if (in_array($_SESSION['user_role'] ?? '', ['Admin', 'Cashier'])): ?>
             <li>
-                <a href="#pos" class="nav-link">
+                <a href="#salesSubmenu" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle nav-link">
                     <i class="fas fa-cash-register"></i>
-                    <span>Point of Sale</span>
+                    <span>Sales</span>
                 </a>
-            </li>
-            <li>
-                <a href="#sales_history" class="nav-link">
-                    <i class="fas fa-history"></i>
-                    <span>Sales History</span>
-                </a>
+                <ul class="collapse list-unstyled submenu" id="salesSubmenu">
+                    <li>
+                        <a href="#pos">
+                            <i class="fas fa-plus"></i> Point of Sale
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#sales_history">
+                            <i class="fas fa-history"></i> Sales History
+                        </a>
+                    </li>
+                </ul>
             </li>
             <?php endif; ?>
-            <?php if (in_array($_SESSION['user_role'] ?? '', ['Admin', 'Stock Manager'])): ?>
+
+            <!-- Inventory Section -->
+            <li class="sidebar-label">Management</li>
             <li>
-                <a href="#purchase_orders" class="nav-link">
-                    <i class="fas fa-file-invoice"></i>
-                    <span>Purchase Orders</span>
-                </a>
-            </li>
-            <li>
-                <a href="#stock" class="nav-link">
+                <a href="#inventorySubmenu" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle nav-link">
                     <i class="fas fa-boxes-stacked"></i>
-                    <span>Stock Management</span>
+                    <span>Inventory</span>
                 </a>
+                <ul class="collapse list-unstyled submenu" id="inventorySubmenu">
+                    <?php if (in_array($_SESSION['user_role'] ?? '', ['Admin', 'Stock Manager'])): ?>
+                    <li>
+                        <a href="#stock">
+                            <i class="fas fa-warehouse"></i> Stock Management
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#purchase_orders">
+                            <i class="fas fa-file-invoice"></i> Purchase Orders
+                        </a>
+                    </li>
+                    <?php endif; ?>
+                    <li>
+                        <a href="#catalog">
+                            <i class="fas fa-list-ul"></i> Catalog
+                        </a>
+                    </li>
+                </ul>
             </li>
-            <?php endif; ?>
+
+            <!-- Contacts Section -->
             <li>
-                <a href="#catalog" class="nav-link">
-                    <i class="fas fa-list-ul"></i>
-                    <span>Catalog</span>
+                <a href="#contactsSubmenu" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle nav-link">
+                    <i class="fas fa-user-group"></i>
+                    <span>Contacts</span>
                 </a>
+                <ul class="collapse list-unstyled submenu" id="contactsSubmenu">
+                    <?php if (in_array($_SESSION['user_role'] ?? '', ['Admin', 'Cashier'])): ?>
+                    <li>
+                        <a href="#customers">
+                            <i class="fas fa-users"></i> Customers
+                        </a>
+                    </li>
+                    <?php endif; ?>
+                    <?php if (in_array($_SESSION['user_role'] ?? '', ['Admin', 'Stock Manager'])): ?>
+                    <li>
+                        <a href="#suppliers">
+                            <i class="fas fa-truck-field"></i> Suppliers
+                        </a>
+                    </li>
+                    <?php endif; ?>
+                </ul>
             </li>
-            <?php if (in_array($_SESSION['user_role'] ?? '', ['Admin', 'Cashier'])): ?>
-            <li>
-                <a href="#customers" class="nav-link">
-                    <i class="fas fa-users"></i>
-                    <span>Customers</span>
-                </a>
-            </li>
-            <?php endif; ?>
-            <?php if (in_array($_SESSION['user_role'] ?? '', ['Admin', 'Stock Manager'])): ?>
-            <li>
-                <a href="#suppliers" class="nav-link">
-                    <i class="fas fa-truck-field"></i>
-                    <span>Suppliers</span>
-                </a>
-            </li>
-            <?php endif; ?>
+
+            <!-- Administration Section -->
             <?php if (($_SESSION['user_role'] ?? '') === 'Admin'): ?>
+            <li class="sidebar-label">Administration</li>
             <li>
-                <a href="#users" class="nav-link">
+                <a href="#adminSubmenu" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle nav-link">
                     <i class="fas fa-user-shield"></i>
-                    <span>Users</span>
+                    <span>System Admin</span>
                 </a>
-            </li>
-            <li>
-                <a href="#reports" class="nav-link">
-                    <i class="fas fa-file-invoice-dollar"></i>
-                    <span>Reports</span>
-                </a>
-            </li>
-            <li>
-                <a href="#settings" class="nav-link">
-                    <i class="fas fa-cog"></i>
-                    <span>Settings</span>
-                </a>
+                <ul class="collapse list-unstyled submenu" id="adminSubmenu">
+                    <li>
+                        <a href="#users">
+                            <i class="fas fa-users-gear"></i> User Management
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#reports">
+                            <i class="fas fa-file-invoice-dollar"></i> Reports
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#settings">
+                            <i class="fas fa-cog"></i> Settings
+                        </a>
+                    </li>
+                </ul>
             </li>
             <?php endif; ?>
         </ul>

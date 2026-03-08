@@ -78,11 +78,20 @@ h6,
 }
 
 .sidebar ul.components {
-    padding: 20px 0;
+    padding: 10px 0;
+}
+
+.sidebar-label {
+    padding: 20px 25px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: rgba(255, 255, 255, 0.4);
 }
 
 .sidebar ul li {
-    padding: 5px 20px;
+    padding: 2px 15px;
 }
 
 .sidebar ul li a {
@@ -112,6 +121,47 @@ h6,
     background: var(--primary-teal);
     color: #fff;
     box-shadow: 0 4px 15px rgba(0, 191, 166, 0.3);
+}
+
+/* Submenu Styling */
+.sidebar ul li .submenu {
+    padding-left: 15px;
+    margin-top: 5px;
+}
+
+.sidebar ul li .submenu li {
+    padding: 0;
+}
+
+.sidebar ul li .submenu li a {
+    padding: 10px 15px;
+    font-size: 14px;
+    background: transparent;
+    box-shadow: none;
+}
+
+.sidebar ul li .submenu li a i {
+    font-size: 12px;
+    opacity: 0.7;
+}
+
+.sidebar ul li .submenu li a:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* Dropdown Toggle Chevron */
+.sidebar .dropdown-toggle::after {
+    display: inline-block;
+    margin-left: auto;
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    content: "\f107";
+    border: none;
+    transition: transform 0.3s;
+}
+
+.sidebar .dropdown-toggle[aria-expanded="true"]::after {
+    transform: rotate(180deg);
 }
 
 .sidebar-footer {
