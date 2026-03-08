@@ -161,6 +161,15 @@ h6,
     padding: 15px 25px;
 }
 
+.user-name-nav {
+    font-size: 0.9rem;
+    transition: color 0.2s;
+}
+
+.dropdown-toggle::after {
+    display: none;
+}
+
 /* Custom UI Elements */
 .btn-teal {
     background-color: var(--primary-teal);
@@ -352,6 +361,7 @@ body.dark-mode .navbar {
 
 body.dark-mode .page-title,
 body.dark-mode .btn-link.text-dark,
+body.dark-mode .user-name-nav,
 body.dark-mode .text-navy {
     color: #fff !important;
 }

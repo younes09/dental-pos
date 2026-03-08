@@ -210,6 +210,31 @@ if (!isset($_SESSION['user_id'])) {
                             </li>
                         </ul>
                     </div>
+
+                    <div class="dropdown ms-3">
+                        <button class="btn btn-link dropdown-toggle text-decoration-none d-flex align-items-center p-0" type="button" data-bs-toggle="dropdown">
+                            <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($_SESSION['user_name'] ?? 'User'); ?>&background=00BFA6&color=fff" alt="User" class="rounded-circle me-2" style="width: 32px; height: 32px;">
+                            <span class="d-none d-md-inline text-dark fw-medium small user-name-nav"><?php echo htmlspecialchars($_SESSION['user_name'] ?? 'User'); ?></span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 mt-3 p-2">
+                            <li>
+                                <a class="dropdown-item rounded-2 py-2" href="#profile">
+                                    <i class="fas fa-user-circle me-2 text-teal"></i> My Profile
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item rounded-2 py-2" href="#settings">
+                                    <i class="fas fa-cog me-2 text-teal"></i> Settings
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item rounded-2 py-2 text-danger" href="api/auth.php?action=logout">
+                                    <i class="fas fa-sign-out-alt me-2"></i> Logout
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </nav>
