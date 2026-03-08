@@ -8,6 +8,9 @@ $action = $_GET['action'] ?? 'list';
 try {
     switch ($action) {
         case 'list':
+            if (!in_array($_SESSION['user_role'] ?? '', ['Admin', 'Stock Manager'])) {
+                throw new Exception('Access denied.');
+            }
             $stmt = $pdo->prepare("
                 SELECT po.*, s.name as supplier_name, s.company as supplier_company
                 FROM purchase_orders po
@@ -20,6 +23,9 @@ try {
             break;
 
         case 'save':
+            if (!in_array($_SESSION['user_role'] ?? '', ['Admin', 'Stock Manager'])) {
+                throw new Exception('Access denied.');
+            }
             $json = file_get_contents('php://input');
             $data = json_decode($json, true);
 
@@ -96,6 +102,9 @@ try {
             break;
 
         case 'receive_order':
+            if (!in_array($_SESSION['user_role'] ?? '', ['Admin', 'Stock Manager'])) {
+                throw new Exception('Access denied.');
+            }
             $json = file_get_contents('php://input');
             $data = json_decode($json, true);
 
@@ -199,6 +208,9 @@ try {
             break;
 
         case 'get_details':
+            if (!in_array($_SESSION['user_role'] ?? '', ['Admin', 'Stock Manager'])) {
+                throw new Exception('Access denied.');
+            }
             $id = $_GET['id'];
             
             // Get PO header

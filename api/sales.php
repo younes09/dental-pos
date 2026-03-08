@@ -29,6 +29,9 @@ try {
             break;
 
         case 'process_sale':
+            if (!in_array($_SESSION['user_role'] ?? '', ['Admin', 'Cashier'])) {
+                throw new Exception('Only Admins and Cashiers can process sales.');
+            }
             $data = json_decode(file_get_contents('php://input'), true);
             if (!$data || empty($data['items'])) throw new Exception('Invalid data or empty cart');
 
@@ -221,8 +224,8 @@ try {
             break;
 
         case 'cancel_sale':
-            if (($_SESSION['user_role'] ?? '') === 'Cashier') {
-                throw new Exception('Only Admins or Managers can cancel sales.');
+            if (($_SESSION['user_role'] ?? '') !== 'Admin') {
+                throw new Exception('Only Admins can cancel sales.');
             }
             $data = json_decode(file_get_contents('php://input'), true);
             $sale_id = $data['sale_id'] ?? null;
@@ -277,6 +280,9 @@ try {
             break;
 
         case 'history':
+            if (!in_array($_SESSION['user_role'] ?? '', ['Admin', 'Cashier'])) {
+                throw new Exception('Only Admins and Cashiers can view sales history.');
+            }
             $customer_id = $_GET['customer_id'] ?? null;
             $query = "
                 SELECT s.*, c.name as customer_name, u.name as user_name
@@ -301,6 +307,9 @@ try {
             break;
 
         case 'sale_details':
+            if (!in_array($_SESSION['user_role'] ?? '', ['Admin', 'Cashier'])) {
+                throw new Exception('Access denied.');
+            }
             $id = $_GET['id'] ?? null;
             if (!$id) throw new Exception('Sale ID is required');
             

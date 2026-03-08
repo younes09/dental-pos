@@ -16,6 +16,19 @@ const App = {
             currency: '$',
             store_name: 'DentalPOS',
             vat_rate: 0
+        },
+        permissions: {
+            'dashboard': ['Admin', 'Cashier', 'Stock Manager'],
+            'pos': ['Admin', 'Cashier'],
+            'sales_history': ['Admin', 'Cashier'],
+            'purchase_orders': ['Admin', 'Stock Manager'],
+            'stock': ['Admin', 'Stock Manager'],
+            'catalog': ['Admin', 'Cashier', 'Stock Manager'],
+            'customers': ['Admin', 'Cashier'],
+            'suppliers': ['Admin', 'Stock Manager'],
+            'users': ['Admin'],
+            'reports': ['Admin'],
+            'settings': ['Admin']
         }
     },
 
@@ -141,6 +154,17 @@ const App = {
         const [viewName, queryStr] = fullRoute.split('?');
 
         console.log('Handling route:', viewName, 'with params:', queryStr);
+
+        // RBAC Check
+        const userRole = (this.state.user?.role || 'Cashier').trim();
+        const allowedRoles = this.state.permissions[viewName];
+
+        if (allowedRoles && !allowedRoles.includes(userRole)) {
+            console.warn(`Access denied for ${userRole} to view: ${viewName}`);
+            this.toast('error', 'You do not have permission to access this module.');
+            window.location.hash = '#dashboard';
+            return;
+        }
 
         this.state.currentRoute = viewName;
         this.updateActiveNavLink(`#${viewName}`);

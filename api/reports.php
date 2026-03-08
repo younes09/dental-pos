@@ -7,6 +7,13 @@ $type = $_GET['type'] ?? 'sales';
 $from = $_GET['from'] ?? date('Y-m-d', strtotime('-30 days'));
 $to = $_GET['to'] ?? date('Y-m-d');
 
+// F4.1: Only Admin can access reports
+if (($_SESSION['user_role'] ?? '') !== 'Admin') {
+    http_response_code(403);
+    echo json_encode(['error' => 'Reports are restricted to administrators only.']);
+    exit;
+}
+
 try {
     switch ($type) {
         case 'sales':

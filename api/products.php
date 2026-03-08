@@ -48,6 +48,10 @@ try {
             break;
 
         case 'save':
+            // F4.1: Only Admin or Stock Manager can save/update products
+            if (!in_array($_SESSION['user_role'] ?? '', ['Admin', 'Stock Manager'])) {
+                throw new Exception('Access denied. Only Admins or Stock Managers can save products.');
+            }
             $id = $_POST['id'] ?? null;
             $name = $_POST['name'];
             $category_id = $_POST['category_id'];
@@ -204,6 +208,9 @@ try {
             exit;
 
         case 'import_csv':
+            if (!in_array($_SESSION['user_role'] ?? '', ['Admin', 'Stock Manager'])) {
+                throw new Exception('Access denied.');
+            }
             if (!isset($_FILES['csv_file']) || $_FILES['csv_file']['error'] !== UPLOAD_ERR_OK) {
                 echo json_encode(['error' => 'No file uploaded or upload error']);
                 exit;

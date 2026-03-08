@@ -21,6 +21,9 @@ try {
             break;
 
         case 'save':
+            if (!in_array($_SESSION['user_role'] ?? '', ['Admin', 'Cashier'])) {
+                throw new Exception('Access denied.');
+            }
             $id = $_POST['id'] ?? null;
             $name = $_POST['name'];
             $phone = $_POST['phone'];
@@ -52,6 +55,9 @@ try {
             break;
 
         case 'add_payment':
+            if (!in_array($_SESSION['user_role'] ?? '', ['Admin', 'Cashier'])) {
+                throw new Exception('Access denied.');
+            }
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception("Invalid request method");
             
             $customer_id = $_POST['customer_id'] ?? null;

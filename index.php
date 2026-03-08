@@ -63,6 +63,7 @@ if (!isset($_SESSION['user_id'])) {
                     <span>Dashboard</span>
                 </a>
             </li>
+            <?php if (in_array($_SESSION['user_role'] ?? '', ['Admin', 'Cashier'])): ?>
             <li>
                 <a href="#pos" class="nav-link">
                     <i class="fas fa-cash-register"></i>
@@ -75,6 +76,8 @@ if (!isset($_SESSION['user_id'])) {
                     <span>Sales History</span>
                 </a>
             </li>
+            <?php endif; ?>
+            <?php if (in_array($_SESSION['user_role'] ?? '', ['Admin', 'Stock Manager'])): ?>
             <li>
                 <a href="#purchase_orders" class="nav-link">
                     <i class="fas fa-file-invoice"></i>
@@ -87,24 +90,29 @@ if (!isset($_SESSION['user_id'])) {
                     <span>Stock Management</span>
                 </a>
             </li>
+            <?php endif; ?>
             <li>
                 <a href="#catalog" class="nav-link">
                     <i class="fas fa-list-ul"></i>
                     <span>Catalog</span>
                 </a>
             </li>
+            <?php if (in_array($_SESSION['user_role'] ?? '', ['Admin', 'Cashier'])): ?>
             <li>
                 <a href="#customers" class="nav-link">
                     <i class="fas fa-users"></i>
                     <span>Customers</span>
                 </a>
             </li>
+            <?php endif; ?>
+            <?php if (in_array($_SESSION['user_role'] ?? '', ['Admin', 'Stock Manager'])): ?>
             <li>
                 <a href="#suppliers" class="nav-link">
                     <i class="fas fa-truck-field"></i>
                     <span>Suppliers</span>
                 </a>
             </li>
+            <?php endif; ?>
             <?php if (($_SESSION['user_role'] ?? '') === 'Admin'): ?>
             <li>
                 <a href="#users" class="nav-link">
@@ -112,7 +120,6 @@ if (!isset($_SESSION['user_id'])) {
                     <span>Users</span>
                 </a>
             </li>
-            <?php endif; ?>
             <li>
                 <a href="#reports" class="nav-link">
                     <i class="fas fa-file-invoice-dollar"></i>
@@ -125,6 +132,7 @@ if (!isset($_SESSION['user_id'])) {
                     <span>Settings</span>
                 </a>
             </li>
+            <?php endif; ?>
         </ul>
         
         <div class="sidebar-footer">
@@ -234,7 +242,12 @@ if (!isset($_SESSION['user_id'])) {
     
     <!-- Core App Logic -->
     <script src="assets/js/app.js"></script>
-    
-    <!-- Load modules dynamically later -->
+    <script>
+        // Inject user session data for RBAC
+        App.state.user = {
+            role: '<?php echo $_SESSION['user_role'] ?? 'Cashier'; ?>',
+            name: '<?php echo $_SESSION['user_name'] ?? 'User'; ?>'
+        };
+    </script>
 </body>
 </html>

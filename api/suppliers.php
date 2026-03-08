@@ -21,6 +21,9 @@ try {
             break;
 
         case 'save':
+            if (!in_array($_SESSION['user_role'] ?? '', ['Admin', 'Stock Manager'])) {
+                throw new Exception('Access denied.');
+            }
             $id = $_POST['id'] ?? null;
             $name = $_POST['name'];
             $company = $_POST['company'];
@@ -39,6 +42,9 @@ try {
             break;
 
         case 'add_payment':
+            if (!in_array($_SESSION['user_role'] ?? '', ['Admin', 'Stock Manager'])) {
+                throw new Exception('Access denied.');
+            }
             $supplier_id = $_POST['supplier_id'] ?? null;
             $amount = isset($_POST['amount']) ? (float)$_POST['amount'] : 0;
             $method = $_POST['payment_method'] ?? 'Cash';
