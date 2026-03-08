@@ -34,6 +34,7 @@ const suppliersModule = {
 
     initDataTable() {
         this.table = $('#suppliersTable').DataTable({
+            destroy: true,
             ajax: 'api/suppliers.php?action=list',
             columns: [
                 {
@@ -48,17 +49,23 @@ const suppliersModule = {
                 { data: 'email', render: (data) => data || '<span class="text-muted">N/A</span>' },
                 {
                     data: 'total_purchases',
-                    render: (data) => {
+                    render: (data, type) => {
                         const val = parseFloat(data || 0);
-                        return `<span class="fw-bold text-muted">${App.formatCurrency(val)}</span>`;
+                        if (type === 'display') {
+                            return `<span class="fw-bold text-muted">${App.formatCurrency(val)}</span>`;
+                        }
+                        return val;
                     }
                 },
                 {
                     data: 'balance',
-                    render: (data) => {
+                    render: (data, type) => {
                         const val = parseFloat(data || 0);
-                        const colorClass = val > 0 ? 'text-danger' : 'text-success';
-                        return `<span class="fw-bold ${colorClass}">${App.formatCurrency(val)}</span>`;
+                        if (type === 'display') {
+                            const colorClass = val > 0 ? 'text-danger' : 'text-success';
+                            return `<span class="fw-bold ${colorClass}">${App.formatCurrency(val)}</span>`;
+                        }
+                        return val;
                     }
                 },
                 {

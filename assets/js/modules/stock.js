@@ -64,6 +64,22 @@ const stockModule = {
             await this.saveProduct();
         };
 
+        // Table Filters
+        const filterCat = document.getElementById('filter-category');
+        const filterBrand = document.getElementById('filter-brand');
+
+        if (filterCat) {
+            filterCat.onchange = (e) => {
+                this.table.column(2).search(e.target.value).draw();
+            };
+        }
+
+        if (filterBrand) {
+            filterBrand.onchange = (e) => {
+                this.table.column(3).search(e.target.value).draw();
+            };
+        }
+
         // Image Preview
         document.getElementById('imageUploadBtn').onclick = () => {
             document.getElementById('product-image-input').click();
@@ -129,6 +145,7 @@ const stockModule = {
 
     initDataTable() {
         this.table = $('#productsTable').DataTable({
+            destroy: true,
             ajax: 'api/products.php?action=list',
             columns: [
                 {
@@ -137,19 +154,26 @@ const stockModule = {
                 },
                 {
                     data: 'name',
-                    className: 'fw-semibold',
-                    render: (data, type, row) => {
-                        return data;
-                    }
+                    className: 'fw-semibold'
                 },
                 { data: 'category_name', render: (data) => `<span class="badge bg-light text-dark border">${data || 'Uncategorized'}</span>` },
                 { data: 'brand_name', render: (data) => `<span class="badge bg-light text-dark border">${data || 'Generic'}</span>` },
                 {
-                    data: null,
-                    render: (data) => `
-                        <small class="text-muted">B: ${App.formatCurrency(data.purchase_price)}</small><br>
-                        <span class="text-teal fw-bold">S: ${App.formatCurrency(data.selling_price)}</span>
-                    `
+                    data: 'selling_price',
+                    type: 'num',
+                    render: (data, type, row) => {
+                        const val = parseFloat(data || 0);
+                        if (type === 'sort' || type === 'type') {
+                            return val;
+                        }
+                        if (type === 'display') {
+                            return `
+                                <small class="text-muted">B: ${App.formatCurrency(row.purchase_price)}</small><br>
+                                <span class="text-teal fw-bold">S: ${App.formatCurrency(val)}</span>
+                            `;
+                        }
+                        return val;
+                    }
                 },
                 {
                     data: 'stock_qty',
@@ -160,25 +184,28 @@ const stockModule = {
                 },
                 {
                     data: 'expiry_date',
-                    render: (data) => {
-                        if (!data) return '<small class="text-muted">N/A</small>';
-                        const today = new Date();
-                        const expiry = new Date(data);
+                    render: (data, type, row) => {
+                        if (type === 'display') {
+                            if (!data) return '<small class="text-muted">N/A</small>';
+                            const today = new Date();
+                            const expiry = new Date(data);
 
-                        // Expired
-                        if (expiry <= today) {
-                            return `<span class="badge bg-danger-subtle text-danger border border-danger p-1 small" style="font-size: 0.75rem;"><i class="fas fa-exclamation-circle me-1"></i>Expired (${data})</span>`;
+                            // Expired
+                            if (expiry <= today) {
+                                return `<span class="badge bg-danger-subtle text-danger border border-danger p-1 small" style="font-size: 0.75rem;"><i class="fas fa-exclamation-circle me-1"></i>Expired (${data})</span>`;
+                            }
+
+                            // Near Expiry (within 30 days)
+                            const oneMonthFromNow = new Date();
+                            oneMonthFromNow.setMonth(today.getMonth() + 1);
+
+                            if (expiry <= oneMonthFromNow) {
+                                return `<span class="badge bg-warning-subtle text-warning-emphasis border border-warning p-1 small" style="font-size: 0.75rem;"><i class="fas fa-clock me-1"></i>Near (${data})</span>`;
+                            }
+
+                            return `<span class="small">${data}</span>`;
                         }
-
-                        // Near Expiry (within 30 days)
-                        const oneMonthFromNow = new Date();
-                        oneMonthFromNow.setMonth(today.getMonth() + 1);
-
-                        if (expiry <= oneMonthFromNow) {
-                            return `<span class="badge bg-warning-subtle text-warning-emphasis border border-warning p-1 small" style="font-size: 0.75rem;"><i class="fas fa-clock me-1"></i>Near (${data})</span>`;
-                        }
-
-                        return `<span class="small">${data}</span>`;
+                        return data;
                     }
                 },
                 {
@@ -225,9 +252,19 @@ const stockModule = {
         if (meta) {
             const catSelect = document.getElementById('product-category');
             const brandSelect = document.getElementById('product-brand');
+            const filterCat = document.getElementById('filter-category');
+            const filterBrand = document.getElementById('filter-brand');
 
-            catSelect.innerHTML = '<option value="">Select Category</option>' + meta.categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-            brandSelect.innerHTML = '<option value="">Select Brand</option>' + meta.brands.map(b => `<option value="${b.id}">${b.name}</option>`).join('');
+            const catOptions = meta.categories.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+            const catIdOptions = meta.categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+            const brandOptions = meta.brands.map(b => `<option value="${b.name}">${b.name}</option>`).join('');
+            const brandIdOptions = meta.brands.map(b => `<option value="${b.id}">${b.name}</option>`).join('');
+
+            if (catSelect) catSelect.innerHTML = '<option value="">Select Category</option>' + catIdOptions;
+            if (brandSelect) brandSelect.innerHTML = '<option value="">Select Brand</option>' + brandIdOptions;
+
+            if (filterCat) filterCat.innerHTML = '<option value="">All Categories</option>' + catOptions;
+            if (filterBrand) filterBrand.innerHTML = '<option value="">All Brands</option>' + brandOptions;
         }
     },
 

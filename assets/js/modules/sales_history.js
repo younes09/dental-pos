@@ -23,6 +23,7 @@ const sales_historyModule = {
 
     initDataTable() {
         this.table = $('#salesHistoryTable').DataTable({
+            destroy: true,
             ajax: 'api/sales.php?action=history',
             columns: [
                 {
@@ -31,7 +32,12 @@ const sales_historyModule = {
                 },
                 {
                     data: 'date',
-                    render: (data) => new Date(data).toLocaleString()
+                    render: (data, type) => {
+                        if (type === 'display') {
+                            return new Date(data).toLocaleString();
+                        }
+                        return data;
+                    }
                 },
                 {
                     data: 'customer_name',
@@ -58,7 +64,13 @@ const sales_historyModule = {
                 },
                 {
                     data: 'total',
-                    render: (data) => `<span class="fw-bold text-navy">${App.formatCurrency(data)}</span>`
+                    render: (data, type) => {
+                        const val = parseFloat(data || 0);
+                        if (type === 'display') {
+                            return `<span class="fw-bold text-navy">${App.formatCurrency(val)}</span>`;
+                        }
+                        return val;
+                    }
                 },
                 {
                     data: null,

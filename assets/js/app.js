@@ -131,9 +131,47 @@ const App = {
         document.getElementById('globalSearchInput')?.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 const query = e.target.value.trim();
-                if (query) {
+                if (!query) return;
+
+                const viewName = this.state.currentRoute;
+
+                // Try to find ANY DataTable API instance on the current page
+                let dataTable = null;
+                try {
+                    // Method 1: Check the expected module
+                    const module = window[`${viewName}Module`];
+                    if (module && module.table) dataTable = module.table;
+
+                    // Method 2: Use DataTables internal tracker
+                    if (!dataTable || typeof dataTable.search !== 'function') {
+                        const tables = $.fn.dataTable.tables({ api: true });
+                        if (tables.length > 0) dataTable = tables[0];
+                    }
+
+                    // Method 3: Direct attempt on common table IDs
+                    if (!dataTable || typeof dataTable.search !== 'function') {
+                        const commonIds = ['#productsTable', '#customersTable', '#suppliersTable', '#salesHistoryTable'];
+                        for (const id of commonIds) {
+                            if ($(id).length) {
+                                dataTable = $(id).DataTable();
+                                break;
+                            }
+                        }
+                    }
+                } catch (err) {
+                    console.error('Error finding DataTable:', err);
+                }
+
+                if (dataTable && typeof dataTable.search === 'function') {
+                    console.log(`Global search: filtering table for "${query}"`);
+                    dataTable.search(query).draw();
+                } else if (viewName === 'pos') {
+                    if (window.posModule && typeof window.posModule.filterProducts === 'function') {
+                        window.posModule.filterProducts(query);
+                    }
+                } else {
+                    console.log('Global search: no table found, redirecting to POS');
                     window.location.hash = `#pos?search=${encodeURIComponent(query)}`;
-                    e.target.value = '';
                 }
             }
         });

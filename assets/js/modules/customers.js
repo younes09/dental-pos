@@ -34,6 +34,7 @@ const customersModule = {
 
     initDataTable() {
         this.table = $('#customersTable').DataTable({
+            destroy: true,
             ajax: 'api/customers.php?action=list',
             columns: [
                 { data: 'name', className: 'fw-semibold' },
@@ -41,16 +42,33 @@ const customersModule = {
                 { data: 'email', render: (data) => data || '<span class="text-muted">N/A</span>' },
                 {
                     data: 'balance',
-                    render: (data) => {
-                        const val = parseFloat(data);
-                        const color = val > 0 ? 'danger' : 'success';
-                        return `<span class="fw-bold text-${color}">${App.formatCurrency(val)}</span>`;
+                    type: 'num',
+                    render: (data, type, row) => {
+                        const val = parseFloat(data || 0);
+                        if (type === 'display') {
+                            const color = val > 0 ? 'danger' : 'success';
+                            return `<span class="fw-bold text-${color}">${App.formatCurrency(val)}</span>`;
+                        }
+                        return val;
                     }
                 },
-                { data: 'loyalty_points', render: (data) => `<span class="badge bg-info-subtle text-info px-3">${data} pts</span>` },
+                {
+                    data: 'loyalty_points',
+                    render: (data, type) => {
+                        if (type === 'display') {
+                            return `<span class="badge bg-info-subtle text-info px-3">${data} pts</span>`;
+                        }
+                        return data;
+                    }
+                },
                 {
                     data: 'last_visit',
-                    render: (data) => data ? new Date(data).toLocaleDateString() : '<span class="text-muted">Never</span>'
+                    render: (data, type) => {
+                        if (type === 'display') {
+                            return data ? new Date(data).toLocaleDateString() : '<span class="text-muted">Never</span>';
+                        }
+                        return data;
+                    }
                 },
                 {
                     data: null,
