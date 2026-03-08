@@ -56,7 +56,8 @@ if (!isset($_SESSION['user_id'])) {
             </button>
         </div>
         
-        <ul class="list-unstyled components">
+        <div class="sidebar-content">
+            <ul class="list-unstyled components">
             <!-- Operations Section -->
             <li class="sidebar-label">Operations</li>
             <li class="active">
@@ -167,6 +168,8 @@ if (!isset($_SESSION['user_id'])) {
             </li>
             <?php endif; ?>
         </ul>
+        
+        </div>
         
         <div class="sidebar-footer">
             <a href="#profile" class="user-info text-decoration-none">

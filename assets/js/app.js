@@ -182,35 +182,51 @@ const App = {
         console.log('Updating active nav link for:', hash);
         let found = false;
 
-        // Clear all active states first
-        document.querySelectorAll('.sidebar ul li').forEach(li => li.classList.remove('active'));
+        // Clear all active and section-active states first
+        document.querySelectorAll('.sidebar li, .sidebar-footer a').forEach(el => {
+            el.classList.remove('active');
+            el.classList.remove('section-active');
+        });
 
         // Find and activate the link
-        document.querySelectorAll('.sidebar ul li a').forEach(link => {
+        document.querySelectorAll('.sidebar a, .sidebar-footer a').forEach(link => {
             if (link.getAttribute('href') === hash) {
-                const li = link.parentElement;
-                li.classList.add('active');
+                // For main list items, activate the parent LI
+                const li = link.closest('li');
+                if (li) {
+                    li.classList.add('active');
+                } else {
+                    // For footer links, activate the link itself
+                    link.classList.add('active');
+                }
                 found = true;
 
                 // Update Page Title
-                const titleText = link.querySelector('span')?.textContent || link.textContent.trim();
+                let titleText = link.querySelector('span')?.textContent || link.textContent.trim();
+
+                // Specific override for Profile link in footer (shows user name instead of "Profile")
+                if (hash === '#profile') titleText = 'User Profile';
+
                 const titleEl = document.getElementById('currentViewTitle');
                 if (titleEl) titleEl.textContent = titleText;
 
-                // If it's a submenu link, make sure the parent is expanded
+                // If it's a submenu link, make sure the parent is expanded and highlighted
                 const parentSubmenu = link.closest('.submenu');
                 if (parentSubmenu) {
                     const collapseInstance = bootstrap.Collapse.getOrCreateInstance(parentSubmenu, { toggle: false });
                     collapseInstance.show();
 
-                    // Mark the parent trigger link parent as active too? 
-                    // Optional: parentSubmenu.parentElement.classList.add('active');
+                    // Mark the parent nav item as section-active
+                    const parentNavItem = parentSubmenu.closest('li');
+                    if (parentNavItem) {
+                        parentNavItem.classList.add('section-active');
+                    }
                 }
             }
         });
 
         // Fallback for dashboard if nothing else matches
-        if (!found && hash !== '#dashboard') {
+        if (!found && hash !== '#dashboard' && !hash.includes('?')) {
             this.updateActiveNavLink('#dashboard');
         }
     },
