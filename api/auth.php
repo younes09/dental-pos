@@ -16,6 +16,10 @@ try {
             $user = $stmt->fetch();
 
             if ($user && password_verify($password, $user['password'])) {
+                if ($user['status'] !== 'Active') {
+                    echo json_encode(['error' => 'Your account is inactive. Please contact the administrator.']);
+                    exit;
+                }
                 $_SESSION['user_id'] = $user['id'];
                 $_SESSION['user_name'] = $user['name'];
                 $_SESSION['user_role'] = $user['role'];

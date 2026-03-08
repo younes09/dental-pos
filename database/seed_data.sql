@@ -31,16 +31,16 @@ INSERT INTO brands (name) VALUES
 
 -- 3. Users (10 total - 1 already exists via admin@dentalpos.com)
 -- Note: All passwords are set to 'admin123' hashed (approx. same as default)
-INSERT INTO users (name, email, password, role) VALUES
-('Sarah Jones', 'sarah@dentalpos.com', '$2a$12$Zka66PNoO.Ryd5K.993dtuZBiZw7IJr3Fs1Q3UdyW78umKIrdF/2q', 'Admin'),
-('Younes Sales', 'younes@dentalpos.com', '$2a$12$Zka66PNoO.Ryd5K.993dtuZBiZw7IJr3Fs1Q3UdyW78umKIrdF/2q', 'Cashier'),
-('Mark Warehouse', 'mark@dentalpos.com', '$2a$12$Zka66PNoO.Ryd5K.993dtuZBiZw7IJr3Fs1Q3UdyW78umKIrdF/2q', 'Stock Manager'),
-('David Roberts', 'david@dentalpos.com', '$2a$12$Zka66PNoO.Ryd5K.993dtuZBiZw7IJr3Fs1Q3UdyW78umKIrdF/2q', 'Cashier'),
-('Emily Clerk', 'emily@dentalpos.com', '$2a$12$Zka66PNoO.Ryd5K.993dtuZBiZw7IJr3Fs1Q3UdyW78umKIrdF/2q', 'Cashier'),
-('Michael Logistics', 'michael@dentalpos.com', '$2a$12$Zka66PNoO.Ryd5K.993dtuZBiZw7IJr3Fs1Q3UdyW78umKIrdF/2q', 'Stock Manager'),
-('Jessica Sales', 'jessica@dentalpos.com', '$2a$12$Zka66PNoO.Ryd5K.993dtuZBiZw7IJr3Fs1Q3UdyW78umKIrdF/2q', 'Cashier'),
-('Chris Store', 'chris@dentalpos.com', '$2a$12$Zka66PNoO.Ryd5K.993dtuZBiZw7IJr3Fs1Q3UdyW78umKIrdF/2q', 'Cashier'),
-('Amanda Admin', 'amanda@dentalpos.com', '$2a$12$Zka66PNoO.Ryd5K.993dtuZBiZw7IJr3Fs1Q3UdyW78umKIrdF/2q', 'Admin');
+INSERT INTO users (name, email, phone, password, role, status) VALUES
+('Sarah Jones', 'sarah@dentalpos.com', '555-0101', '$2a$12$Zka66PNoO.Ryd5K.993dtuZBiZw7IJr3Fs1Q3UdyW78umKIrdF/2q', 'Admin', 'Active'),
+('Younes Sales', 'younes@dentalpos.com', '555-0102', '$2a$12$Zka66PNoO.Ryd5K.993dtuZBiZw7IJr3Fs1Q3UdyW78umKIrdF/2q', 'Cashier', 'Active'),
+('Mark Warehouse', 'mark@dentalpos.com', '555-0103', '$2a$12$Zka66PNoO.Ryd5K.993dtuZBiZw7IJr3Fs1Q3UdyW78umKIrdF/2q', 'Stock Manager', 'Active'),
+('David Roberts', 'david@dentalpos.com', '555-0104', '$2a$12$Zka66PNoO.Ryd5K.993dtuZBiZw7IJr3Fs1Q3UdyW78umKIrdF/2q', 'Cashier', 'Active'),
+('Emily Clerk', 'emily@dentalpos.com', '555-0105', '$2a$12$Zka66PNoO.Ryd5K.993dtuZBiZw7IJr3Fs1Q3UdyW78umKIrdF/2q', 'Cashier', 'Active'),
+('Michael Logistics', 'michael@dentalpos.com', '555-0106', '$2a$12$Zka66PNoO.Ryd5K.993dtuZBiZw7IJr3Fs1Q3UdyW78umKIrdF/2q', 'Stock Manager', 'Active'),
+('Jessica Sales', 'jessica@dentalpos.com', '555-0107', '$2a$12$Zka66PNoO.Ryd5K.993dtuZBiZw7IJr3Fs1Q3UdyW78umKIrdF/2q', 'Cashier', 'Active'),
+('Chris Store', 'chris@dentalpos.com', '555-0108', '$2a$12$Zka66PNoO.Ryd5K.993dtuZBiZw7IJr3Fs1Q3UdyW78umKIrdF/2q', 'Cashier', 'Active'),
+('Amanda Admin', 'amanda@dentalpos.com', '555-0109', '$2a$12$Zka66PNoO.Ryd5K.993dtuZBiZw7IJr3Fs1Q3UdyW78umKIrdF/2q', 'Admin', 'Active');
 
 -- 4. Products (20)
 INSERT INTO products (name, category_id, brand_id, barcode, purchase_price, selling_price, stock_qty, min_stock, expiry_date, image, status) VALUES

@@ -178,7 +178,7 @@ const stockModule = {
                             return `<span class="badge bg-warning-subtle text-warning-emphasis border border-warning p-1 small" style="font-size: 0.75rem;"><i class="fas fa-clock me-1"></i>Near (${data})</span>`;
                         }
 
-                        return `<span class="text-dark small">${data}</span>`;
+                        return `<span class="small">${data}</span>`;
                     }
                 },
                 {

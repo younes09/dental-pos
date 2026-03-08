@@ -105,6 +105,14 @@ if (!isset($_SESSION['user_id'])) {
                     <span>Suppliers</span>
                 </a>
             </li>
+            <?php if (($_SESSION['user_role'] ?? '') === 'Admin'): ?>
+            <li>
+                <a href="#users" class="nav-link">
+                    <i class="fas fa-user-shield"></i>
+                    <span>Users</span>
+                </a>
+            </li>
+            <?php endif; ?>
             <li>
                 <a href="#reports" class="nav-link">
                     <i class="fas fa-file-invoice-dollar"></i>
@@ -121,10 +129,10 @@ if (!isset($_SESSION['user_id'])) {
         
         <div class="sidebar-footer">
             <div class="user-info">
-                <img src="https://ui-avatars.com/api/?name=Admin+User&background=00BFA6&color=fff" alt="User" class="rounded-circle">
+                <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($_SESSION['user_name'] ?? 'User'); ?>&background=00BFA6&color=fff" alt="User" class="rounded-circle">
                 <div class="ms-2">
-                    <p class="mb-0 fw-bold text-truncate">Admin User</p>
-                    <small class="text-primary">Administrator</small>
+                    <p class="mb-0 fw-bold text-truncate"><?php echo htmlspecialchars($_SESSION['user_name'] ?? 'User'); ?></p>
+                    <small class="text-primary"><?php echo htmlspecialchars($_SESSION['user_role'] ?? 'User'); ?></small>
                 </div>
             </div>
             <a href="api/auth.php?action=logout" class="logout-btn" title="Logout">
