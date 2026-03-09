@@ -32,6 +32,7 @@ const App = {
             'users': ['Admin'],
             'reports': ['Admin'],
             'salaries': ['Admin'],
+            'balance': ['Admin'],
             'settings': ['Admin'],
             'profile': ['Admin', 'Cashier', 'Stock Manager']
         }

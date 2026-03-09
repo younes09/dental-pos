@@ -165,6 +165,12 @@ if (!isset($_SESSION['user_id'])) {
             </li>
             <?php if (($_SESSION['user_role'] ?? '') === 'Admin'): ?>
             <li>
+                <a href="#balance" class="nav-link">
+                    <i class="fas fa-scale-balanced"></i>
+                    <span>Bilan Financier</span>
+                </a>
+            </li>
+            <li>
                 <a href="#salaries" class="nav-link">
                     <i class="fas fa-hand-holding-dollar"></i>
                     <span>Salaires</span>
