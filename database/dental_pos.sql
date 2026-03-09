@@ -215,3 +215,34 @@ CREATE TABLE IF NOT EXISTS equipment (
     quantity INT DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Staff table
+CREATE TABLE IF NOT EXISTS staff (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    position VARCHAR(100),
+    phone VARCHAR(20),
+    email VARCHAR(100),
+    base_salary DECIMAL(10, 2) DEFAULT 0.00,
+    status ENUM('Active', 'Inactive') DEFAULT 'Active',
+    hiring_date DATE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Salary Payments table
+CREATE TABLE IF NOT EXISTS salary_payments (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    staff_id INT NOT NULL,
+    vault_account_id INT NOT NULL,
+    amount DECIMAL(10, 2) NOT NULL,
+    payment_date DATE NOT NULL,
+    period_month TINYINT NOT NULL,
+    period_year SMALLINT NOT NULL,
+    payment_method ENUM('Cash', 'Bank Transfer', 'Cheque') DEFAULT 'Cash',
+    notes TEXT,
+    user_id INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (staff_id) REFERENCES staff(id),
+    FOREIGN KEY (vault_account_id) REFERENCES vault_accounts(id),
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);

@@ -163,6 +163,14 @@ if (!isset($_SESSION['user_id'])) {
                     <span>Trésorerie</span>
                 </a>
             </li>
+            <?php if (($_SESSION['user_role'] ?? '') === 'Admin'): ?>
+            <li>
+                <a href="#salaries" class="nav-link">
+                    <i class="fas fa-hand-holding-dollar"></i>
+                    <span>Salaires</span>
+                </a>
+            </li>
+            <?php endif; ?>
 
             <!-- Administration Section -->
             <?php if (($_SESSION['user_role'] ?? '') === 'Admin'): ?>

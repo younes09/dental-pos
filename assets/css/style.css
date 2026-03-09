@@ -900,6 +900,35 @@ body.dark-mode .swal2-timer-progress-bar {
     }
 }
 
+/* Custom Pills */
+.custom-pills .nav-link {
+    color: var(--text-dark);
+    font-weight: 500;
+    font-size: 0.9rem;
+    padding: 10px 20px;
+    background: #fff;
+    border: 1px solid var(--border-color);
+}
+
+.custom-pills .nav-link.active {
+    background-color: var(--primary-teal);
+    color: #fff;
+    border-color: var(--primary-teal);
+    box-shadow: 0 4px 12px rgba(0, 191, 166, 0.2);
+}
+
+body.dark-mode .custom-pills .nav-link {
+    color: #94a3b8;
+    background: #0c1a2e;
+    border-color: #1e2d41;
+}
+
+body.dark-mode .custom-pills .nav-link.active {
+    color: #fff;
+    background-color: var(--primary-teal);
+    border-color: var(--primary-teal);
+}
+
 /* Responsive */
 @media (max-width: 992px) {
     .sidebar {
