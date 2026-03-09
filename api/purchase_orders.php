@@ -228,6 +228,107 @@ try {
             echo json_encode(['success' => $msg]);
             break;
 
+        case 'process_return':
+            if (!in_array($_SESSION['user_role'] ?? '', ['Admin', 'Stock Manager'])) {
+                throw new Exception('Access denied.');
+            }
+            $data = json_decode(file_get_contents('php://input'), true);
+            if (!$data || empty($data['items']) || !$data['po_id']) {
+                throw new Exception('Invalid return data');
+            }
+
+            $pdo->beginTransaction();
+
+            $po_id = (int)$data['po_id'];
+            $reason = $data['reason'] ?? '';
+            $user_id = $_SESSION['user_id'] ?? 1;
+
+            // Fetch PO header
+            $stmt = $pdo->prepare("SELECT * FROM purchase_orders WHERE id = ? FOR UPDATE");
+            $stmt->execute([$po_id]);
+            $po = $stmt->fetch();
+            if (!$po) throw new Exception('Purchase Order not found');
+
+            $total_return_amount = 0;
+            $return_items = [];
+
+            foreach ($data['items'] as $item) {
+                $product_id = (int)$item['product_id'];
+                $qty_to_return = (int)$item['qty'];
+
+                if ($qty_to_return <= 0) continue;
+
+                // Validate against PO items
+                $item_stmt = $pdo->prepare("SELECT id, received_qty, returned_qty, unit_cost FROM purchase_order_items WHERE po_id = ? AND product_id = ? FOR UPDATE");
+                $item_stmt->execute([$po_id, $product_id]);
+                $po_item = $item_stmt->fetch();
+
+                if (!$po_item) throw new Exception("Product ID $product_id not found in this Purchase Order");
+
+                $max_returnable = $po_item['received_qty'] - $po_item['returned_qty'];
+                if ($qty_to_return > $max_returnable) {
+                    throw new Exception("Cannot return more than received for Product ID $product_id");
+                }
+
+                $item_return_value = $qty_to_return * $po_item['unit_cost'];
+                $total_return_amount += $item_return_value;
+
+                // Update purchase_order_items
+                $update_item_stmt = $pdo->prepare("UPDATE purchase_order_items SET returned_qty = returned_qty + ? WHERE id = ?");
+                $update_item_stmt->execute([$qty_to_return, $po_item['id']]);
+
+                // Decrease stock
+                $pdo->prepare("UPDATE products SET stock_qty = GREATEST(0, stock_qty - ?) WHERE id = ?")->execute([$qty_to_return, $product_id]);
+                
+                // FIFO Batch Deduction for return
+                $remaining_to_deduct = $qty_to_return;
+                $batches_stmt = $pdo->prepare("SELECT id, remaining_qty FROM stock_batches WHERE product_id = ? AND remaining_qty > 0 ORDER BY created_at DESC FOR UPDATE"); // Deduct from newest first for returns? Or FIFO? Usually returns to supplier are the ones just received. Let's use FIFO for consistency with sales, or LIFO for returns? FIFO is safer for stock valuation.
+                $batches_stmt->execute([$product_id]);
+                $batches = $batches_stmt->fetchAll();
+                
+                $update_batch_stmt = $pdo->prepare("UPDATE stock_batches SET remaining_qty = ? WHERE id = ?");
+                foreach ($batches as $batch) {
+                    if ($remaining_to_deduct <= 0) break;
+                    $available = (int)$batch['remaining_qty'];
+                    if ($available >= $remaining_to_deduct) {
+                        $update_batch_stmt->execute([$available - $remaining_to_deduct, $batch['id']]);
+                        $remaining_to_deduct = 0;
+                    } else {
+                        $update_batch_stmt->execute([0, $batch['id']]);
+                        $remaining_to_deduct -= $available;
+                    }
+                }
+
+                $return_items[] = [
+                    'product_id' => $product_id,
+                    'qty' => $qty_to_return,
+                    'unit_cost' => $po_item['unit_cost']
+                ];
+            }
+
+            if (empty($return_items)) throw new Exception('No items to return');
+
+            // Insert into purchase_returns
+            $stmt = $pdo->prepare("INSERT INTO purchase_returns (po_id, user_id, reason, total_amount) VALUES (?, ?, ?, ?)");
+            $stmt->execute([$po_id, $user_id, $reason, $total_return_amount]);
+            $return_id = $pdo->lastInsertId();
+
+            // Insert into purchase_return_items
+            $stmt = $pdo->prepare("INSERT INTO purchase_return_items (return_id, product_id, qty, unit_cost) VALUES (?, ?, ?, ?)");
+            foreach ($return_items as $ri) {
+                $stmt->execute([$return_id, $ri['product_id'], $ri['qty'], $ri['unit_cost']]);
+            }
+
+            // Adjust supplier balance (decrease debt)
+            if ($po['supplier_id']) {
+                $pdo->prepare("UPDATE suppliers SET balance = GREATEST(0, balance - ?) WHERE id = ?")
+                    ->execute([$total_return_amount, $po['supplier_id']]);
+            }
+
+            $pdo->commit();
+            echo json_encode(['success' => 'Supplier return processed successfully', 'return_id' => $return_id]);
+            break;
+
         case 'get_details':
             if (!in_array($_SESSION['user_role'] ?? '', ['Admin', 'Stock Manager'])) {
                 throw new Exception('Access denied.');

@@ -289,6 +289,94 @@ try {
             echo json_encode(['success' => 'Sale cancelled and stock restored']);
             break;
 
+        case 'process_return':
+            if (!in_array($_SESSION['user_role'] ?? '', ['Admin', 'Cashier'])) {
+                throw new Exception('Only Admins and Cashiers can process returns.');
+            }
+            $data = json_decode(file_get_contents('php://input'), true);
+            if (!$data || empty($data['items']) || !$data['sale_id']) {
+                throw new Exception('Invalid return data');
+            }
+
+            $pdo->beginTransaction();
+            
+            $sale_id = (int)$data['sale_id'];
+            $reason = $data['reason'] ?? '';
+            $user_id = $_SESSION['user_id'] ?? 1;
+
+            // Fetch sale header
+            $stmt = $pdo->prepare("SELECT * FROM sales WHERE id = ? FOR UPDATE");
+            $stmt->execute([$sale_id]);
+            $sale = $stmt->fetch();
+            if (!$sale) throw new Exception('Sale not found');
+
+            $total_return_amount = 0;
+            $return_items = [];
+
+            foreach ($data['items'] as $item) {
+                $product_id = (int)$item['product_id'];
+                $qty_to_return = (int)$item['qty'];
+
+                if ($qty_to_return <= 0) continue;
+
+                // Validate against sale items
+                $item_stmt = $pdo->prepare("SELECT id, qty, returned_qty, unit_price FROM sale_items WHERE sale_id = ? AND product_id = ? FOR UPDATE");
+                $item_stmt->execute([$sale_id, $product_id]);
+                $sale_item = $item_stmt->fetch();
+
+                if (!$sale_item) throw new Exception("Product ID $product_id not found in this sale");
+
+                $max_returnable = $sale_item['qty'] - $sale_item['returned_qty'];
+                if ($qty_to_return > $max_returnable) {
+                    throw new Exception("Cannot return more than purchased for Product ID $product_id");
+                }
+
+                $item_return_value = $qty_to_return * $sale_item['unit_price'];
+                $total_return_amount += $item_return_value;
+
+                // Update sale_items
+                $update_item_stmt = $pdo->prepare("UPDATE sale_items SET returned_qty = returned_qty + ? WHERE id = ?");
+                $update_item_stmt->execute([$qty_to_return, $sale_item['id']]);
+
+                // Increase stock
+                $pdo->prepare("UPDATE products SET stock_qty = stock_qty + ? WHERE id = ?")->execute([$qty_to_return, $product_id]);
+                
+                // Create stock batch for returned items
+                $pdo->prepare("INSERT INTO stock_batches (product_id, purchase_type, initial_qty, remaining_qty) VALUES (?, 'BA', ?, ?)")
+                    ->execute([$product_id, $qty_to_return, $qty_to_return]);
+
+                $return_items[] = [
+                    'product_id' => $product_id,
+                    'qty' => $qty_to_return,
+                    'unit_price' => $sale_item['unit_price']
+                ];
+            }
+
+            if (empty($return_items)) throw new Exception('No items to return');
+
+            // Insert into sale_returns
+            $stmt = $pdo->prepare("INSERT INTO sale_returns (sale_id, user_id, reason, total_amount) VALUES (?, ?, ?, ?)");
+            $stmt->execute([$sale_id, $user_id, $reason, $total_return_amount]);
+            $return_id = $pdo->lastInsertId();
+
+            // Insert into sale_return_items
+            $stmt = $pdo->prepare("INSERT INTO sale_return_items (return_id, product_id, qty, unit_price) VALUES (?, ?, ?, ?)");
+            foreach ($return_items as $ri) {
+                $stmt->execute([$return_id, $ri['product_id'], $ri['qty'], $ri['unit_price']]);
+            }
+
+            // Adjust customer balance (decrease debt)
+            if ($sale['customer_id']) {
+                // We decrease balance (debt) up to the return amount
+                // If it's more than the balance, it stays at 0 (or goes negative if we support credits, but let's keep it simple)
+                $pdo->prepare("UPDATE customers SET balance = GREATEST(0, balance - ?) WHERE id = ?")
+                    ->execute([$total_return_amount, $sale['customer_id']]);
+            }
+
+            $pdo->commit();
+            echo json_encode(['success' => 'Return processed successfully', 'return_id' => $return_id]);
+            break;
+
         case 'history':
             if (!in_array($_SESSION['user_role'] ?? '', ['Admin', 'Cashier'])) {
                 throw new Exception('Only Admins and Cashiers can view sales history.');

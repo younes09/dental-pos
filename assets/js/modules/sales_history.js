@@ -19,6 +19,10 @@ const sales_historyModule = {
         document.getElementById('btn-print-receipt').onclick = () => {
             window.print();
         };
+
+        document.getElementById('btn-confirm-return').onclick = () => {
+            this.confirmReturn();
+        };
     },
 
     initDataTable() {
@@ -81,6 +85,8 @@ const sales_historyModule = {
                             <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
                                 <li><a class="dropdown-item" href="javascript:void(0)" onclick="sales_historyModule.viewDetails(${data.id})"><i class="fas fa-eye me-2 text-info"></i>View Details</a></li>
                                 <li><a class="dropdown-item" href="javascript:void(0)" onclick="sales_historyModule.directPrint(${data.id})"><i class="fas fa-print me-2 text-teal"></i>Print Receipt</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="javascript:void(0)" onclick="sales_historyModule.openReturnModal(${data.id})"><i class="fas fa-undo me-2 text-warning"></i>Return Items</a></li>
                             </ul>
                         </div>
                     `
@@ -180,6 +186,87 @@ const sales_historyModule = {
                 payload: { ...data, settings: App.state.settings }
             }, window.location.origin);
         };
+    },
+
+    async openReturnModal(id) {
+        const result = await App.api(`sales.php?action=sale_details&id=${id}`);
+        if (!result) return;
+
+        const { sale, items } = result;
+        document.getElementById('return-sale-id').value = sale.id;
+        document.getElementById('sale-return-subtitle').textContent = `Invoice #INV-${sale.id} | ${sale.customer_name || 'Walk-in'}`;
+        document.getElementById('return-reason').value = '';
+
+        const tbody = document.querySelector('#sale-return-items-table tbody');
+        tbody.innerHTML = items.map(item => `
+            <tr>
+                <td>
+                    <div class="fw-medium">${item.product_name}</div>
+                    <small class="text-muted small">${item.barcode || ''}</small>
+                </td>
+                <td class="text-center">${item.qty}</td>
+                <td class="text-center">${item.returned_qty || 0}</td>
+                <td class="text-center">
+                    <input type="number" class="form-control form-control-sm return-qty-input text-center" 
+                           data-product-id="${item.product_id}" 
+                           data-price="${item.unit_price}"
+                           max="${item.qty - (item.returned_qty || 0)}" 
+                           min="0" value="0" 
+                           onchange="sales_historyModule.updateReturnTotal()">
+                </td>
+                <td class="text-end fw-bold return-item-total">0.00 ${App.state.settings.currency || '$'}</td>
+            </tr>
+        `).join('');
+
+        this.updateReturnTotal();
+        new bootstrap.Modal(document.getElementById('saleReturnModal')).show();
+    },
+
+    updateReturnTotal() {
+        let total = 0;
+        document.querySelectorAll('.return-qty-input').forEach(input => {
+            const qty = parseInt(input.value) || 0;
+            const price = parseFloat(input.dataset.price);
+            const itemTotal = qty * price;
+            total += itemTotal;
+            input.closest('tr').querySelector('.return-item-total').textContent = App.formatCurrency(itemTotal);
+        });
+        document.getElementById('sale-return-total').textContent = App.formatCurrency(total);
+    },
+
+    async confirmReturn() {
+        const saleId = document.getElementById('return-sale-id').value;
+        const reason = document.getElementById('return-reason').value;
+        const items = [];
+
+        document.querySelectorAll('.return-qty-input').forEach(input => {
+            const qty = parseInt(input.value) || 0;
+            if (qty > 0) {
+                items.push({
+                    product_id: input.dataset.productId,
+                    qty: qty
+                });
+            }
+        });
+
+        if (items.length === 0) {
+            App.toast('warning', 'Please select at least one item to return');
+            return;
+        }
+
+        if (!confirm('Are you sure you want to process this return? Customer balance will be adjusted.')) return;
+
+        const result = await App.api('sales.php?action=process_return', 'POST', {
+            sale_id: saleId,
+            reason: reason,
+            items: items
+        });
+
+        if (result && result.success) {
+            App.toast('success', result.success);
+            bootstrap.Modal.getInstance(document.getElementById('saleReturnModal')).hide();
+            this.table.ajax.reload(null, false);
+        }
     }
 };
 

@@ -72,6 +72,10 @@ const purchase_ordersModule = {
                 this.calculateOrderTotal();
             }
         });
+
+        document.getElementById('btn-confirm-purchase-return').onclick = () => {
+            this.confirmPurchaseReturn();
+        };
     },
 
     initDataTable() {
@@ -156,6 +160,9 @@ const purchase_ordersModule = {
                                 <li><a class="dropdown-item" href="javascript:void(0)" onclick="purchase_ordersModule.viewDetails(${data.id})"><i class="fas fa-eye me-2 text-info"></i>View Details</a></li>
                                 <li><a class="dropdown-item" href="javascript:void(0)" onclick="purchase_ordersModule.printBC(${data.id})"><i class="fas fa-print me-2 text-primary"></i>Print BC</a></li>
                                 ${receiveBtn}
+                                ${data.status === 'Received' || data.status === 'Partial' ? `
+                                    <li><a class="dropdown-item" href="javascript:void(0)" onclick="purchase_ordersModule.openReturnModal(${data.id})"><i class="fas fa-undo me-2 text-warning"></i>Return to Supplier</a></li>
+                                ` : ''}
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item text-danger" href="javascript:void(0)" onclick="purchase_ordersModule.deletePO(${data.id})"><i class="fas fa-trash me-2"></i>Delete</a></li>
                             </ul>
@@ -612,6 +619,90 @@ const purchase_ordersModule = {
     createForSupplier(supplierId) {
         bootstrap.Modal.getOrCreateInstance(document.getElementById('poModal')).show();
         document.getElementById('po-supplier-select').value = supplierId;
+    },
+
+    async openReturnModal(id) {
+        const result = await App.api(`purchase_orders.php?action=get_details&id=${id}`);
+        if (!result) return;
+
+        const { order, items } = result;
+        document.getElementById('return-po-id').value = order.id;
+        document.getElementById('purchase-return-subtitle').textContent = `Order #PO-${order.id} | ${order.supplier_name}`;
+        document.getElementById('purchase-return-reason').value = '';
+
+        const tbody = document.querySelector('#purchase-return-items-table tbody');
+        tbody.innerHTML = items.map(item => {
+            const maxReturnable = (item.received_qty || 0) - (item.returned_qty || 0);
+            return `
+                <tr>
+                    <td>
+                        <div class="fw-medium">${item.product_name}</div>
+                        <small class="text-muted small">${item.barcode || ''}</small>
+                    </td>
+                    <td class="text-center">${item.received_qty || 0}</td>
+                    <td class="text-center">${item.returned_qty || 0}</td>
+                    <td class="text-center">
+                        <input type="number" class="form-control form-control-sm purchase-return-qty-input text-center" 
+                               data-product-id="${item.product_id}" 
+                               data-cost="${item.unit_cost}"
+                               max="${maxReturnable}" 
+                               min="0" value="0" 
+                               onchange="purchase_ordersModule.updatePurchaseReturnTotal()">
+                    </td>
+                    <td class="text-end fw-bold purchase-return-item-total">0.00 ${App.state.settings.currency || '$'}</td>
+                </tr>
+            `;
+        }).join('');
+
+        this.updatePurchaseReturnTotal();
+        new bootstrap.Modal(document.getElementById('purchaseReturnModal')).show();
+    },
+
+    updatePurchaseReturnTotal() {
+        let total = 0;
+        document.querySelectorAll('.purchase-return-qty-input').forEach(input => {
+            const qty = parseInt(input.value) || 0;
+            const cost = parseFloat(input.dataset.cost);
+            const itemTotal = qty * cost;
+            total += itemTotal;
+            input.closest('tr').querySelector('.purchase-return-item-total').textContent = App.formatCurrency(itemTotal);
+        });
+        document.getElementById('purchase-return-total').textContent = App.formatCurrency(total);
+    },
+
+    async confirmPurchaseReturn() {
+        const poId = document.getElementById('return-po-id').value;
+        const reason = document.getElementById('purchase-return-reason').value;
+        const items = [];
+
+        document.querySelectorAll('.purchase-return-qty-input').forEach(input => {
+            const qty = parseInt(input.value) || 0;
+            if (qty > 0) {
+                items.push({
+                    product_id: input.dataset.productId,
+                    qty: qty
+                });
+            }
+        });
+
+        if (items.length === 0) {
+            App.toast('warning', 'Please select at least one item to return');
+            return;
+        }
+
+        if (!confirm('Are you sure you want to process this return to supplier? Supplier balance will be adjusted and stock decreased.')) return;
+
+        const result = await App.api('purchase_orders.php?action=process_return', 'POST', {
+            po_id: poId,
+            reason: reason,
+            items: items
+        });
+
+        if (result && result.success) {
+            App.toast('success', result.success);
+            bootstrap.Modal.getInstance(document.getElementById('purchaseReturnModal')).hide();
+            this.table.ajax.reload(null, false);
+        }
     }
 };
 
