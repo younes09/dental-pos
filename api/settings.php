@@ -85,7 +85,7 @@ switch ($method) {
                 $tmpFile = $file['tmp_name'];
 
                 // Command to restore: mysql -u {user} -p{pass} {db} < {file}
-                // Note: using shell_exec or exec with redirection
+                // Wrap EVERYTHING in double quotes for cmd /c on Windows
                 $command = sprintf(
                     '"%s" --user=%s --password=%s --host=%s %s < "%s"',
                     $mysqlPath,
@@ -96,8 +96,7 @@ switch ($method) {
                     $tmpFile
                 );
 
-                // For Windows, we might need cmd /c for redirection
-                $winCommand = 'cmd /c ' . $command;
+                $winCommand = 'cmd /c "' . $command . '"'; // Extra quotes around the whole command
                 
                 exec($winCommand, $output, $returnVar);
 
@@ -105,7 +104,11 @@ switch ($method) {
                     echo json_encode(['success' => true, 'message' => 'Database restored successfully']);
                 } else {
                     http_response_code(500);
-                    echo json_encode(['error' => 'Restore failed with exit code ' . $returnVar, 'output' => $output]);
+                    echo json_encode([
+                        'error' => 'Restore failed with exit code ' . $returnVar,
+                        'details' => $output,
+                        'command_used' => $winCommand // Helpful for debugging if it still fails
+                    ]);
                 }
                 exit;
             } catch (Exception $e) {

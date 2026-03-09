@@ -274,7 +274,7 @@ INSERT IGNORE INTO settings (setting_key, setting_value) VALUES
 
 -- Insert a default admin user (password: admin123)
 -- In a real app, use password_hash()
-INSERT INTO users (name, email, password, role) VALUES ('Admin User', 'admin@dentalpos.com', '$2y$10$YndX.m18KUnRCOFh2p29.eI8k/YvWp1b9V3Q4G.5Fm/L8f3q6vBv2', 'Admin');
+INSERT INTO users (name, email, password, role) VALUES ('Admin User', 'admin@dentalpos.com', '$2y$10$CPUky3MhUBcUBUdgz15sq.OHl2pOAhYiN9TC24tE/8A92vh5DUFym', 'Admin');
 
 -- Equipment table
 CREATE TABLE IF NOT EXISTS equipment (
