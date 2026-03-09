@@ -35,6 +35,7 @@ try {
             
             $data = json_decode(file_get_contents('php://input'), true);
             $opening_balance = (float)($data['opening_balance'] ?? 0);
+            $account_id = $data['account_id'] ?? null;
             
             // Check if any session is already open
             $stmt = $pdo->query("SELECT id FROM cash_sessions WHERE status = 'Open'");
@@ -42,10 +43,40 @@ try {
                 throw new Exception('A session is already open.');
             }
             
+            $pdo->beginTransaction();
+
+            // Record session
             $stmt = $pdo->prepare("INSERT INTO cash_sessions (user_id, opening_balance, expected_balance, status) VALUES (?, ?, ?, 'Open')");
             $stmt->execute([$user_id, $opening_balance, $opening_balance]);
-            
-            echo json_encode(['success' => 'Session opened', 'id' => $pdo->lastInsertId()]);
+            $session_id = $pdo->lastInsertId();
+
+            // F10.4: Vault Integration - Deduct from treasury if account selected
+            if ($account_id && $opening_balance > 0) {
+                // Check balance
+                $acc_stmt = $pdo->prepare("SELECT balance FROM vault_accounts WHERE id = ? FOR UPDATE");
+                $acc_stmt->execute([$account_id]);
+                $current_bal = (float)$acc_stmt->fetchColumn();
+
+                if ($current_bal < $opening_balance) {
+                    throw new Exception("Solde insuffisant dans le compte sélectionné (" . number_format($current_bal, 2) . ")");
+                }
+
+                // Record transaction
+                $tx_stmt = $pdo->prepare("INSERT INTO vault_transactions (account_id, type, amount, description, related_type, related_id, user_id) VALUES (?, 'Expense', ?, ?, 'CashSession', ?, ?)");
+                $tx_stmt->execute([
+                    $account_id,
+                    $opening_balance,
+                    "Ouverture de caisse - Session #$session_id",
+                    $session_id,
+                    $user_id
+                ]);
+
+                // Update vault balance
+                $pdo->prepare("UPDATE vault_accounts SET balance = balance - ? WHERE id = ?")->execute([$opening_balance, $account_id]);
+            }
+
+            $pdo->commit();
+            echo json_encode(['success' => 'Session opened successfully', 'id' => $session_id]);
             break;
 
         case 'close_session':

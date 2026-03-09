@@ -9,7 +9,19 @@ const cash_registerModule = {
     init() {
         this.checkStatus();
         this.loadHistory();
+        this.loadAccounts();
         this.bindEvents();
+    },
+
+    async loadAccounts() {
+        const select = document.getElementById('open-session-account-id');
+        if (!select) return;
+
+        const result = await App.api('vault.php?action=list_accounts');
+        if (result && result.data) {
+            select.innerHTML = '<option value="">-- Aucun retrait automatique --</option>' +
+                result.data.map(acc => `<option value="${acc.id}">${acc.name} (${App.formatCurrency(acc.balance)})</option>`).join('');
+        }
     },
 
     bindEvents() {
@@ -56,15 +68,17 @@ const cash_registerModule = {
 
     async openSession(formData) {
         const data = {
-            opening_balance: formData.get('opening_balance')
+            opening_balance: formData.get('opening_balance'),
+            account_id: formData.get('account_id')
         };
 
         const result = await App.api('cash_register.php?action=open_session', 'POST', data);
         if (result && result.success) {
-            App.toast('success', 'Caisse ouverte avec succès');
+            App.toast('success', result.success);
             bootstrap.Modal.getInstance(document.getElementById('modalOpenSession')).hide();
             this.checkStatus();
             this.loadHistory();
+            this.loadAccounts(); // Refresh balances
         }
     },
 
