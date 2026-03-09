@@ -26,6 +26,7 @@ const App = {
             'catalog': ['Admin', 'Cashier', 'Stock Manager'],
             'customers': ['Admin', 'Cashier'],
             'suppliers': ['Admin', 'Stock Manager'],
+            'equipment': ['Admin', 'Stock Manager'],
             'users': ['Admin'],
             'reports': ['Admin'],
             'settings': ['Admin'],

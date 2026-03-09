@@ -184,3 +184,13 @@ INSERT IGNORE INTO settings (setting_key, setting_value) VALUES
 -- Insert a default admin user (password: admin123)
 -- In a real app, use password_hash()
 INSERT INTO users (name, email, password, role) VALUES ('Admin User', 'admin@dentalpos.com', '$2a$12$Zka66PNoO.Ryd5K.993dtuZBiZw7IJr3Fs1Q3UdyW78umKIrdF/2q', 'Admin');
+
+-- Equipment table
+CREATE TABLE IF NOT EXISTS equipment (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    purchase_price DECIMAL(10, 2) NOT NULL,
+    condition_status VARCHAR(50) DEFAULT 'New',
+    quantity INT DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

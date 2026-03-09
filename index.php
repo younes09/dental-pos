@@ -116,6 +116,13 @@ if (!isset($_SESSION['user_id'])) {
                             <i class="fas fa-list-ul"></i> Catalog
                         </a>
                     </li>
+                    <?php if (in_array($_SESSION['user_role'] ?? '', ['Admin', 'Stock Manager'])): ?>
+                    <li>
+                        <a href="#equipment">
+                            <i class="fas fa-tools"></i> Equipment
+                        </a>
+                    </li>
+                    <?php endif; ?>
                 </ul>
             </li>
 
