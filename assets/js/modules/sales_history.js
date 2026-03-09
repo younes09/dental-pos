@@ -32,7 +32,13 @@ const sales_historyModule = {
             columns: [
                 {
                     data: 'id',
-                    render: (data) => `<span class="fw-bold">#INV-${data}</span>`
+                    type: 'num',
+                    render: (data, type) => {
+                        if (type === 'display') {
+                            return `<span class="fw-bold">#INV-${data}</span>`;
+                        }
+                        return data;
+                    }
                 },
                 {
                     data: 'date',
@@ -68,6 +74,7 @@ const sales_historyModule = {
                 },
                 {
                     data: 'total',
+                    type: 'num',
                     render: (data, type) => {
                         const val = parseFloat(data || 0);
                         if (type === 'display') {
