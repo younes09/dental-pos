@@ -77,7 +77,12 @@ const purchase_ordersModule = {
             columns: [
                 {
                     data: 'id',
-                    render: (data) => `<span class="fw-bold">#PO-${data}</span>`
+                    render: (data, type) => {
+                        if (type === 'display') {
+                            return `<span class="fw-bold">#PO-${data}</span>`;
+                        }
+                        return data;
+                    }
                 },
                 { data: 'date' },
                 {
@@ -89,11 +94,25 @@ const purchase_ordersModule = {
                 },
                 {
                     data: 'total',
-                    render: (data) => `<span class="fw-bold text-navy">${App.formatCurrency(data)}</span>`
+                    type: 'num',
+                    render: (data, type) => {
+                        const val = parseFloat(data || 0);
+                        if (type === 'display') {
+                            return `<span class="fw-bold text-navy">${App.formatCurrency(val)}</span>`;
+                        }
+                        return val;
+                    }
                 },
                 {
                     data: 'paid_amount',
-                    render: (data) => `<span class="fw-bold text-success">${App.formatCurrency(data || 0)}</span>`
+                    type: 'num',
+                    render: (data, type) => {
+                        const val = parseFloat(data || 0);
+                        if (type === 'display') {
+                            return `<span class="fw-bold text-success">${App.formatCurrency(val)}</span>`;
+                        }
+                        return val;
+                    }
                 },
                 {
                     data: 'status',
