@@ -150,7 +150,7 @@ const stockModule = {
             columns: [
                 {
                     data: 'image',
-                    render: (data) => `<img src="assets/img/products/${data || 'default.png'}" class="rounded" width="40" height="40" onerror="this.src='https://ui-avatars.com/api/?name=Product&background=random'">`
+                    render: (data) => `<img src="assets/img/products/${data || 'default.png'}" class="rounded" width="40" height="40" onerror="this.src='assets/img/img_holder.png'">`
                 },
                 {
                     data: 'name',

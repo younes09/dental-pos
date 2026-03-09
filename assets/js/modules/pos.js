@@ -386,7 +386,7 @@ const posModule = {
             <div class="col-md-4 col-xl-3">
                 <div class="card product-card border-0 shadow-sm h-100 rounded-4 pointer" onclick="posModule.addToCart(${p.id})">
                     <div class="p-3 position-relative">
-                        <img src="assets/img/products/${p.image || 'default.jpg'}" class="card-img-top rounded-4" style="height: 120px; object-fit: contain;" onerror="this.src='https://ui-avatars.com/api/?name=P&background=random'">
+                        <img src="assets/img/products/${p.image || 'default.jpg'}" class="card-img-top rounded-4" style="height: 120px; object-fit: contain;" onerror="this.src='assets/img/img_holder.png'">
                         <div class="position-absolute top-0 end-0 m-3 d-flex flex-column gap-1 align-items-end">
                             ${badges}
                         </div>
@@ -592,7 +592,7 @@ const posModule = {
 
         cartList.innerHTML = this.cart.map(item => `
             <div class="cart-item d-flex align-items-center mb-3 p-2 bg-light rounded-4">
-                <img src="assets/img/products/${item.image || 'default.jpg'}" class="rounded-3 me-3" width="50" height="50" onerror="this.src='https://ui-avatars.com/api/?name=P&background=random'">
+                <img src="assets/img/products/${item.image || 'default.jpg'}" class="rounded-3 me-3" width="50" height="50" onerror="this.src='assets/img/img_holder.png'">
                 <div class="flex-grow-1">
                     <h6 class="mb-0 fw-bold small text-truncate" style="max-width: 140px;">${item.name}</h6>
                     <span class="text-teal fw-bold">${App.formatCurrency(item.price)}</span>
