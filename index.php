@@ -84,7 +84,7 @@ if (!isset($_SESSION['user_id'])) {
                     </li>
                     <li>
                         <a href="#cash_register">
-                            <i class="fas fa-cash-register"></i> Gestion Caisse
+                            <i class="fas fa-cash-register"></i> Cash Management
                         </a>
                     </li>
                     <li>
@@ -160,20 +160,20 @@ if (!isset($_SESSION['user_id'])) {
             <li>
                 <a href="#vault" class="nav-link">
                     <i class="fas fa-vault"></i>
-                    <span>Trésorerie</span>
+                    <span>Treasury</span>
                 </a>
             </li>
             <?php if (($_SESSION['user_role'] ?? '') === 'Admin'): ?>
             <li>
                 <a href="#balance" class="nav-link">
                     <i class="fas fa-scale-balanced"></i>
-                    <span>Bilan Financier</span>
+                    <span>Financial Balance</span>
                 </a>
             </li>
             <li>
                 <a href="#salaries" class="nav-link">
                     <i class="fas fa-hand-holding-dollar"></i>
-                    <span>Salaires</span>
+                    <span>Payroll</span>
                 </a>
             </li>
             <?php endif; ?>

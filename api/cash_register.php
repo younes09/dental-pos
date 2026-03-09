@@ -58,7 +58,7 @@ try {
                 $current_bal = (float)$acc_stmt->fetchColumn();
 
                 if ($current_bal < $opening_balance) {
-                    throw new Exception("Solde insuffisant dans le compte sélectionné (" . number_format($current_bal, 2) . ")");
+                    throw new Exception("Insufficient balance in the selected account (" . number_format($current_bal, 2) . ")");
                 }
 
                 // Record transaction
@@ -66,7 +66,7 @@ try {
                 $tx_stmt->execute([
                     $account_id,
                     $opening_balance,
-                    "Ouverture de caisse - Session #$session_id",
+                    "Cash opening - Session #$session_id",
                     $session_id,
                     $user_id
                 ]);
@@ -132,10 +132,11 @@ try {
                 $tx_stmt->execute([
                     $vault_id, 
                     $net_cash_to_vault, 
-                    "Fermeture de caisse - Session #" . $session['id'],
+                    "Cash closing - Session #" . $session['id'],
                     $session['id'],
                     $user_id
                 ]);
+                
 
                 // Update account balance
                 $pdo->prepare("UPDATE vault_accounts SET balance = balance + ? WHERE id = ?")->execute([$net_cash_to_vault, $vault_id]);

@@ -216,7 +216,7 @@ try {
                 $stmtTx->execute([
                     $account_id,
                     $paid_amount,
-                    "Paiement Commande Fournisseur #$po_id",
+                    "Supplier Order Payment #$po_id",
                     $po_id,
                     $user_id
                 ]);

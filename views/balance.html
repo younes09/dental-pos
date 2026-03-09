@@ -2,11 +2,11 @@
     <div class="col-12">
         <div class="d-flex justify-content-between align-items-center">
             <div>
-                <h2 class="fw-bold mb-1">Bilan Financier</h2>
-                <p class="text-muted small mb-0">Résumé du capital et de la structure financière de l'établissement.</p>
+                <h2 class="fw-bold mb-1">Financial Balance</h2>
+                <p class="text-muted small mb-0">Summary of capital and financial structure of the establishment.</p>
             </div>
             <button id="refreshBalance" class="btn btn-teal-outline">
-                <i class="fas fa-sync-alt me-2"></i> Actualiser
+                <i class="fas fa-sync-alt me-2"></i> Refresh
             </button>
         </div>
     </div>
@@ -20,10 +20,10 @@
             <div class="kpi-icon bg-teal-subtle text-teal">
                 <i class="fas fa-sack-dollar"></i>
             </div>
-            <h6 class="text-muted small fw-bold text-uppercase mb-1">Capital Net</h6>
+            <h6 class="text-muted small fw-bold text-uppercase mb-1">Net Capital</h6>
             <h3 class="fw-bold mb-0" id="netCapital">0.00 <span class="currency-symbol"></span></h3>
             <div class="mt-2 small">
-                <span class="text-teal fw-medium">Actifs - Passifs</span>
+                <span class="text-teal fw-medium">Assets - Liabilities</span>
             </div>
         </div>
     </div>
@@ -34,9 +34,9 @@
             <div class="kpi-icon bg-primary-subtle text-primary">
                 <i class="fas fa-building-columns"></i>
             </div>
-            <h6 class="text-muted small fw-bold text-uppercase mb-1">Total Actifs</h6>
+            <h6 class="text-muted small fw-bold text-uppercase mb-1">Total Assets</h6>
             <h3 class="fw-bold mb-0" id="totalAssets">0.00 <span class="currency-symbol"></span></h3>
-            <div class="mt-2 small text-muted">Ce que vous possédez</div>
+            <div class="mt-2 small text-muted">What you own</div>
         </div>
     </div>
 
@@ -46,9 +46,9 @@
             <div class="kpi-icon bg-danger-subtle text-danger">
                 <i class="fas fa-file-invoice-dollar"></i>
             </div>
-            <h6 class="text-muted small fw-bold text-uppercase mb-1">Total Passifs</h6>
+            <h6 class="text-muted small fw-bold text-uppercase mb-1">Total Liabilities</h6>
             <h3 class="fw-bold mb-0" id="totalLiabilities">0.00 <span class="currency-symbol"></span></h3>
-            <div class="mt-2 small text-muted">Ce que vous devez</div>
+            <div class="mt-2 small text-muted">What you owe</div>
         </div>
     </div>
 </div>
@@ -58,16 +58,16 @@
     <div class="col-lg-8">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-header bg-white py-3 border-0">
-                <h5 class="fw-bold mb-0">Répartition des Actifs</h5>
+                <h5 class="fw-bold mb-0">Assets Breakdown</h5>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
                         <thead class="bg-light">
                             <tr>
-                                <th class="ps-4">Catégorie</th>
+                                <th class="ps-4">Category</th>
                                 <th>Description</th>
-                                <th class="text-end pe-4">Valeur Estm.</th>
+                                <th class="text-end pe-4">Estimated Value</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -77,11 +77,12 @@
                                         <div class="icon-circle bg-success-subtle text-success me-3">
                                             <i class="fas fa-vault"></i>
                                         </div>
-                                        <span class="fw-medium">Disponibilités (Coffre/Banque)</span>
+                                        <span class="fw-medium">Cash availability (Vault/Bank)</span>
                                     </div>
                                 </td>
-                                <td class="text-muted">Liquidités dans tous les comptes de trésorerie</td>
-                                <td class="text-end pe-4 fw-bold" id="vaultBalanceBreakdown">0.00 <span class="currency-symbol"></span></td>
+                                <td class="text-muted">Liquidity in all treasury accounts</td>
+                                <td class="text-end pe-4 fw-bold" id="vaultBalanceBreakdown">0.00 <span
+                                        class="currency-symbol"></span></td>
                             </tr>
                             <tr>
                                 <td class="ps-4">
@@ -89,11 +90,12 @@
                                         <div class="icon-circle bg-info-subtle text-info me-3">
                                             <i class="fas fa-boxes-stacked"></i>
                                         </div>
-                                        <span class="fw-medium">Valeur du Stock</span>
+                                        <span class="fw-medium">Inventory Value</span>
                                     </div>
                                 </td>
-                                <td class="text-muted">Valeur d'achat totale des produits en stock</td>
-                                <td class="text-end pe-4 fw-bold" id="inventoryValueBreakdown">0.00 <span class="currency-symbol"></span></td>
+                                <td class="text-muted">Total purchase value of products in stock</td>
+                                <td class="text-end pe-4 fw-bold" id="inventoryValueBreakdown">0.00 <span
+                                        class="currency-symbol"></span></td>
                             </tr>
                             <tr>
                                 <td class="ps-4">
@@ -101,11 +103,12 @@
                                         <div class="icon-circle bg-primary-subtle text-primary me-3">
                                             <i class="fas fa-users"></i>
                                         </div>
-                                        <span class="fw-medium">Créances Clients</span>
+                                        <span class="fw-medium">Customer Receivables</span>
                                     </div>
                                 </td>
-                                <td class="text-muted">Total des soldes dus par les clients</td>
-                                <td class="text-end pe-4 fw-bold" id="receivableBreakdown">0.00 <span class="currency-symbol"></span></td>
+                                <td class="text-muted">Total balances owed by customers</td>
+                                <td class="text-end pe-4 fw-bold" id="receivableBreakdown">0.00 <span
+                                        class="currency-symbol"></span></td>
                             </tr>
                             <tr>
                                 <td class="ps-4">
@@ -113,17 +116,19 @@
                                         <div class="icon-circle bg-warning-subtle text-warning me-3">
                                             <i class="fas fa-tools"></i>
                                         </div>
-                                        <span class="fw-medium">Immobilisations (Équipement)</span>
+                                        <span class="fw-medium">Fixed Assets (Equipment)</span>
                                     </div>
                                 </td>
-                                <td class="text-muted">Valeur d'achat des équipements et matériels</td>
-                                <td class="text-end pe-4 fw-bold" id="equipmentValueBreakdown">0.00 <span class="currency-symbol"></span></td>
+                                <td class="text-muted">Purchase value of equipment and hardware</td>
+                                <td class="text-end pe-4 fw-bold" id="equipmentValueBreakdown">0.00 <span
+                                        class="currency-symbol"></span></td>
                             </tr>
                         </tbody>
                         <tfoot class="bg-light">
                             <tr>
-                                <td colspan="2" class="ps-4 fw-bold">TOTAL ACTIFS</td>
-                                <td class="text-end pe-4 fw-bold text-primary" id="totalAssetsBreakdown">0.00 <span class="currency-symbol"></span></td>
+                                <td colspan="2" class="ps-4 fw-bold">TOTAL ASSETS</td>
+                                <td class="text-end pe-4 fw-bold text-primary" id="totalAssetsBreakdown">0.00 <span
+                                        class="currency-symbol"></span></td>
                             </tr>
                         </tfoot>
                     </table>
@@ -136,31 +141,34 @@
     <div class="col-lg-4">
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-header bg-white py-3 border-0">
-                <h5 class="fw-bold mb-0">Passifs & Engagement</h5>
+                <h5 class="fw-bold mb-0">Liabilities & Commitment</h5>
             </div>
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <div>
-                        <span class="text-muted small d-block">Dettes Fournisseurs</span>
-                        <h5 class="fw-bold mb-0 text-danger" id="payableValueBreakdown">0.00 <span class="currency-symbol"></span></h5>
+                        <span class="text-muted small d-block">Supplier Debts</span>
+                        <h5 class="fw-bold mb-0 text-danger" id="payableValueBreakdown">0.00 <span
+                                class="currency-symbol"></span></h5>
                     </div>
                 </div>
                 <div class="alert bg-danger-subtle text-danger border-0 p-3 mb-0 small">
-                    <i class="fas fa-info-circle me-2"></i> Les passifs représentent les dettes en suspens qui diminuent votre capital net.
+                    <i class="fas fa-info-circle me-2"></i> Liabilities represent outstanding debts that decrease your
+                    net capital.
                 </div>
             </div>
         </div>
 
         <div class="card border-0 shadow-sm bg-teal text-white">
             <div class="card-body p-4">
-                <h6 class="text-uppercase small fw-bold mb-3 opacity-75">Santé Financière</h6>
-                <p class="mb-4">Votre établissement dispose d'un capital propre estimé à <span class="fw-bold fs-5" id="netCapitalInsight">--</span>.</p>
+                <h6 class="text-uppercase small fw-bold mb-3 opacity-75">Financial Health</h6>
+                <p class="mb-4">Your establishment has an estimated net capital of <span class="fw-bold fs-5"
+                        id="netCapitalInsight">--</span>.</p>
                 <div class="progress bg-white bg-opacity-25" style="height: 10px;">
                     <div id="capitalProgress" class="progress-bar bg-white" role="progressbar" style="width: 0%"></div>
                 </div>
                 <div class="d-flex justify-content-between mt-2 small opacity-75">
-                    <span>Passifs</span>
-                    <span>Actifs</span>
+                    <span>Liabilities</span>
+                    <span>Assets</span>
                 </div>
             </div>
         </div>

@@ -17,10 +17,10 @@ const posModule = {
         const session = await App.api('cash_register.php?action=get_status');
         if (!session || session.status !== 'open') {
             await Swal.fire({
-                title: 'Caisse Fermée',
-                text: 'Vous devez ouvrir une session de caisse avant de pouvoir effectuer des ventes.',
+                title: 'Register Closed',
+                text: 'You must open a cash session before you can perform sales.',
                 icon: 'warning',
-                confirmButtonText: 'Aller à la Gestion Caisse',
+                confirmButtonText: 'Go to Cash Management',
                 allowOutsideClick: false
             });
             window.location.hash = '#cash_register';
@@ -85,7 +85,7 @@ const posModule = {
     handleInvoiceTypeChange(type) {
         if (type === 'BL') {
             document.getElementById('pay-credit').checked = true;
-            App.toast('info', 'Bon de Livraison sélectionné. Taxe mise à 0 et paiement défini sur Crédit.');
+            App.toast('info', 'Delivery Note selected. Tax set to 0 and payment set to Credit.');
         } else {
             document.getElementById('pay-cash').checked = true;
         }
@@ -462,14 +462,14 @@ const posModule = {
 
             if (!alreadyHitBL) {
                 const confirm = await Swal.fire({
-                    title: 'Attention !',
-                    text: `La quantité demandée pour "${product.name}" nécessite de piocher dans un stock "Bon de Livraison" (BL). Voulez-vous vraiment l'ajouter à la facturation ?`,
+                    title: 'Attention!',
+                    text: `The requested quantity for "${product.name}" requires using stock from a "Delivery Note" (BL). Do you really want to add it to the cart?`,
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#ffc107',
                     cancelButtonColor: '#6c757d',
-                    confirmButtonText: 'Oui, ajouter au panier',
-                    cancelButtonText: 'Annuler',
+                    confirmButtonText: 'Yes, add to cart',
+                    cancelButtonText: 'Cancel',
                     reverseButtons: true
                 });
 
@@ -541,14 +541,14 @@ const posModule = {
 
                         if (!alreadyHitBL) {
                             const confirm = await Swal.fire({
-                                title: 'Attention !',
-                                text: `Cette quantité supplémentaire nécessite de piocher dans un stock "Bon de Livraison" (BL). Voulez-vous continuer ?`,
+                                title: 'Attention!',
+                                text: `This additional quantity requires using stock from a "Delivery Note" (BL). Do you want to continue?`,
                                 icon: 'warning',
                                 showCancelButton: true,
                                 confirmButtonColor: '#ffc107',
                                 cancelButtonColor: '#6c757d',
-                                confirmButtonText: 'Oui, ajouter',
-                                cancelButtonText: 'Annuler',
+                                confirmButtonText: 'Yes, add',
+                                cancelButtonText: 'Cancel',
                                 reverseButtons: true
                             });
 

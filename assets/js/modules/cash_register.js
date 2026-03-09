@@ -19,7 +19,7 @@ const cash_registerModule = {
 
         const result = await App.api('vault.php?action=list_accounts');
         if (result && result.data) {
-            select.innerHTML = '<option value="">-- Aucun retrait automatique --</option>' +
+            select.innerHTML = '<option value="">-- No automatic withdrawal --</option>' +
                 result.data.map(acc => `<option value="${acc.id}">${acc.name} (${App.formatCurrency(acc.balance)})</option>`).join('');
         }
     },
@@ -91,9 +91,9 @@ const cash_registerModule = {
         const result = await App.api('cash_register.php?action=close_session', 'POST', data);
         if (result && result.success) {
             const diff = parseFloat(result.difference);
-            let msg = 'Caisse fermée avec succès.';
+            let msg = 'Register closed successfully.';
             if (diff !== 0) {
-                msg += ` Écart de ${App.formatCurrency(diff)}`;
+                msg += ` Discrepancy of ${App.formatCurrency(diff)}`;
             }
 
             App.toast(diff === 0 ? 'success' : 'info', msg);
@@ -122,7 +122,7 @@ const cash_registerModule = {
                         ${row.closing_date ? `
                             <span class="fw-bold small d-block">${App.formatDate(row.closing_date)}</span>
                             <small class="text-muted">${new Date(row.closing_date).toLocaleTimeString()}</small>
-                        ` : '<span class="badge bg-teal-soft text-teal rounded-pill">En cours</span>'}
+                        ` : '<span class="badge bg-teal-soft text-teal rounded-pill">In progress</span>'}
                     </td>
                     <td><small class="fw-medium">${row.user_name}</small></td>
                     <td class="small fw-bold">${App.formatCurrency(row.expected_balance)}</td>
@@ -130,7 +130,7 @@ const cash_registerModule = {
                     <td class="small fw-bold ${diffClass}">${row.closing_date ? App.formatCurrency(diff) : '-'}</td>
                     <td>
                         <span class="badge ${row.status === 'Open' ? 'bg-teal-soft text-teal' : 'bg-light text-muted'} rounded-pill">
-                            ${row.status === 'Open' ? 'Ouverte' : 'Fermée'}
+                            ${row.status === 'Open' ? 'Open' : 'Closed'}
                         </span>
                     </td>
                 </tr>

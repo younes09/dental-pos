@@ -313,6 +313,7 @@
                 <div class="info-content">
                     <div class="info-name" id="shop-name">DentalPOS Premium</div>
                     <div id="shop-address">123 Clinical Way, Medical District</div>
+                    <div id="shop-phone"></div>
                     <div id="shop-tax">VAT-12345678</div>
                 </div>
             </div>
@@ -383,6 +384,7 @@
                 document.getElementById('receipt-brand-name').innerHTML = settings.store_name.replace('POS', '<span>POS</span>') || 'Dental<span>POS</span>';
                 document.getElementById('shop-name').textContent = settings.store_name || 'DentalPOS Premium';
                 document.getElementById('shop-address').textContent = settings.address || '';
+                document.getElementById('shop-phone').textContent = settings.phone || '';
                 document.getElementById('shop-tax').textContent = settings.tax_number || '';
 
                 // Set dynamic VAT label if exists
@@ -396,7 +398,7 @@
             const receiptTitle = document.getElementById('receipt-title');
             if (receiptTitle) {
                 const isBL = sale.invoice_type === 'BL';
-                receiptTitle.textContent = isBL ? 'Bon de Livraison' : 'Bon de Vente';
+                receiptTitle.textContent = isBL ? 'Delivery Note' : 'Sales Receipt';
 
                 // Adjust font size for longer titles
                 receiptTitle.style.fontSize = isBL ? '24px' : '32px';

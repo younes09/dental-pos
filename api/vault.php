@@ -34,7 +34,7 @@ try {
 
         case 'add_transaction':
             if (!in_array($_SESSION['user_role'] ?? '', ['Admin'])) {
-                throw new Exception('Seul l\'administrateur peut ajouter des transactions manuelles.');
+                throw new Exception('Only administrators can add manual transactions.');
             }
             $data = json_decode(file_get_contents('php://input'), true);
             $account_id = $data['account_id'];
@@ -42,7 +42,7 @@ try {
             $amount = (float)$data['amount'];
             $description = $data['description'] ?? '';
 
-            if ($amount <= 0) throw new Exception('Montant invalide.');
+            if ($amount <= 0) throw new Exception('Invalid amount.');
 
             $pdo->beginTransaction();
 
@@ -54,12 +54,12 @@ try {
             $stmt->execute([$balance_change, $account_id]);
 
             $pdo->commit();
-            echo json_encode(['success' => 'Transaction enregistrée avec succès']);
+            echo json_encode(['success' => 'Transaction recorded successfully']);
             break;
 
         case 'transfer':
             if (!in_array($_SESSION['user_role'] ?? '', ['Admin'])) {
-                throw new Exception('Seul l\'administrateur peut effectuer des virements.');
+                throw new Exception('Only administrators can perform transfers.');
             }
             $data = json_decode(file_get_contents('php://input'), true);
             $from_id = $data['from_id'];
@@ -67,8 +67,8 @@ try {
             $amount = (float)$data['amount'];
             $description = $data['description'] ?? 'Virement interne';
 
-            if ($amount <= 0) throw new Exception('Montant invalide.');
-            if ($from_id == $to_id) throw new Exception('Les comptes source et destination doivent être différents.');
+            if ($amount <= 0) throw new Exception('Invalid amount.');
+            if ($from_id == $to_id) throw new Exception('Source and destination accounts must be different.');
 
             $pdo->beginTransaction();
 
@@ -76,7 +76,7 @@ try {
             $stmt = $pdo->prepare("SELECT balance FROM vault_accounts WHERE id = ? FOR UPDATE");
             $stmt->execute([$from_id]);
             $from_balance = (float)$stmt->fetchColumn();
-            if ($from_balance < $amount) throw new Exception('Solde insuffisant dans le compte source.');
+            if ($from_balance < $amount) throw new Exception('Insufficient balance in source account.');
 
             // 2. Record transactions
             $stmtTx = $pdo->prepare("INSERT INTO vault_transactions (account_id, type, amount, description, user_id) VALUES (?, ?, ?, ?, ?)");
@@ -88,7 +88,7 @@ try {
             $pdo->prepare("UPDATE vault_accounts SET balance = balance + ? WHERE id = ?")->execute([$amount, $to_id]);
 
             $pdo->commit();
-            echo json_encode(['success' => 'Virement effectué avec succès']);
+            echo json_encode(['success' => 'Transfer completed successfully']);
             break;
 
         case 'add_account':
@@ -99,7 +99,7 @@ try {
             
             $stmt = $pdo->prepare("INSERT INTO vault_accounts (name, type) VALUES (?, ?)");
             $stmt->execute([$name, $type]);
-            echo json_encode(['success' => 'Compte créé avec succès']);
+            echo json_encode(['success' => 'Account created successfully']);
             break;
 
         default:

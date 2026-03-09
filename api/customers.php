@@ -87,7 +87,7 @@ try {
                 $stmtTx->execute([
                     $account_id,
                     $amount,
-                    "Paiement Dette Client - " . ($notes ?: "Paiement #$payment_id"),
+                    "Customer Debt Payment - " . ($notes ?: "Payment #$payment_id"),
                     $payment_id,
                     $user_id
                 ]);

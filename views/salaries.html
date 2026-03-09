@@ -1,15 +1,16 @@
 <div class="container-fluid fade-in">
     <div class="row mb-4">
         <div class="col-md-6">
-            <h3 class="fw-bold mb-0">Gestion des Salaires</h3>
-            <p class="text-muted small">Gérez votre personnel et suivez les paiements de salaires.</p>
+            <h3 class="fw-bold mb-0">Payroll Management</h3>
+            <p class="text-muted small">Manage your staff and track salary payments.</p>
         </div>
         <div class="col-md-6 text-md-end">
-            <button class="btn btn-teal-outline rounded-pill px-4 me-2" data-bs-toggle="modal" data-bs-target="#paymentModal">
-                <i class="fas fa-money-bill-transfer me-2"></i>Nouveau Paiement
+            <button class="btn btn-teal-outline rounded-pill px-4 me-2" data-bs-toggle="modal"
+                data-bs-target="#paymentModal">
+                <i class="fas fa-money-bill-transfer me-2"></i>New Payment
             </button>
             <button class="btn btn-teal rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#staffModal">
-                <i class="fas fa-plus me-2"></i>Ajouter Personnel
+                <i class="fas fa-plus me-2"></i>Add Staff
             </button>
         </div>
     </div>
@@ -17,13 +18,15 @@
     <!-- Tabs -->
     <ul class="nav nav-pills custom-pills mb-4" id="salaryTabs" role="tablist">
         <li class="nav-item" role="presentation">
-            <button class="nav-link active rounded-pill px-4 me-2" id="staff-tab" data-bs-toggle="tab" data-bs-target="#staff-content" type="button" role="tab">
-                <i class="fas fa-users me-2"></i>Personnel
+            <button class="nav-link active rounded-pill px-4 me-2" id="staff-tab" data-bs-toggle="tab"
+                data-bs-target="#staff-content" type="button" role="tab">
+                <i class="fas fa-users me-2"></i>Staff
             </button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link rounded-pill px-4" id="payments-tab" data-bs-toggle="tab" data-bs-target="#payments-content" type="button" role="tab">
-                <i class="fas fa-history me-2"></i>Historique des Paiements
+            <button class="nav-link rounded-pill px-4" id="payments-tab" data-bs-toggle="tab"
+                data-bs-target="#payments-content" type="button" role="tab">
+                <i class="fas fa-history me-2"></i>Payment History
             </button>
         </li>
     </ul>
@@ -37,11 +40,11 @@
                         <table class="table table-hover align-middle" id="staffTable">
                             <thead class="bg-light">
                                 <tr>
-                                    <th>Nom</th>
-                                    <th>Poste</th>
-                                    <th>Téléphone</th>
-                                    <th>Salaire de Base</th>
-                                    <th>Statut</th>
+                                    <th>Name</th>
+                                    <th>Position</th>
+                                    <th>Phone</th>
+                                    <th>Base Salary</th>
+                                    <th>Status</th>
                                     <th class="text-end">Action</th>
                                 </tr>
                             </thead>
@@ -63,11 +66,11 @@
                             <thead class="bg-light">
                                 <tr>
                                     <th>Date</th>
-                                    <th>Personnel</th>
-                                    <th>Période</th>
-                                    <th>Montant</th>
-                                    <th>Compte</th>
-                                    <th>Méthode</th>
+                                    <th>Staff</th>
+                                    <th>Period</th>
+                                    <th>Amount</th>
+                                    <th>Account</th>
+                                    <th>Method</th>
                                     <th>Note</th>
                                     <th class="text-end">Action</th>
                                 </tr>
@@ -88,23 +91,24 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4">
             <div class="modal-header border-0 p-4 pb-0">
-                <h5 class="fw-bold">Détails du Personnel</h5>
+                <h5 class="fw-bold">Staff Details</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="staffForm">
                 <div class="modal-body p-4">
                     <input type="hidden" id="staffId" name="id">
                     <div class="mb-3">
-                        <label class="form-label small fw-bold">Nom Complet *</label>
+                        <label class="form-label small fw-bold">Full Name *</label>
                         <input type="text" class="form-control rounded-3" name="name" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label small fw-bold">Poste</label>
-                        <input type="text" class="form-control rounded-3" name="position" placeholder="Ex: Assistant Dentaire">
+                        <label class="form-label small fw-bold">Position</label>
+                        <input type="text" class="form-control rounded-3" name="position"
+                            placeholder="Ex: Dental Assistant">
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label small fw-bold">Téléphone</label>
+                            <label class="form-label small fw-bold">Phone</label>
                             <input type="text" class="form-control rounded-3" name="phone">
                         </div>
                         <div class="col-md-6 mb-3">
@@ -114,28 +118,31 @@
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label small fw-bold">Salaire de Base</label>
+                            <label class="form-label small fw-bold">Base Salary</label>
                             <div class="input-group">
-                                <input type="number" step="0.01" class="form-control rounded-start-3" name="base_salary" required>
-                                <span class="input-group-text bg-light border-start-0 rounded-end-3 currency-symbol">DZD</span>
+                                <input type="number" step="0.01" class="form-control rounded-start-3" name="base_salary"
+                                    required>
+                                <span
+                                    class="input-group-text bg-light border-start-0 rounded-end-3 currency-symbol">DZD</span>
                             </div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label small fw-bold">Statut</label>
+                            <label class="form-label small fw-bold">Status</label>
                             <select class="form-select rounded-3" name="status">
-                                <option value="Active">Actif</option>
-                                <option value="Inactive">Inactif</option>
+                                <option value="Active">Active</option>
+                                <option value="Inactive">Inactive</option>
                             </select>
                         </div>
                     </div>
                     <div class="mb-0">
-                        <label class="form-label small fw-bold">Date d'embauche</label>
+                        <label class="form-label small fw-bold">Hiring Date</label>
                         <input type="date" class="form-control rounded-3" name="hiring_date">
                     </div>
                 </div>
                 <div class="modal-footer border-0 p-4 pt-0">
-                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Annuler</button>
-                    <button type="submit" class="btn btn-teal rounded-pill px-4">Enregistrer</button>
+                    <button type="button" class="btn btn-light rounded-pill px-4"
+                        data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-teal rounded-pill px-4">Save</button>
                 </div>
             </form>
         </div>
@@ -147,75 +154,80 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4">
             <div class="modal-header border-0 p-4 pb-0">
-                <h5 class="fw-bold">Enregistrer un Paiement</h5>
+                <h5 class="fw-bold">Record a Payment</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="paymentForm">
                 <div class="modal-body p-4">
                     <div class="mb-3">
-                        <label class="form-label small fw-bold">Sélectionner Personnel *</label>
+                        <label class="form-label small fw-bold">Select Staff Member *</label>
                         <select class="form-select rounded-3" name="staff_id" id="paymentStaffSelect" required>
-                            <option value="">-- Choisir --</option>
+                            <option value="">-- Choose --</option>
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label small fw-bold">Compte de Trésorerie *</label>
+                        <label class="form-label small fw-bold">Treasury Account *</label>
                         <select class="form-select rounded-3" name="vault_account_id" id="paymentVaultSelect" required>
-                            <option value="">-- Choisir --</option>
+                            <option value="">-- Choose --</option>
                         </select>
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label small fw-bold">Période (Mois)</label>
+                            <label class="form-label small fw-bold">Period (Month)</label>
                             <select class="form-select rounded-3" name="period_month" required>
-                                <option value="1">Janvier</option>
-                                <option value="2">Février</option>
-                                <option value="3">Mars</option>
-                                <option value="4">Avril</option>
-                                <option value="5">Mai</option>
-                                <option value="6">Juin</option>
-                                <option value="7">Juillet</option>
-                                <option value="8">Août</option>
-                                <option value="9">Septembre</option>
-                                <option value="10">Octobre</option>
-                                <option value="11">Novembre</option>
-                                <option value="12">Décembre</option>
+                                <option value="1">January</option>
+                                <option value="2">February</option>
+                                <option value="3">March</option>
+                                <option value="4">April</option>
+                                <option value="5">May</option>
+                                <option value="6">June</option>
+                                <option value="7">July</option>
+                                <option value="8">August</option>
+                                <option value="9">September</option>
+                                <option value="10">October</option>
+                                <option value="11">November</option>
+                                <option value="12">December</option>
                             </select>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label small fw-bold">Année</label>
-                            <input type="number" class="form-control rounded-3" name="period_year" value="2026" required>
+                            <label class="form-label small fw-bold">Year</label>
+                            <input type="number" class="form-control rounded-3" name="period_year" value="2026"
+                                required>
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label small fw-bold">Montant *</label>
+                            <label class="form-label small fw-bold">Amount *</label>
                             <div class="input-group">
-                                <input type="number" step="0.01" class="form-control rounded-start-3" name="amount" id="paymentAmountInput" required>
-                                <span class="input-group-text bg-light border-start-0 rounded-end-3 currency-symbol">DZD</span>
+                                <input type="number" step="0.01" class="form-control rounded-start-3" name="amount"
+                                    id="paymentAmountInput" required>
+                                <span
+                                    class="input-group-text bg-light border-start-0 rounded-end-3 currency-symbol">DZD</span>
                             </div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label small fw-bold">Date de Paiement</label>
+                            <label class="form-label small fw-bold">Payment Date</label>
                             <input type="date" class="form-control rounded-3" name="payment_date" required>
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label small fw-bold">Méthode de Paiement</label>
+                        <label class="form-label small fw-bold">Payment Method</label>
                         <select class="form-select rounded-3" name="payment_method">
-                            <option value="Cash">Espèces</option>
-                            <option value="Bank Transfer">Virement Bancaire</option>
-                            <option value="Cheque">Chèque</option>
+                            <option value="Cash">Cash</option>
+                            <option value="Bank Transfer">Bank Transfer</option>
+                            <option value="Cheque">Cheque</option>
                         </select>
                     </div>
                     <div class="mb-0">
-                        <label class="form-label small fw-bold">Commentaires (Optionnel)</label>
-                        <textarea class="form-control rounded-3" name="notes" rows="2" placeholder="Notes additionnelles..."></textarea>
+                        <label class="form-label small fw-bold">Comments (Optional)</label>
+                        <textarea class="form-control rounded-3" name="notes" rows="2"
+                            placeholder="Additional notes..."></textarea>
                     </div>
                 </div>
                 <div class="modal-footer border-0 p-4 pt-0">
-                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Annuler</button>
-                    <button type="submit" class="btn btn-teal rounded-pill px-4">Valider le Paiement</button>
+                    <button type="button" class="btn btn-light rounded-pill px-4"
+                        data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-teal rounded-pill px-4">Validate Payment</button>
                 </div>
             </form>
         </div>

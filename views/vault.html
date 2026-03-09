@@ -1,15 +1,15 @@
 <div class="row mb-4 animate__animated animate__fadeIn">
     <div class="col-12 d-flex justify-content-between align-items-center">
         <div>
-            <h3 class="fw-bold mb-0">Gestion de la Trésorerie</h3>
-            <p class="text-muted small">Suivi des fonds (Coffre, Banque) et historique des mouvements.</p>
+            <h3 class="fw-bold mb-0">Treasury Management</h3>
+            <p class="text-muted small">Tracking funds (Vault, Bank) and transaction history.</p>
         </div>
         <div>
             <button class="btn btn-teal rounded-pill px-4 me-2" onclick="vaultModule.openTransferModal()">
-                <i class="fas fa-exchange-alt me-2"></i>Virement Interne
+                <i class="fas fa-exchange-alt me-2"></i>Internal Transfer
             </button>
             <button class="btn btn-navy rounded-pill px-4" onclick="vaultModule.openAddTransactionModal()">
-                <i class="fas fa-plus me-2"></i>Nouvelle Transaction
+                <i class="fas fa-plus me-2"></i>New Transaction
             </button>
         </div>
     </div>
@@ -28,10 +28,11 @@
         <div class="card border-0 shadow-sm rounded-4">
             <div class="card-body p-4">
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="fw-bold mb-0">Historique des Mouvements</h5>
+                    <h5 class="fw-bold mb-0">Transaction History</h5>
                     <div class="d-flex gap-2">
-                        <select id="filter-account" class="form-select form-select-sm rounded-pill" style="width: 200px;" onchange="vaultModule.loadTransactions()">
-                            <option value="">Tous les comptes</option>
+                        <select id="filter-account" class="form-select form-select-sm rounded-pill"
+                            style="width: 200px;" onchange="vaultModule.loadTransactions()">
+                            <option value="">All Accounts</option>
                         </select>
                         <button class="btn btn-light btn-sm rounded-pill px-3" onclick="vaultModule.loadTransactions()">
                             <i class="fas fa-sync-alt"></i>
@@ -44,11 +45,11 @@
                         <thead class="bg-light">
                             <tr>
                                 <th>Date</th>
-                                <th>Compte</th>
+                                <th>Account</th>
                                 <th>Type</th>
                                 <th>Description</th>
-                                <th class="text-end">Montant</th>
-                                <th>Utilisateur</th>
+                                <th class="text-end">Amount</th>
+                                <th>User</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -66,37 +67,40 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4">
             <div class="modal-header border-0 p-4 pb-0">
-                <h5 class="fw-bold">Nouvelle Transaction</h5>
+                <h5 class="fw-bold">New Transaction</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="formAddTransaction">
                 <div class="modal-body p-4">
                     <div class="mb-3">
-                        <label class="form-label small fw-bold">Compte</label>
+                        <label class="form-label small fw-bold">Account</label>
                         <select name="account_id" class="form-select rounded-3" required></select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label small fw-bold">Type de mouvement</label>
+                        <label class="form-label small fw-bold">Movement Type</label>
                         <select name="type" class="form-select rounded-3" required>
-                            <option value="Income">Entrée (Revenu)</option>
-                            <option value="Expense">Sortie (Dépense)</option>
+                            <option value="Income">Income (Revenue)</option>
+                            <option value="Expense">Expense (Outflow)</option>
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label small fw-bold">Montant</label>
+                        <label class="form-label small fw-bold">Amount</label>
                         <div class="input-group">
-                            <input type="number" name="amount" step="0.01" class="form-control rounded-3" placeholder="0.00" required>
-                            <span class="input-group-text bg-light border-start-0">DH</span>
+                            <input type="number" name="amount" step="0.01" class="form-control rounded-3"
+                                placeholder="0.00" required>
+                            <span class="input-group-text bg-light border-start-0">DZD</span>
                         </div>
                     </div>
                     <div class="mb-0">
                         <label class="form-label small fw-bold">Description / Notes</label>
-                        <textarea name="description" class="form-control rounded-3" rows="3" placeholder="Ex: Achat fournitures, Versement..."></textarea>
+                        <textarea name="description" class="form-control rounded-3" rows="3"
+                            placeholder="Ex: Supply purchase, Deposit..."></textarea>
                     </div>
                 </div>
                 <div class="modal-footer border-0 p-4 pt-0">
-                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Annuler</button>
-                    <button type="submit" class="btn btn-teal rounded-pill px-4">Enregistrer</button>
+                    <button type="button" class="btn btn-light rounded-pill px-4"
+                        data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-teal rounded-pill px-4">Save</button>
                 </div>
             </form>
         </div>
@@ -108,34 +112,37 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4">
             <div class="modal-header border-0 p-4 pb-0">
-                <h5 class="fw-bold">Virement Interne</h5>
+                <h5 class="fw-bold">Internal Transfer</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="formTransfer">
                 <div class="modal-body p-4">
                     <div class="mb-3">
-                        <label class="form-label small fw-bold">Depuis (Source)</label>
+                        <label class="form-label small fw-bold">From (Source)</label>
                         <select name="from_id" class="form-select rounded-3" required></select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label small fw-bold">Vers (Destination)</label>
+                        <label class="form-label small fw-bold">To (Destination)</label>
                         <select name="to_id" class="form-select rounded-3" required></select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label small fw-bold">Montant</label>
+                        <label class="form-label small fw-bold">Amount</label>
                         <div class="input-group">
-                            <input type="number" name="amount" step="0.01" class="form-control rounded-3" placeholder="0.00" required>
-                            <span class="input-group-text bg-light border-start-0">DH</span>
+                            <input type="number" name="amount" step="0.01" class="form-control rounded-3"
+                                placeholder="0.00" required>
+                            <span class="input-group-text bg-light border-start-0">DZD</span>
                         </div>
                     </div>
                     <div class="mb-0">
                         <label class="form-label small fw-bold">Notes</label>
-                        <input type="text" name="description" class="form-control rounded-3" placeholder="Ex: Dépôt banque">
+                        <input type="text" name="description" class="form-control rounded-3"
+                            placeholder="Ex: Bank deposit">
                     </div>
                 </div>
                 <div class="modal-footer border-0 p-4 pt-0">
-                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Annuler</button>
-                    <button type="submit" class="btn btn-teal rounded-pill px-4">Effectuer</button>
+                    <button type="button" class="btn btn-light rounded-pill px-4"
+                        data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-teal rounded-pill px-4">Perform</button>
                 </div>
             </form>
         </div>
