@@ -598,6 +598,15 @@ body.dark-mode .kpi-card {
     color: #e1e7ed;
 }
 
+.filter-row-bg {
+    background-color: #fff !important;
+}
+
+body.dark-mode .filter-row-bg {
+    background-color: #0c1a2e !important;
+    border: 1px solid #1e2d41;
+}
+
 body.dark-mode .card-header,
 body.dark-mode .modal-header {
     background-color: rgba(255, 255, 255, 0.03) !important;
