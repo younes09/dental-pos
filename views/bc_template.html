@@ -371,7 +371,9 @@
             if (settings) {
                 document.getElementById('receipt-brand-name').innerHTML = settings.store_name?.replace('POS', '<span>POS</span>') || 'Dental<span>POS</span>';
                 document.getElementById('receipt-brand-sub').textContent = settings.address || 'Premium Dental store Management';
-                document.getElementById('receipt-brand-phone').textContent = settings.phone || '';
+                if (settings.store_phone) {
+                    document.getElementById('receipt-brand-phone').textContent = 'Tel: ' + settings.store_phone;
+                }
             }
 
             // Set Order Info
