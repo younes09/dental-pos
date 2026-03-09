@@ -734,6 +734,10 @@ body.dark-mode .modal-content {
     border: 1px solid #1e2d41;
 }
 
+body.dark-mode .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
 /* Dark Mode Subtle Overrides */
 body.dark-mode .bg-primary-subtle,
 body.dark-mode .bg-navy-subtle {

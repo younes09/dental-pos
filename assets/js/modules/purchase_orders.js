@@ -558,60 +558,14 @@ const purchase_ordersModule = {
         const { order, items } = result;
         const settings = App.state.settings || {};
 
-        // Create an iframe for printing
-        const iframe = document.createElement('iframe');
-        iframe.style.display = 'none';
-        document.body.appendChild(iframe);
+        const printWindow = window.open('views/bc_template.html', '_blank', 'width=900,height=800');
 
-        const doc = iframe.contentWindow.document;
-
-        // Fetch template content
-        const templateRes = await fetch('views/bc_template.html');
-        let html = await templateRes.text();
-
-        // Replace placeholders
-        html = html.replace('{{po_id}}', order.id);
-
-        doc.open();
-        doc.write(html);
-        doc.close();
-
-        // Wait for iframe to load, then populate and print
-        iframe.onload = function () {
-            const innerDoc = iframe.contentWindow.document;
-
-            innerDoc.getElementById('store-name').textContent = settings.store_name || 'DentalPOS';
-            innerDoc.getElementById('store-address').textContent = settings.address || '';
-            innerDoc.getElementById('store-phone').textContent = `Phone: ${settings.store_phone || ''}`;
-            innerDoc.getElementById('po-number').textContent = `#PO-${order.id}`;
-            innerDoc.getElementById('po-date').textContent = order.date;
-            innerDoc.getElementById('supplier-name').textContent = order.supplier_name;
-            innerDoc.getElementById('supplier-company').textContent = order.supplier_company || '';
-            innerDoc.getElementById('supplier-contact').textContent = `${order.supplier_email || ''} / ${order.supplier_phone || ''}`;
-            innerDoc.getElementById('po-status').textContent = order.status;
-            innerDoc.getElementById('po-payment-status').textContent = order.payment_status;
-
-            const tbody = innerDoc.getElementById('items-tbody');
-            tbody.innerHTML = items.map(item => `
-                <tr>
-                    <td>
-                        <strong>${item.product_name}</strong><br>
-                        <small>Barcode: ${item.barcode || 'N/A'}</small>
-                    </td>
-                    <td class="text-end">${item.qty}</td>
-                    <td class="text-end">${App.formatCurrency(item.old_unit_cost)}</td>
-                    <td class="text-end" style="border-bottom: 1px dotted #ccc; width: 100px;"></td>
-                    <td class="text-end">${App.formatCurrency(item.qty * item.unit_cost)}</td>
-                </tr>
-            `).join('');
-
-            innerDoc.getElementById('total-items').textContent = items.length;
-            innerDoc.getElementById('grand-total').textContent = App.formatCurrency(order.total);
-
-            setTimeout(() => {
-                iframe.contentWindow.print();
-                setTimeout(() => document.body.removeChild(iframe), 1000);
-            }, 500);
+        // Wait for window to load then send data
+        printWindow.onload = function () {
+            printWindow.postMessage({
+                type: 'POPULATE_BC',
+                payload: { order, items, settings }
+            }, window.location.origin);
         };
     },
 
