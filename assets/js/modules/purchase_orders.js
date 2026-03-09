@@ -194,7 +194,15 @@ const purchase_ordersModule = {
             <td>
                 <select class="form-select form-select-sm item-product" required>
                     <option value="">Select Product</option>
-                    ${this.products.map(p => `<option value="${p.id}" data-price="${p.purchase_price}">${p.name}</option>`).join('')}
+                    ${this.products.map(p => {
+            let colorStyle = '';
+            if (p.stock_qty <= 0) {
+                colorStyle = 'style="color: #dc3545; font-weight: bold;"'; // Red for Out of Stock
+            } else if (p.stock_qty <= p.min_stock) {
+                colorStyle = 'style="color: #ffc107; font-weight: bold;"'; // Yellow for Low Stock
+            }
+            return `<option value="${p.id}" ${colorStyle} data-price="${p.purchase_price}">${p.name} (Stock: ${p.stock_qty})</option>`;
+        }).join('')}
                 </select>
             </td>
             <td><input type="number" class="form-control form-control-sm item-qty" value="1" min="1" required></td>

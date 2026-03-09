@@ -425,6 +425,16 @@ const App = {
         return `${parseFloat(amount).toFixed(2)} ${symbol}`;
     },
 
+    formatDate(dateString) {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        });
+    },
+
     toast(icon, title) {
         Swal.fire({
             toast: true,

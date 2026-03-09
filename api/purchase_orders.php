@@ -268,7 +268,7 @@ try {
             break;
 
         case 'get_products':
-            $stmt = $pdo->query("SELECT id, name, barcode, purchase_price, stock_qty FROM products ORDER BY name ASC");
+            $stmt = $pdo->query("SELECT id, name, barcode, purchase_price, stock_qty, min_stock FROM products ORDER BY name ASC");
             $products = $stmt->fetchAll();
             echo json_encode(['data' => $products]);
             break;

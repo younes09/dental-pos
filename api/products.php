@@ -63,6 +63,7 @@ try {
             $stock_qty = (int)$_POST['stock_qty'];
             $min_stock = $_POST['min_stock'];
             $expiry_date = $_POST['expiry_date'] ?: null;
+            $status = $_POST['status'] ?? 'Active';
             
             // F4.2: Validate prices
             if ($purchase_price < 0) throw new Exception('Purchase price cannot be negative');
@@ -84,19 +85,19 @@ try {
                     UPDATE products SET 
                     name=?, category_id=?, brand_id=?, barcode=?, 
                     purchase_price=?, selling_price=?, min_stock=?, 
-                    expiry_date=?, image=?
+                    expiry_date=?, image=?, status=?
                     WHERE id=?
                 ");
-                $stmt->execute([$name, $category_id, $brand_id, $barcode, $purchase_price, $selling_price, $min_stock, $expiry_date, $image, $id]);
+                $stmt->execute([$name, $category_id, $brand_id, $barcode, $purchase_price, $selling_price, $min_stock, $expiry_date, $image, $status, $id]);
                 echo json_encode(['success' => 'Product updated successfully']);
             } else {
                 $pdo->beginTransaction();
                 $stmt = $pdo->prepare("
                     INSERT INTO products 
-                    (name, category_id, brand_id, barcode, purchase_price, selling_price, stock_qty, min_stock, expiry_date, image) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    (name, category_id, brand_id, barcode, purchase_price, selling_price, stock_qty, min_stock, expiry_date, image, status) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ");
-                $stmt->execute([$name, $category_id, $brand_id, $barcode, $purchase_price, $selling_price, $stock_qty, $min_stock, $expiry_date, $image]);
+                $stmt->execute([$name, $category_id, $brand_id, $barcode, $purchase_price, $selling_price, $stock_qty, $min_stock, $expiry_date, $image, $status]);
                 
                 $product_id = $pdo->lastInsertId();
                 if ($stock_qty > 0) {

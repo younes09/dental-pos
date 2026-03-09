@@ -76,6 +76,7 @@ const suppliersModule = {
                             <button class="btn btn-sm btn-light" data-bs-toggle="dropdown"><i class="fas fa-ellipsis-v"></i></button>
                             <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
                                 <li><a class="dropdown-item" href="javascript:void(0)" onclick="suppliersModule.editSupplier(${data.id})"><i class="fas fa-edit me-2 text-primary"></i>Edit Supplier</a></li>
+                                <li><a class="dropdown-item" href="javascript:void(0)" onclick="suppliersModule.viewProducts(${data.id}, '${data.name.replace(/'/g, "\\'")}')"><i class="fas fa-box me-2 text-info"></i>View Products</a></li>
                                 <li><a class="dropdown-item" href="javascript:void(0)" onclick="suppliersModule.createPO(${data.id})"><i class="fas fa-cart-plus me-2 text-teal"></i>Create Purchase Order</a></li>
                                 <li><a class="dropdown-item" href="javascript:void(0)" onclick="suppliersModule.openSettleDebt(${data.id})"><i class="fas fa-money-bill-wave me-2 text-success"></i>Settle Debt</a></li>
                                 <li><hr class="dropdown-divider"></li>
@@ -204,6 +205,49 @@ const suppliersModule = {
         } catch (error) {
             App.toast('error', 'Failed to settle debt: ' + error.message);
         }
+    },
+
+    viewProducts(id, name) {
+        document.getElementById('supplierProductsModalTitle').textContent = name;
+        new bootstrap.Modal(document.getElementById('supplierProductsModal')).show();
+
+        if ($.fn.DataTable.isDataTable('#supplierProductsTable')) {
+            $('#supplierProductsTable').DataTable().destroy();
+        }
+
+        $('#supplierProductsTable').DataTable({
+            ajax: `api/suppliers.php?action=products&id=${id}`,
+            columns: [
+                { data: 'name', render: (data) => `<span class="fw-bold">${data}</span>` },
+                { data: 'barcode', render: (data) => data || '<span class="text-muted">N/A</span>' },
+                {
+                    data: null,
+                    render: (data, type, row) => `${row.category_name || '<span class="text-muted">Uncategorized</span>'} <br> <small class="text-muted">${row.brand_name || 'No Brand'}</small>`
+                },
+                {
+                    data: 'total_supplied_qty',
+                    render: (data) => `<span class="badge bg-teal-subtle text-teal rounded-pill px-3">${data || 0}</span>`
+                },
+                {
+                    data: 'avg_unit_cost',
+                    render: (data, type) => {
+                        const val = parseFloat(data || 0);
+                        return type === 'display' ? `<span class="fw-semibold">${App.formatCurrency(val)}</span>` : val;
+                    }
+                },
+                {
+                    data: 'last_purchase_date',
+                    render: (data) => data ? App.formatDate(data) : '<span class="text-muted">Never</span>'
+                }
+            ],
+            language: {
+                search: "_INPUT_",
+                searchPlaceholder: "Search products...",
+                emptyTable: "No products currently linked to this supplier."
+            },
+            dom: '<"d-flex justify-content-between align-items-center mb-3"f>rt<"d-flex justify-content-between align-items-center mt-3"p>',
+            pageLength: 5
+        });
     }
 };
 

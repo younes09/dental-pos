@@ -125,3 +125,37 @@
         </div>
     </div>
 </div>
+
+<!-- Supplier Products Modal -->
+<div class="modal fade" id="supplierProductsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-bottom-0 p-4">
+                <h5 class="modal-title fw-bold">Products Provided by <span id="supplierProductsModalTitle" class="text-teal"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4 pt-0">
+                <div class="table-responsive">
+                    <table id="supplierProductsTable" class="table table-hover align-middle w-100 text-nowrap">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Product Name</th>
+                                <th>Barcode</th>
+                                <th>Category / Brand</th>
+                                <th>Total Supplied Qty</th>
+                                <th>Avg Unit Cost</th>
+                                <th>Last Purchase Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- DataTable Content -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer border-top-0 p-4">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>

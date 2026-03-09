@@ -76,7 +76,7 @@ const dashboardModule = {
         const isDark = document.body.classList.contains('dark-mode');
         const textColor = isDark ? '#e1e7ed' : '#6c757d';
         const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
-        const barColor = isDark ? '#1e2d41' : '#0A1628';
+        const barColor = isDark ? '#00BFA6' : '#00BFA6';
 
         // Line Chart
         const ctxSales = document.getElementById('salesChart').getContext('2d');

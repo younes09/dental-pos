@@ -178,8 +178,14 @@ const stockModule = {
                 {
                     data: 'stock_qty',
                     render: (data, type, row) => {
-                        const color = data <= row.min_stock ? 'danger' : 'success';
-                        return `<span class="badge bg-${color}">${data} units</span>`;
+                        if (type === 'display') {
+                            if (data <= 0) {
+                                return `<span class="badge bg-danger-subtle text-danger border border-danger p-1 small" style="font-size: 0.75rem;"><i class="fas fa-exclamation-circle me-1"></i>Out of Stock (${data})</span>`;
+                            } else if (data <= row.min_stock) {
+                                return `<span class="badge bg-warning-subtle text-warning-emphasis border border-warning p-1 small" style="font-size: 0.75rem;"><i class="fas fa-clock me-1"></i>Low Stock (${data})</span>`;
+                            }
+                        }
+                        return `<span class="badge bg-success-subtle text-success border border-success p-1 small" style="font-size: 0.75rem;"><i class="fas fa-check-circle me-1"></i>In Stock (${data})</span>`;
                     }
                 },
                 {
@@ -210,7 +216,12 @@ const stockModule = {
                 },
                 {
                     data: 'status',
-                    render: (data) => `<span class="badge bg-${data === 'Active' ? 'success' : 'secondary'}-subtle text-${data === 'Active' ? 'success' : 'secondary'} px-3">${data}</span>`
+                    render: (data) => {
+                        const status = data || 'Active';
+                        const color = status === 'Active' ? 'success' : 'secondary';
+                        const label = status === 'Active' ? 'Active' : 'Inactive';
+                        return `<span class="badge bg-${color}-subtle text-${color} px-3">${label}</span>`;
+                    }
                 },
                 {
                     data: null,
@@ -312,6 +323,7 @@ const stockModule = {
 
         document.querySelector('[name="min_stock"]').value = product.min_stock;
         document.querySelector('[name="expiry_date"]').value = product.expiry_date;
+        document.querySelector('[name="status"]').value = product.status || 'Active';
 
         document.getElementById('existing-image').value = product.image || '';
         document.getElementById('product-img-preview').src = product.image ? `assets/img/products/${product.image}` : `assets/img/img_holder.png`;

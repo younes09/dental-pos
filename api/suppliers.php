@@ -20,6 +20,35 @@ try {
             echo json_encode(['data' => $suppliers]);
             break;
 
+        case 'products':
+            $supplier_id = $_GET['id'] ?? null;
+            if (!$supplier_id) throw new Exception("Supplier ID required");
+            
+            // Get all products that Have been purchased from this supplier
+            $stmt = $pdo->prepare("
+                SELECT 
+                    p.id, 
+                    p.name, 
+                    p.barcode,
+                    c.name as category_name,
+                    b.name as brand_name,
+                    SUM(poi.qty) as total_supplied_qty,
+                    AVG(poi.unit_cost) as avg_unit_cost,
+                    MAX(po.date) as last_purchase_date
+                FROM products p
+                JOIN purchase_order_items poi ON p.id = poi.product_id
+                JOIN purchase_orders po ON poi.po_id = po.id
+                LEFT JOIN categories c ON p.category_id = c.id
+                LEFT JOIN brands b ON p.brand_id = b.id
+                WHERE po.supplier_id = ?
+                GROUP BY p.id
+                ORDER BY max(po.date) DESC
+            ");
+            $stmt->execute([$supplier_id]);
+            $products = $stmt->fetchAll();
+            echo json_encode(['data' => $products]);
+            break;
+
         case 'save':
             if (!in_array($_SESSION['user_role'] ?? '', ['Admin', 'Stock Manager'])) {
                 throw new Exception('Access denied.');
