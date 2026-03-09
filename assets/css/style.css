@@ -354,7 +354,8 @@ h6,
     flex-direction: column;
 }
 
-.main-content.active {
+.main-content.active,
+.main-content.active.sidebar-collapsed {
     margin-left: 0;
 }
 

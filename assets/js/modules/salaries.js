@@ -195,6 +195,9 @@ const salariesModule = {
     },
 
     initPaymentsTable() {
+        if ($.fn.DataTable.isDataTable('#paymentsTable')) {
+            $('#paymentsTable').DataTable().destroy();
+        }
         this.paymentsTable = $('#paymentsTable').DataTable({
             language: { search: "", searchPlaceholder: "Rechercher un paiement..." },
             order: [[0, 'desc']],
@@ -278,4 +281,7 @@ const salariesModule = {
 };
 
 // Initialize module
-salariesModule.init();
+if (document.getElementById('staffTable')) {
+    salariesModule.init();
+}
+window.salariesModule = salariesModule;
