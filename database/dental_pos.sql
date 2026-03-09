@@ -78,6 +78,31 @@ CREATE TABLE suppliers (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Vault Accounts table
+CREATE TABLE vault_accounts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    type ENUM('Cash', 'Bank', 'Safe') DEFAULT 'Cash',
+    balance DECIMAL(15, 2) DEFAULT 0.00,
+    is_default BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Vault Transactions table
+CREATE TABLE vault_transactions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    account_id INT NOT NULL,
+    type ENUM('Income', 'Expense', 'Transfer_In', 'Transfer_Out') NOT NULL,
+    amount DECIMAL(15, 2) NOT NULL,
+    description TEXT,
+    related_type VARCHAR(50) NULL,
+    related_id INT NULL,
+    user_id INT NOT NULL,
+    date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (account_id) REFERENCES vault_accounts(id),
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
 -- Supplier Payments table
 CREATE TABLE supplier_payments (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -111,11 +136,50 @@ CREATE TABLE purchase_order_items (
     product_id INT,
     qty INT NOT NULL,
     received_qty INT NOT NULL DEFAULT 0,
+    returned_qty INT NOT NULL DEFAULT 0,
     CONSTRAINT chk_received_lte_qty CHECK (received_qty <= qty),
     unit_cost DECIMAL(10, 2) NOT NULL,
     old_unit_cost DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
     FOREIGN KEY (po_id) REFERENCES purchase_orders(id) ON DELETE CASCADE,
     FOREIGN KEY (product_id) REFERENCES products(id)
+);
+
+-- Purchase Returns table
+CREATE TABLE purchase_returns (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    po_id INT NOT NULL,
+    user_id INT NOT NULL,
+    reason TEXT,
+    total_amount DECIMAL(10, 2) NOT NULL,
+    date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (po_id) REFERENCES purchase_orders(id),
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+-- Purchase Return Items table
+CREATE TABLE purchase_return_items (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    return_id INT NOT NULL,
+    product_id INT NOT NULL,
+    qty INT NOT NULL,
+    unit_cost DECIMAL(10, 2) NOT NULL,
+    FOREIGN KEY (return_id) REFERENCES purchase_returns(id) ON DELETE CASCADE,
+    FOREIGN KEY (product_id) REFERENCES products(id)
+);
+
+-- Cash Sessions table
+CREATE TABLE cash_sessions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    opening_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    closing_date TIMESTAMP NULL,
+    opening_balance DECIMAL(10, 2) NOT NULL,
+    expected_balance DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
+    closing_balance DECIMAL(10, 2) NULL,
+    difference DECIMAL(10, 2) NULL,
+    status ENUM('Open', 'Closed') DEFAULT 'Open',
+    notes TEXT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
 -- Sales table
@@ -137,25 +201,8 @@ CREATE TABLE sales (
     points_earned INT NOT NULL DEFAULT 0,
     points_redeemed INT NOT NULL DEFAULT 0,
     FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE SET NULL,
-    FOREIGN KEY (user_id) REFERENCES users(id)
-);
-
--- Register FK for sales
-ALTER TABLE sales ADD CONSTRAINT fk_sale_session FOREIGN KEY (cash_session_id) REFERENCES cash_sessions(id) ON DELETE SET NULL;
-
--- Cash Sessions table
-CREATE TABLE cash_sessions (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    opening_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    closing_date TIMESTAMP NULL,
-    opening_balance DECIMAL(10, 2) NOT NULL,
-    expected_balance DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
-    closing_balance DECIMAL(10, 2) NULL,
-    difference DECIMAL(10, 2) NULL,
-    status ENUM('Open', 'Closed') DEFAULT 'Open',
-    notes TEXT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(id)
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (cash_session_id) REFERENCES cash_sessions(id) ON DELETE SET NULL
 );
 
 -- Sale Items table
@@ -164,10 +211,34 @@ CREATE TABLE sale_items (
     sale_id INT,
     product_id INT,
     qty INT NOT NULL,
+    returned_qty INT NOT NULL DEFAULT 0,
     unit_price DECIMAL(10, 2) NOT NULL,
     cost_price DECIMAL(10, 2) NOT NULL DEFAULT 0,
     total DECIMAL(10, 2) NOT NULL,
     FOREIGN KEY (sale_id) REFERENCES sales(id) ON DELETE CASCADE,
+    FOREIGN KEY (product_id) REFERENCES products(id)
+);
+
+-- Sale Returns table
+CREATE TABLE sale_returns (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    sale_id INT NOT NULL,
+    user_id INT NOT NULL,
+    reason TEXT,
+    total_amount DECIMAL(10, 2) NOT NULL,
+    date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (sale_id) REFERENCES sales(id),
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+-- Sale Return Items table
+CREATE TABLE sale_return_items (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    return_id INT NOT NULL,
+    product_id INT NOT NULL,
+    qty INT NOT NULL,
+    unit_price DECIMAL(10, 2) NOT NULL,
+    FOREIGN KEY (return_id) REFERENCES sale_returns(id) ON DELETE CASCADE,
     FOREIGN KEY (product_id) REFERENCES products(id)
 );
 
@@ -201,10 +272,9 @@ INSERT IGNORE INTO settings (setting_key, setting_value) VALUES
 ('loyalty_earning_rate', '100'),
 ('loyalty_point_value', '1');
 
-
 -- Insert a default admin user (password: admin123)
 -- In a real app, use password_hash()
-INSERT INTO users (name, email, password, role) VALUES ('Admin User', 'admin@dentalpos.com', '$2a$12$Zka66PNoO.Ryd5K.993dtuZBiZw7IJr3Fs1Q3UdyW78umKIrdF/2q', 'Admin');
+INSERT INTO users (name, email, password, role) VALUES ('Admin User', 'admin@dentalpos.com', '$2y$10$YndX.m18KUnRCOFh2p29.eI8k/YvWp1b9V3Q4G.5Fm/L8f3q6vBv2', 'Admin');
 
 -- Equipment table
 CREATE TABLE IF NOT EXISTS equipment (

@@ -72,6 +72,10 @@ const settingsModule = {
         const result = await App.api('settings.php', 'POST', data);
         if (result && result.success) {
             App.toast('success', 'Business settings saved successfully');
+
+            // Update app state for immediate effect
+            Object.assign(App.state.settings, data);
+            App.applySettings();
         }
     },
 
@@ -83,6 +87,9 @@ const settingsModule = {
         const result = await App.api('settings.php', 'POST', data);
         if (result && result.success) {
             App.toast('success', 'Tax configuration updated');
+
+            // Update app state
+            if (data.vat_rate) App.state.settings.vat_rate = data.vat_rate;
         }
     },
 
@@ -103,9 +110,70 @@ const settingsModule = {
 
     backupDB() {
         App.toast('info', 'Generating SQL backup... please wait');
+        // Trigger download via hidden iframe or direct navigation
+        // Direct navigation is often simplest for downloads
+        window.location.href = 'api/settings.php?action=backup';
+
+        // Hide loading message after a short delay (the browser will handle the download in background)
         setTimeout(() => {
-            App.toast('success', 'Backup ready! Download starting...');
-        }, 1500);
+            App.toast('success', 'Backup request sent');
+        }, 2000);
+    },
+
+    triggerRestore() {
+        document.getElementById('dbRestoreInput').click();
+    },
+
+    async restoreDB(input) {
+        if (!input.files || !input.files[0]) return;
+
+        const file = input.files[0];
+
+        const { isConfirmed } = await Swal.fire({
+            title: 'Restore Database?',
+            text: "This will OVERWRITE your current data with the backup file. This action cannot be undone!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, restore it!',
+            cancelButtonText: 'Cancel'
+        });
+
+        if (!isConfirmed) {
+            input.value = ''; // Reset input
+            return;
+        }
+
+        App.toast('info', 'Restoring database... please do not close the window');
+
+        const formData = new FormData();
+        formData.append('backup_file', file);
+
+        try {
+            const response = await fetch('api/settings.php?action=restore', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (result && result.success) {
+                await Swal.fire({
+                    title: 'Restored!',
+                    text: 'Database has been successfully restored. The application will now reload.',
+                    icon: 'success'
+                });
+                window.location.reload();
+            } else {
+                App.toast('error', result.error || 'Restore failed');
+            }
+        } catch (error) {
+            console.error('Restore Error:', error);
+            App.toast('error', 'Network error during restore');
+        } finally {
+            input.value = ''; // Reset input
+        }
     },
 
     clearCache() {

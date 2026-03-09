@@ -6,6 +6,44 @@ $method = $_SERVER['REQUEST_METHOD'];
 
 switch ($method) {
     case 'GET':
+        if (isset($_GET['action']) && $_GET['action'] === 'backup') {
+            // Only Admin can backup
+            if (($_SESSION['user_role'] ?? '') !== 'Admin') {
+                http_response_code(403);
+                echo json_encode(['error' => 'Only Admins can perform database backup.']);
+                exit;
+            }
+
+            try {
+                $filename = 'backup_' . DB_NAME . '_' . date('Y-m-d_H-i-s') . '.sql';
+                $mysqldumpPath = 'C:\\xampp\\mysql\\bin\\mysqldump.exe';
+                
+                header('Content-Type: application/octet-stream');
+                header('Content-Disposition: attachment; filename="' . $filename . '"');
+                header('Pragma: no-cache');
+                header('Expires: 0');
+
+                // Using direct path to mysqldump in XAMPP
+                // -u {user} -p{pass} {db}
+                // Note: No space between -p and password
+                $command = sprintf(
+                    '"%s" --user=%s --password=%s --host=%s %s',
+                    $mysqldumpPath,
+                    escapeshellarg(DB_USER),
+                    escapeshellarg(DB_PASS),
+                    escapeshellarg(DB_HOST),
+                    escapeshellarg(DB_NAME)
+                );
+
+                passthru($command);
+                exit;
+            } catch (Exception $e) {
+                http_response_code(500);
+                echo json_encode(['error' => 'Backup failed: ' . $e->getMessage()]);
+                exit;
+            }
+        }
+
         try {
             $stmt = $pdo->query("SELECT setting_key, setting_value FROM settings");
             $settings = [];
@@ -20,12 +58,63 @@ switch ($method) {
         break;
 
     case 'POST':
-        // F4.1: Only Admin can modify settings
+        // F4.1: Only Admin can modify settings / restore
         if (($_SESSION['user_role'] ?? '') !== 'Admin') {
             http_response_code(403);
-            echo json_encode(['error' => 'Only Admins can modify settings.']);
+            echo json_encode(['error' => 'Only Admins can modify settings or restore database.']);
             exit;
         }
+
+        // Handle Database Restore
+        if (isset($_GET['action']) && $_GET['action'] === 'restore') {
+            if (!isset($_FILES['backup_file'])) {
+                http_response_code(400);
+                echo json_encode(['error' => 'No backup file uploaded']);
+                exit;
+            }
+
+            $file = $_FILES['backup_file'];
+            if ($file['error'] !== UPLOAD_ERR_OK) {
+                http_response_code(500);
+                echo json_encode(['error' => 'File upload error: ' . $file['error']]);
+                exit;
+            }
+
+            try {
+                $mysqlPath = 'C:\\xampp\\mysql\\bin\\mysql.exe';
+                $tmpFile = $file['tmp_name'];
+
+                // Command to restore: mysql -u {user} -p{pass} {db} < {file}
+                // Note: using shell_exec or exec with redirection
+                $command = sprintf(
+                    '"%s" --user=%s --password=%s --host=%s %s < "%s"',
+                    $mysqlPath,
+                    escapeshellarg(DB_USER),
+                    escapeshellarg(DB_PASS),
+                    escapeshellarg(DB_HOST),
+                    escapeshellarg(DB_NAME),
+                    $tmpFile
+                );
+
+                // For Windows, we might need cmd /c for redirection
+                $winCommand = 'cmd /c ' . $command;
+                
+                exec($winCommand, $output, $returnVar);
+
+                if ($returnVar === 0) {
+                    echo json_encode(['success' => true, 'message' => 'Database restored successfully']);
+                } else {
+                    http_response_code(500);
+                    echo json_encode(['error' => 'Restore failed with exit code ' . $returnVar, 'output' => $output]);
+                }
+                exit;
+            } catch (Exception $e) {
+                http_response_code(500);
+                echo json_encode(['error' => 'Restore failed: ' . $e->getMessage()]);
+                exit;
+            }
+        }
+
         $data = json_decode(file_get_contents('php://input'), true);
         if (!$data) {
             http_response_code(400);

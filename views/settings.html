@@ -119,6 +119,16 @@
                                 <small class="text-muted">Refresh local storage and state</small>
                             </div>
                         </a>
+                        <a href="javascript:void(0)" class="list-group-item list-group-item-action border-0 px-0 d-flex align-items-center mt-3" onclick="settingsModule.triggerRestore()">
+                            <div class="icon-circle bg-info-subtle text-info me-3">
+                                <i class="fas fa-upload"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fw-bold">Restore Database Backup</h6>
+                                <small class="text-muted">Import a previously exported SQL dump</small>
+                            </div>
+                        </a>
+                        <input type="file" id="dbRestoreInput" class="d-none" accept=".sql" onchange="settingsModule.restoreDB(this)">
                     </div>
                 </div>
             </div>
