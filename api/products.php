@@ -72,9 +72,21 @@ try {
             // Image handling (simplified)
             $image = $_POST['existing_image'] ?? 'default.jpg';
             if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
+                // C4: Validate file extension and MIME type to prevent malicious uploads
+                $allowed_ext = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+                $ext = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
+                if (!in_array($ext, $allowed_ext)) {
+                    throw new Exception('Invalid image format. Allowed: jpg, png, gif, webp');
+                }
+                $finfo = new finfo(FILEINFO_MIME_TYPE);
+                $mime = $finfo->file($_FILES['image']['tmp_name']);
+                if (!str_starts_with($mime, 'image/')) {
+                    throw new Exception('Uploaded file is not a valid image');
+                }
+                
                 $target_dir = "../assets/img/products/";
                 if (!is_dir($target_dir)) mkdir($target_dir, 0777, true);
-                $file_name = time() . "_" . basename($_FILES["image"]["name"]);
+                $file_name = time() . "_" . bin2hex(random_bytes(4)) . "." . $ext;
                 if (move_uploaded_file($_FILES["image"]["tmp_name"], $target_dir . $file_name)) {
                     $image = $file_name;
                 }
@@ -310,6 +322,7 @@ try {
             break;
     }
 } catch (PDOException $e) {
+    error_log("Products API Error: " . $e->getMessage() . " | User: " . ($_SESSION['user_id'] ?? 'unknown'));
     echo json_encode(['error' => $e->getMessage()]);
 }
 // Removed closing tag

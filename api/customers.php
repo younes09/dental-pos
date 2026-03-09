@@ -49,6 +49,8 @@ try {
                 echo json_encode(['error' => 'Only Admins can delete customers.']);
                 exit;
             }
+            $id = $_GET['id'] ?? null;
+            if (!$id) throw new Exception('Customer ID required');
             $stmt = $pdo->prepare("DELETE FROM customers WHERE id = ?");
             $stmt->execute([$id]);
             echo json_encode(['success' => 'Customer deleted successfully']);
@@ -101,7 +103,7 @@ try {
             echo json_encode(['error' => 'Invalid action']);
             break;
     }
-} catch (PHPException | Exception $e) {
+} catch (Exception $e) {
     if ($pdo && $pdo->inTransaction()) $pdo->rollBack();
     echo json_encode(['error' => $e->getMessage()]);
 }

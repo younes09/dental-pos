@@ -316,3 +316,16 @@ CREATE TABLE IF NOT EXISTS salary_payments (
     FOREIGN KEY (vault_account_id) REFERENCES vault_accounts(id),
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
+
+-- Customer Payments table
+CREATE TABLE IF NOT EXISTS customer_payments (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    customer_id INT NOT NULL,
+    amount DECIMAL(10, 2) NOT NULL,
+    payment_method ENUM('Cash', 'Bank Transfer', 'Cheque') DEFAULT 'Cash',
+    notes TEXT,
+    date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    user_id INT,
+    FOREIGN KEY (customer_id) REFERENCES customers(id),
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);

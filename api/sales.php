@@ -128,9 +128,14 @@ try {
 
             $taxable = max(0, $subtotal - $discount_amount);
             
-            // Check invoice type for special BL rules
             $invoice_type = $data['invoice_type'] ?? 'BV';
             $payment_method = $data['payment_method'] ?? 'Cash';
+            
+            // M10: Validate ENUM values server-side
+            $valid_methods = ['Cash', 'Card', 'Insurance'];
+            $valid_types = ['BV', 'BL'];
+            if (!in_array($payment_method, $valid_methods)) throw new Exception('Invalid payment method');
+            if (!in_array($invoice_type, $valid_types)) throw new Exception('Invalid invoice type');
             
             // Force tax to 0 for BL
             if ($invoice_type === 'BL') {
@@ -141,6 +146,7 @@ try {
             $total = round($taxable + $tax, 2);
 
             $paid_amount = (float)($data['paid_amount'] ?? $total);
+            if ($paid_amount < 0) throw new Exception('Paid amount cannot be negative');
             $payment_status = 'Paid';
             if ($paid_amount < $total) {
                 $payment_status = ($paid_amount > 0) ? 'Partial' : 'Unpaid';
@@ -279,10 +285,12 @@ try {
             $batch_stmt = $pdo->prepare("INSERT INTO stock_batches (product_id, purchase_type, initial_qty, remaining_qty) VALUES (?, 'BA', ?, ?)");
             
             foreach ($items as $item) {
-                // Restore stock
-                $restore_stmt->execute([$item['qty'], $item['product_id']]);
-                // Restore into a new valid batch
-                $batch_stmt->execute([$item['product_id'], $item['qty'], $item['qty']]);
+                // M7: Only restore stock that hasn't already been returned
+                $net_qty = $item['qty'] - ($item['returned_qty'] ?? 0);
+                if ($net_qty > 0) {
+                    $restore_stmt->execute([$net_qty, $item['product_id']]);
+                    $batch_stmt->execute([$item['product_id'], $net_qty, $net_qty]);
+                }
             }
             
             $pdo->commit();
@@ -449,6 +457,7 @@ try {
     }
 } catch (Exception $e) {
     if ($pdo->inTransaction()) $pdo->rollBack();
+    error_log("Sales API Error: " . $e->getMessage() . " | User: " . ($_SESSION['user_id'] ?? 'unknown'));
     echo json_encode(['error' => $e->getMessage()]);
 }
 // Removed closing tag

@@ -76,6 +76,10 @@ h6,
     color: var(--primary-teal) !important;
 }
 
+.border-teal {
+    border-color: var(--primary-teal) !important;
+}
+
 .logo span span {
     color: var(--primary-teal);
 }

@@ -93,7 +93,7 @@ switch ($method) {
                     escapeshellarg(DB_PASS),
                     escapeshellarg(DB_HOST),
                     escapeshellarg(DB_NAME),
-                    $tmpFile
+                    escapeshellarg($tmpFile)
                 );
 
                 $winCommand = 'cmd /c "' . $command . '"'; // Extra quotes around the whole command
@@ -103,11 +103,11 @@ switch ($method) {
                 if ($returnVar === 0) {
                     echo json_encode(['success' => true, 'message' => 'Database restored successfully']);
                 } else {
+                    error_log("DB Restore failed with exit code $returnVar. Command: $winCommand");
                     http_response_code(500);
                     echo json_encode([
                         'error' => 'Restore failed with exit code ' . $returnVar,
-                        'details' => $output,
-                        'command_used' => $winCommand // Helpful for debugging if it still fails
+                        'details' => 'Check server logs for more information.'
                     ]);
                 }
                 exit;

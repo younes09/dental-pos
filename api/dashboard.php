@@ -16,7 +16,7 @@ try {
     $yesterday_revenue = $stmt->fetch()['revenue'] ?? 0;
 
     $stmt = $pdo->prepare("
-        SELECT SUM(si.qty * si.cost_price) as cogs
+        SELECT SUM((si.qty - si.returned_qty) * si.cost_price) as cogs
         FROM sale_items si
         JOIN sales s ON si.sale_id = s.id
         WHERE DATE(s.date) = CURDATE() AND s.status = 'Completed'
@@ -28,7 +28,7 @@ try {
 
     // Yesterday's Profit
     $stmt = $pdo->prepare("
-        SELECT SUM(si.qty * si.cost_price) as cogs
+        SELECT SUM((si.qty - si.returned_qty) * si.cost_price) as cogs
         FROM sale_items si
         JOIN sales s ON si.sale_id = s.id
         WHERE DATE(s.date) = DATE_SUB(CURDATE(), INTERVAL 1 DAY) AND s.status = 'Completed'
@@ -174,6 +174,7 @@ try {
     ]);
 
 } catch (PDOException $e) {
+    error_log("Dashboard API Error: " . $e->getMessage());
     echo json_encode(['error' => $e->getMessage()]);
 }
 // Removed closing tag

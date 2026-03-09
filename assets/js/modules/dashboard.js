@@ -271,7 +271,7 @@ const dashboardModule = {
 
         // Update VAT Percentage label
         const vatDisplays = document.querySelectorAll('.vat-rate-display');
-        const vatRate = App.state.settings.vat_rate || 15;
+        const vatRate = App.state.settings.vat_rate || 0;
         vatDisplays.forEach(el => el.textContent = vatRate);
 
         // Show Modal

@@ -118,26 +118,27 @@ try {
             ");
             $update_stmt->execute([$expected, $closing_balance, $difference, $notes, $session['id']]);
             
-            // F10.1: Vault Integration - Transfer closed cash to main Vault account (id=1 usually 'Coffre Principal')
-            // Get the first Active Cash account as default target if id=1 is missing
-            $vault_stmt = $pdo->query("SELECT id FROM vault_accounts WHERE type = 'Cash' AND status = 'Active' ORDER BY id ASC LIMIT 1");
+            // F10.1: Vault Integration - Transfer closed cash to main Vault account
+            // Only transfer net cash sales (not the opening balance, which was already deducted at open)
+            $vault_stmt = $pdo->query("SELECT id FROM vault_accounts WHERE type = 'Cash' ORDER BY id ASC LIMIT 1");
             $vault_account = $vault_stmt->fetch(PDO::FETCH_ASSOC);
 
-            if ($vault_account && $closing_balance > 0) {
+            $net_cash_to_vault = $cash_sales; // Only sales revenue, not the full closing_balance
+            if ($vault_account && $net_cash_to_vault > 0) {
                 $vault_id = $vault_account['id'];
                 
                 // Record transaction
                 $tx_stmt = $pdo->prepare("INSERT INTO vault_transactions (account_id, type, amount, description, related_type, related_id, user_id) VALUES (?, 'Income', ?, ?, 'CashSession', ?, ?)");
                 $tx_stmt->execute([
                     $vault_id, 
-                    $closing_balance, 
+                    $net_cash_to_vault, 
                     "Fermeture de caisse - Session #" . $session['id'],
                     $session['id'],
                     $user_id
                 ]);
 
                 // Update account balance
-                $pdo->prepare("UPDATE vault_accounts SET balance = balance + ? WHERE id = ?")->execute([$closing_balance, $vault_id]);
+                $pdo->prepare("UPDATE vault_accounts SET balance = balance + ? WHERE id = ?")->execute([$net_cash_to_vault, $vault_id]);
             }
             
             $pdo->commit();
