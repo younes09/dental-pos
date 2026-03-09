@@ -20,9 +20,11 @@ const App = {
         permissions: {
             'dashboard': ['Admin', 'Cashier', 'Stock Manager'],
             'pos': ['Admin', 'Cashier'],
+            'cash_register': ['Admin', 'Cashier'],
             'sales_history': ['Admin', 'Cashier'],
             'purchase_orders': ['Admin', 'Stock Manager'],
             'stock': ['Admin', 'Stock Manager'],
+            'vault': ['Admin'],
             'catalog': ['Admin', 'Cashier', 'Stock Manager'],
             'customers': ['Admin', 'Cashier'],
             'suppliers': ['Admin', 'Stock Manager'],

@@ -1,0 +1,132 @@
+/**
+ * Cash Register Module
+ */
+
+const cash_registerModule = {
+    currentSession: null,
+    table: null,
+
+    init() {
+        this.checkStatus();
+        this.loadHistory();
+        this.bindEvents();
+    },
+
+    bindEvents() {
+        document.getElementById('formOpenSession').onsubmit = (e) => {
+            e.preventDefault();
+            this.openSession(new FormData(e.target));
+        };
+
+        document.getElementById('formCloseSession').onsubmit = (e) => {
+            e.preventDefault();
+            this.closeSession(new FormData(e.target));
+        };
+    },
+
+    async checkStatus() {
+        const container = document.getElementById('session-status-container');
+        const closedTpl = document.getElementById('tpl-session-closed');
+        const openTpl = document.getElementById('tpl-session-open');
+
+        container.classList.remove('d-none');
+        closedTpl.classList.add('d-none');
+        openTpl.classList.add('d-none');
+
+        const result = await App.api('cash_register.php?action=get_status');
+
+        container.classList.add('d-none');
+
+        if (result && result.status === 'open') {
+            this.currentSession = result.session;
+            openTpl.classList.remove('d-none');
+
+            document.getElementById('session-user').textContent = this.currentSession.user_name || App.state.user.name;
+            document.getElementById('session-start').textContent = App.formatDate(this.currentSession.opening_date) + ' ' + new Date(this.currentSession.opening_date).toLocaleTimeString();
+            document.getElementById('session-opening-bal').textContent = App.formatCurrency(this.currentSession.opening_balance);
+            document.getElementById('session-sales').textContent = App.formatCurrency(this.currentSession.current_total_sales || 0);
+            document.getElementById('session-expected').textContent = App.formatCurrency(this.currentSession.expected_balance);
+
+            document.getElementById('close-modal-expected').textContent = App.formatCurrency(this.currentSession.expected_balance);
+        } else {
+            this.currentSession = null;
+            closedTpl.classList.remove('d-none');
+        }
+    },
+
+    async openSession(formData) {
+        const data = {
+            opening_balance: formData.get('opening_balance')
+        };
+
+        const result = await App.api('cash_register.php?action=open_session', 'POST', data);
+        if (result && result.success) {
+            App.toast('success', 'Caisse ouverte avec succès');
+            bootstrap.Modal.getInstance(document.getElementById('modalOpenSession')).hide();
+            this.checkStatus();
+            this.loadHistory();
+        }
+    },
+
+    async closeSession(formData) {
+        const data = {
+            closing_balance: formData.get('closing_balance'),
+            notes: formData.get('notes')
+        };
+
+        const result = await App.api('cash_register.php?action=close_session', 'POST', data);
+        if (result && result.success) {
+            const diff = parseFloat(result.difference);
+            let msg = 'Caisse fermée avec succès.';
+            if (diff !== 0) {
+                msg += ` Écart de ${App.formatCurrency(diff)}`;
+            }
+
+            App.toast(diff === 0 ? 'success' : 'info', msg);
+            bootstrap.Modal.getInstance(document.getElementById('modalCloseSession')).hide();
+            this.checkStatus();
+            this.loadHistory();
+        }
+    },
+
+    async loadHistory() {
+        const result = await App.api('cash_register.php?action=history');
+        if (!result || !result.data) return;
+
+        const tbody = document.querySelector('#sessionsTable tbody');
+        tbody.innerHTML = result.data.map(row => {
+            const diff = parseFloat(row.difference || 0);
+            const diffClass = diff > 0 ? 'text-success' : (diff < 0 ? 'text-danger' : 'text-muted');
+
+            return `
+                <tr>
+                    <td>
+                        <span class="fw-bold small d-block">${App.formatDate(row.opening_date)}</span>
+                        <small class="text-muted">${new Date(row.opening_date).toLocaleTimeString()}</small>
+                    </td>
+                    <td>
+                        ${row.closing_date ? `
+                            <span class="fw-bold small d-block">${App.formatDate(row.closing_date)}</span>
+                            <small class="text-muted">${new Date(row.closing_date).toLocaleTimeString()}</small>
+                        ` : '<span class="badge bg-teal-soft text-teal rounded-pill">En cours</span>'}
+                    </td>
+                    <td><small class="fw-medium">${row.user_name}</small></td>
+                    <td class="small fw-bold">${App.formatCurrency(row.expected_balance)}</td>
+                    <td class="small fw-bold">${row.closing_balance ? App.formatCurrency(row.closing_balance) : '-'}</td>
+                    <td class="small fw-bold ${diffClass}">${row.closing_date ? App.formatCurrency(diff) : '-'}</td>
+                    <td>
+                        <span class="badge ${row.status === 'Open' ? 'bg-teal-soft text-teal' : 'bg-light text-muted'} rounded-pill">
+                            ${row.status === 'Open' ? 'Ouverte' : 'Fermée'}
+                        </span>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+};
+
+// Initialize
+if (document.getElementById('sessionsTable')) {
+    cash_registerModule.init();
+}
+window.cash_registerModule = cash_registerModule;

@@ -32,13 +32,22 @@ try {
             if (!in_array($_SESSION['user_role'] ?? '', ['Admin', 'Cashier'])) {
                 throw new Exception('Only Admins and Cashiers can process sales.');
             }
+            $pdo->beginTransaction();
             $data = json_decode(file_get_contents('php://input'), true);
             if (!$data || empty($data['items'])) throw new Exception('Invalid data or empty cart');
 
-            $pdo->beginTransaction();
-
             $customer_id = $data['customer_id'] ?? null;
             $user_id = $_SESSION['user_id'] ?? 1;
+
+            // F7.1: Cash Register - Check active session
+            $session_stmt = $pdo->prepare("SELECT id FROM cash_sessions WHERE status = 'Open' LIMIT 1");
+            $session_stmt->execute();
+            $cash_session = $session_stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$cash_session) {
+                throw new Exception('No active cash session found. Please open the register first.');
+            }
+            $cash_session_id = (int)$cash_session['id'];
 
             // Recalculate totals server-side
             $subtotal = 0;
@@ -142,12 +151,13 @@ try {
             // 1. Insert into sales table (F2.4: store points for reversal)
             $stmt = $pdo->prepare("
                 INSERT INTO sales 
-                (customer_id, user_id, subtotal, discount, tax, total, paid_amount, payment_status, payment_method, invoice_type, points_earned, points_redeemed) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                (customer_id, user_id, cash_session_id, subtotal, discount, tax, total, paid_amount, payment_status, payment_method, invoice_type, points_earned, points_redeemed) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ");
             $stmt->execute([
                 $customer_id,
                 $user_id,
+                $cash_session_id,
                 $subtotal,
                 $discount_amount,
                 $tax,

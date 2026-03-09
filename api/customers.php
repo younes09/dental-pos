@@ -65,26 +65,33 @@ try {
             $method = $_POST['payment_method'] ?? 'Cash';
             $notes = $_POST['notes'] ?? '';
             $user_id = $_SESSION['user_id'] ?? 1;
+            $account_id = $_POST['account_id'] ?? null; // Optional: specify which account received the money
 
             if (!$customer_id) throw new Exception("Customer ID required");
             if ($amount <= 0) throw new Exception("Invalid payment amount");
 
             $pdo->beginTransaction();
 
-            // Check current balance
-            $stmtBal = $pdo->prepare("SELECT balance FROM customers WHERE id = ? FOR UPDATE");
-            $stmtBal->execute([$customer_id]);
-            $currentBalance = (float)$stmtBal->fetchColumn();
-
-            if ($amount > $currentBalance) {
-                throw new Exception("Payment amount (" . number_format($amount, 2) . ") exceeds current debt (" . number_format($currentBalance, 2) . ")");
-            }
-
             $stmt = $pdo->prepare("INSERT INTO customer_payments (customer_id, amount, payment_method, notes, user_id) VALUES (?, ?, ?, ?, ?)");
             $stmt->execute([$customer_id, $amount, $method, $notes, $user_id]);
+            $payment_id = $pdo->lastInsertId();
 
             $stmtUpdate = $pdo->prepare("UPDATE customers SET balance = balance - ? WHERE id = ?");
             $stmtUpdate->execute([$amount, $customer_id]);
+
+            // F10.2: Vault Integration - Record Income if account is specified
+            if ($account_id) {
+                $stmtTx = $pdo->prepare("INSERT INTO vault_transactions (account_id, type, amount, description, related_type, related_id, user_id) VALUES (?, 'Income', ?, ?, 'CustomerPayment', ?, ?)");
+                $stmtTx->execute([
+                    $account_id,
+                    $amount,
+                    "Paiement Dette Client - " . ($notes ?: "Paiement #$payment_id"),
+                    $payment_id,
+                    $user_id
+                ]);
+
+                $pdo->prepare("UPDATE vault_accounts SET balance = balance + ? WHERE id = ?")->execute([$amount, $account_id]);
+            }
 
             $pdo->commit();
             echo json_encode(['success' => 'Debt payment recorded successfully']);
@@ -94,7 +101,8 @@ try {
             echo json_encode(['error' => 'Invalid action']);
             break;
     }
-} catch (PDOException $e) {
+} catch (PHPException | Exception $e) {
+    if ($pdo && $pdo->inTransaction()) $pdo->rollBack();
     echo json_encode(['error' => $e->getMessage()]);
 }
 ?>

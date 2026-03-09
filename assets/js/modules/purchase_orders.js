@@ -37,15 +37,18 @@ const purchase_ordersModule = {
         document.getElementById('po-status').onchange = (e) => {
             const container = document.getElementById('po-purchase-type-container');
             const paidContainer = document.getElementById('po-paid-amount-container');
+            const accountContainer = document.getElementById('po-account-container');
 
             if (e.target.value === 'Received') {
                 container.classList.remove('d-none');
                 document.getElementById('po-purchase-type').required = true;
                 paidContainer.classList.remove('d-none');
+                accountContainer.classList.remove('d-none');
             } else {
                 container.classList.add('d-none');
                 document.getElementById('po-purchase-type').required = false;
                 paidContainer.classList.add('d-none');
+                accountContainer.classList.add('d-none');
             }
         };
 
@@ -186,6 +189,19 @@ const purchase_ordersModule = {
         if (productRes) {
             this.products = productRes.data;
         }
+
+        // Load accounts for vault integration
+        const accountRes = await App.api('vault.php?action=list_accounts');
+        if (accountRes && accountRes.data) {
+            const options = '<option value="">-- No Treasury Update --</option>' +
+                accountRes.data.map(acc => `<option value="${acc.id}">${acc.name} (${App.formatCurrency(acc.balance)})</option>`).join('');
+
+            const createSelect = document.getElementById('po-account-id');
+            if (createSelect) createSelect.innerHTML = options;
+
+            const receiveSelect = document.getElementById('receive-po-account-id');
+            if (receiveSelect) receiveSelect.innerHTML = options;
+        }
     },
 
     addItemRow() {
@@ -283,6 +299,7 @@ const purchase_ordersModule = {
         if (status === 'Received') {
             data.purchase_type = document.getElementById('po-purchase-type').value;
             data.paid_amount = document.getElementById('po-paid-amount').value || 0;
+            data.account_id = document.getElementById('po-account-id').value;
         }
 
         const result = await App.api('purchase_orders.php?action=save', 'POST', data);
@@ -298,6 +315,8 @@ const purchase_ordersModule = {
             document.getElementById('po-purchase-type').required = false;
             document.getElementById('po-paid-amount-container').classList.add('d-none');
             document.getElementById('po-paid-amount').value = '';
+            document.getElementById('po-account-container').classList.add('d-none');
+            document.getElementById('po-account-id').value = '';
 
             document.querySelector('#po-items-table tbody').innerHTML = '';
             document.getElementById('po-total-display').textContent = App.formatCurrency(0);
@@ -425,11 +444,13 @@ const purchase_ordersModule = {
         }
 
         const paidAmount = document.getElementById('receive-po-paid-amount').value || 0;
+        const accountId = document.getElementById('receive-po-account-id').value;
 
         const data = {
             po_id: id,
             purchase_type: purchaseType,
             paid_amount: paidAmount,
+            account_id: accountId,
             items: receivedItems
         };
 

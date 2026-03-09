@@ -123,17 +123,38 @@ CREATE TABLE sales (
     id INT AUTO_INCREMENT PRIMARY KEY,
     customer_id INT,
     user_id INT,
+    cash_session_id INT NULL,
     date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     subtotal DECIMAL(10, 2) NOT NULL,
     discount DECIMAL(10, 2) DEFAULT 0.00,
     tax DECIMAL(10, 2) DEFAULT 0.00,
     total DECIMAL(10, 2) NOT NULL,
+    paid_amount DECIMAL(10, 2) DEFAULT 0.00,
+    payment_status ENUM('Unpaid', 'Partial', 'Paid') DEFAULT 'Paid',
     payment_method ENUM('Cash', 'Card', 'Insurance') DEFAULT 'Cash',
     invoice_type ENUM('BV', 'BL') DEFAULT 'BV',
     status ENUM('Completed', 'Hold', 'Cancelled') DEFAULT 'Completed',
     points_earned INT NOT NULL DEFAULT 0,
     points_redeemed INT NOT NULL DEFAULT 0,
     FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE SET NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+-- Register FK for sales
+ALTER TABLE sales ADD CONSTRAINT fk_sale_session FOREIGN KEY (cash_session_id) REFERENCES cash_sessions(id) ON DELETE SET NULL;
+
+-- Cash Sessions table
+CREATE TABLE cash_sessions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    opening_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    closing_date TIMESTAMP NULL,
+    opening_balance DECIMAL(10, 2) NOT NULL,
+    expected_balance DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
+    closing_balance DECIMAL(10, 2) NULL,
+    difference DECIMAL(10, 2) NULL,
+    status ENUM('Open', 'Closed') DEFAULT 'Open',
+    notes TEXT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 

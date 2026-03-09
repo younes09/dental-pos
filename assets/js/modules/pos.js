@@ -9,9 +9,23 @@ const posModule = {
     cart: [],
     taxRate: 0, // F1.5: Default to 0, will be loaded from settings
 
-    init() {
+    async init() {
         this.loadSettings();
         this.loadCategories();
+
+        // Check for active session
+        const session = await App.api('cash_register.php?action=get_status');
+        if (!session || session.status !== 'open') {
+            await Swal.fire({
+                title: 'Caisse Fermée',
+                text: 'Vous devez ouvrir une session de caisse avant de pouvoir effectuer des ventes.',
+                icon: 'warning',
+                confirmButtonText: 'Aller à la Gestion Caisse',
+                allowOutsideClick: false
+            });
+            window.location.hash = '#cash_register';
+            return;
+        }
 
         // Handle search query from URL if any
         const params = new URLSearchParams(window.location.hash.split('?')[1]);

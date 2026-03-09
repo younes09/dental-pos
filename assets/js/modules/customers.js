@@ -187,7 +187,7 @@ const customersModule = {
         }
     },
 
-    openSettleDebt(id) {
+    async openSettleDebt(id) {
         const customer = this.table.rows().data().toArray().find(c => c.id == id);
         if (!customer) return;
 
@@ -199,6 +199,16 @@ const customersModule = {
         amountInput.value = '';
         amountInput.max = customer.balance || 0;
         amountInput.dataset.max = customer.balance || 0;
+
+        // Load accounts for treasury integration
+        const accountSelect = document.getElementById('debt-account-id');
+        if (accountSelect) {
+            const result = await App.api('vault.php?action=list_accounts');
+            if (result && result.data) {
+                accountSelect.innerHTML = '<option value="">-- No Treasury Update --</option>' +
+                    result.data.map(acc => `<option value="${acc.id}">${acc.name} (${App.formatCurrency(acc.balance)})</option>`).join('');
+            }
+        }
 
         new bootstrap.Modal(document.getElementById('settleDebtModal')).show();
     },

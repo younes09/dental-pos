@@ -1,0 +1,170 @@
+<div class="row mb-4 animate__animated animate__fadeIn">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+        <div>
+            <h3 class="fw-bold mb-0">Gestion de la Caisse</h3>
+            <p class="text-muted">Gérer les sessions d'ouverture et de fermeture de la caisse</p>
+        </div>
+    </div>
+</div>
+
+<div class="row animate__animated animate__fadeInUp">
+    <!-- Current Session Status -->
+    <div class="col-lg-4 mb-4">
+        <div class="card border-0 shadow-sm rounded-4 h-100">
+            <div class="card-body p-4">
+                <h5 class="fw-bold mb-4">Statut de la Session</h5>
+                
+                <div id="session-status-container" class="text-center py-4">
+                    <div class="spinner-border text-teal" role="status">
+                        <span class="visually-hidden">Chargement...</span>
+                    </div>
+                </div>
+
+                <!-- Template for Closed Session -->
+                <div id="tpl-session-closed" class="d-none">
+                    <div class="icon-circle bg-light text-muted mx-auto mb-3" style="width: 80px; height: 80px;">
+                        <i class="fas fa-lock fa-2x"></i>
+                    </div>
+                    <h6 class="fw-bold text-muted mb-3">La caisse est fermée</h6>
+                    <button class="btn btn-teal w-100 rounded-pill py-2" data-bs-toggle="modal" data-bs-target="#modalOpenSession">
+                        <i class="fas fa-key me-2"></i>Ouvrir la Caisse
+                    </button>
+                </div>
+
+                <!-- Template for Open Session -->
+                <div id="tpl-session-open" class="d-none">
+                    <div class="icon-circle bg-teal-soft text-teal mx-auto mb-3" style="width: 80px; height: 80px;">
+                        <i class="fas fa-cash-register fa-2x"></i>
+                    </div>
+                    <h6 class="fw-bold text-teal mb-3">La caisse est ouverte</h6>
+                    
+                    <div class="bg-light rounded-4 p-3 mb-4 text-start">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted small">Ouvert par :</span>
+                            <span class="fw-bold small" id="session-user">-</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted small">Depuis :</span>
+                            <span class="fw-bold small" id="session-start">-</span>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted small">Fond de caisse :</span>
+                            <span class="fw-bold text-teal" id="session-opening-bal">0.00 DZD</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted small">Ventes (Espèces) :</span>
+                            <span class="fw-bold text-navy" id="session-sales">0.00 DZD</span>
+                        </div>
+                        <div class="d-flex justify-content-between mt-3 pt-2 border-top">
+                            <span class="fw-bold">Total Attendu :</span>
+                            <span class="fw-bold text-teal h5 mb-0" id="session-expected">0.00 DZD</span>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-outline-danger w-100 rounded-pill py-2" data-bs-toggle="modal" data-bs-target="#modalCloseSession">
+                        <i class="fas fa-door-closed me-2"></i>Fermer la Session
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- History Table -->
+    <div class="col-lg-8 mb-4">
+        <div class="card border-0 shadow-sm rounded-4 h-100">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="fw-bold mb-0">Historique des Sessions</h5>
+                    <button class="btn btn-light btn-sm rounded-pill px-3" onclick="cash_registerModule.loadHistory()">
+                        <i class="fas fa-sync-alt me-1"></i> Actualiser
+                    </button>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle custom-table" id="sessionsTable">
+                        <thead class="bg-light">
+                            <tr>
+                                <th>Ouverture</th>
+                                <th>Fermeture</th>
+                                <th>Utilisateur</th>
+                                <th>Attendu</th>
+                                <th>Compté</th>
+                                <th>Différence</th>
+                                <th>Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Data injected via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Open Session -->
+<div class="modal fade" id="modalOpenSession" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow rounded-4">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">Ouvrir la Caisse</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="formOpenSession">
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Fond de Caisse Initial (DZD)</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-0"><i class="fas fa-money-bill-wave"></i></span>
+                            <input type="number" step="0.01" class="form-control bg-light border-0" name="opening_balance" value="0.00" required>
+                        </div>
+                        <small class="text-muted mt-2 d-block">Indiquez le montant en espèces présent dans le tiroir-caisse au début de la session.</small>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-teal rounded-pill px-4">Ouvrir la Session</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Close Session -->
+<div class="modal fade" id="modalCloseSession" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow rounded-4">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">Fermer la Caisse</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="formCloseSession">
+                <div class="modal-body p-4">
+                    <div class="bg-teal-soft text-teal p-3 rounded-4 mb-4 text-center">
+                        <span class="small d-block mb-1">Montant Attendu (Espèces)</span>
+                        <h4 class="fw-bold mb-0" id="close-modal-expected">0.00 DZD</h4>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Montant Réel Compté (DZD)</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-0"><i class="fas fa-calculator"></i></span>
+                            <input type="number" step="0.01" class="form-control bg-light border-0" name="closing_balance" placeholder="0.00" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Notes (Optionnel)</label>
+                        <textarea class="form-control bg-light border-0" name="notes" rows="2" placeholder="Ex: Erreur de rendu monnaie, ajout de fond de caisse..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-danger rounded-pill px-4">Confirmer la Fermeture</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

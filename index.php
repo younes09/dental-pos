@@ -83,6 +83,11 @@ if (!isset($_SESSION['user_id'])) {
                         </a>
                     </li>
                     <li>
+                        <a href="#cash_register">
+                            <i class="fas fa-cash-register"></i> Gestion Caisse
+                        </a>
+                    </li>
+                    <li>
                         <a href="#sales_history">
                             <i class="fas fa-history"></i> Sales History
                         </a>
@@ -148,6 +153,15 @@ if (!isset($_SESSION['user_id'])) {
                     </li>
                     <?php endif; ?>
                 </ul>
+            </li>
+
+            <!-- Finance Section -->
+            <li class="sidebar-label">Finance</li>
+            <li>
+                <a href="#vault" class="nav-link">
+                    <i class="fas fa-vault"></i>
+                    <span>Trésorerie</span>
+                </a>
             </li>
 
             <!-- Administration Section -->

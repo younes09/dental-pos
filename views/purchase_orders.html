@@ -141,6 +141,12 @@
                                     </div>
                                     <small class="text-muted d-block mt-1">Leave empty or 0 if unpaid.</small>
                                 </div>
+                                <div class="mb-3 d-none" id="po-account-container">
+                                    <label class="form-label small fw-bold">Source Account (Treasury)</label>
+                                    <select name="account_id" id="po-account-id" class="form-select rounded-3">
+                                        <option value="">-- No Treasury Update --</option>
+                                    </select>
+                                </div>
                             </div>
                         </div>
 
@@ -289,6 +295,13 @@
                                 </div>
                                 <small class="text-muted d-block mt-1">Leave empty or 0 if no payment is made
                                     now.</small>
+                            </div>
+                            <div class="col-12 mt-3">
+                                <label class="form-label small fw-bold">Source Account (Treasury)</label>
+                                <select name="account_id" id="receive-po-account-id" class="form-select rounded-3">
+                                    <option value="">-- No Treasury Update --</option>
+                                </select>
+                                <small class="text-muted">Select the account from which the payment was made.</small>
                             </div>
                         </div>
                     </div>

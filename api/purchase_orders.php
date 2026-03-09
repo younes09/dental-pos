@@ -208,6 +208,21 @@ try {
                 $stmtSupplier->execute([$net_debt_increase, $po['supplier_id']]);
             }
 
+            // F10.3: Vault Integration - Record Expense if account is specified
+            $account_id = $data['account_id'] ?? null;
+            if ($account_id && $paid_amount > 0) {
+                $stmtTx = $pdo->prepare("INSERT INTO vault_transactions (account_id, type, amount, description, related_type, related_id, user_id) VALUES (?, 'Expense', ?, ?, 'PurchaseOrder', ?, ?)");
+                $stmtTx->execute([
+                    $account_id,
+                    $paid_amount,
+                    "Paiement Commande Fournisseur #$po_id",
+                    $po_id,
+                    $user_id
+                ]);
+
+                $pdo->prepare("UPDATE vault_accounts SET balance = balance - ? WHERE id = ?")->execute([$paid_amount, $account_id]);
+            }
+
             $pdo->commit();
             $msg = ($new_status === 'Received') ? 'Order fully received' : 'Order partially received';
             echo json_encode(['success' => $msg]);
