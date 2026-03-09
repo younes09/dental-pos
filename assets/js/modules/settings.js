@@ -45,6 +45,7 @@ const settingsModule = {
                 if (settings.store_name) businessForm.elements['store_name'].value = settings.store_name;
                 if (settings.tax_number) businessForm.elements['tax_number'].value = settings.tax_number;
                 if (settings.currency) businessForm.elements['currency'].value = settings.currency;
+                if (settings.store_phone) businessForm.elements['store_phone'].value = settings.store_phone;
                 if (settings.address) businessForm.elements['address'].value = settings.address;
             }
 

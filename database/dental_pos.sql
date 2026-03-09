@@ -113,6 +113,7 @@ CREATE TABLE purchase_order_items (
     received_qty INT NOT NULL DEFAULT 0,
     CONSTRAINT chk_received_lte_qty CHECK (received_qty <= qty),
     unit_cost DECIMAL(10, 2) NOT NULL,
+    old_unit_cost DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
     FOREIGN KEY (po_id) REFERENCES purchase_orders(id) ON DELETE CASCADE,
     FOREIGN KEY (product_id) REFERENCES products(id)
 );

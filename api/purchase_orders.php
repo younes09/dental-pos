@@ -74,13 +74,19 @@ try {
             $stmt->execute([$supplier_id, $date, $status, $total, $paid_amount, $payment_status]);
             $po_id = $pdo->lastInsertId();
 
-            $stmtItem = $pdo->prepare("INSERT INTO purchase_order_items (po_id, product_id, qty, received_qty, unit_cost) VALUES (?, ?, ?, ?, ?)");
+            $stmtItem = $pdo->prepare("INSERT INTO purchase_order_items (po_id, product_id, qty, received_qty, unit_cost, old_unit_cost) VALUES (?, ?, ?, ?, ?, ?)");
             $stmtUpdateProduct = $pdo->prepare("UPDATE products SET stock_qty = stock_qty + ?, purchase_price = ? WHERE id = ?");
             $stmtBatch = $pdo->prepare("INSERT INTO stock_batches (product_id, purchase_type, initial_qty, remaining_qty) VALUES (?, ?, ?, ?)");
+            $stmtGetOldPrice = $pdo->prepare("SELECT purchase_price FROM products WHERE id = ?");
 
             foreach ($items as $item) {
                 $received_qty = ($status === 'Received') ? $item['qty'] : 0;
-                $stmtItem->execute([$po_id, $item['product_id'], $item['qty'], $received_qty, $item['unit_cost']]);
+                
+                // Get old purchase price
+                $stmtGetOldPrice->execute([$item['product_id']]);
+                $old_price = $stmtGetOldPrice->fetchColumn() ?: 0;
+                
+                $stmtItem->execute([$po_id, $item['product_id'], $item['qty'], $received_qty, $item['unit_cost'], $old_price]);
                 
                 if ($status === 'Received') {
                     $stmtUpdateProduct->execute([$item['qty'], $item['unit_cost'], $item['product_id']]);

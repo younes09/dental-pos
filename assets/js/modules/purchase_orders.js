@@ -151,6 +151,7 @@ const purchase_ordersModule = {
                             <button class="btn btn-sm btn-light" data-bs-toggle="dropdown"><i class="fas fa-ellipsis-v"></i></button>
                             <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
                                 <li><a class="dropdown-item" href="javascript:void(0)" onclick="purchase_ordersModule.viewDetails(${data.id})"><i class="fas fa-eye me-2 text-info"></i>View Details</a></li>
+                                <li><a class="dropdown-item" href="javascript:void(0)" onclick="purchase_ordersModule.printBC(${data.id})"><i class="fas fa-print me-2 text-primary"></i>Print BC</a></li>
                                 ${receiveBtn}
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item text-danger" href="javascript:void(0)" onclick="purchase_ordersModule.deletePO(${data.id})"><i class="fas fa-trash me-2"></i>Delete</a></li>
@@ -500,6 +501,10 @@ const purchase_ordersModule = {
                 </td>
                 <td><small class="text-muted">${item.barcode || 'N/A'}</small></td>
                 <td class="text-center">${item.qty}</td>
+                <td class="text-end">
+                    ${App.formatCurrency(item.old_unit_cost)}
+                    ${(parseFloat(item.unit_cost) !== parseFloat(item.old_unit_cost)) ? `<br><small class="text-danger">Changed</small>` : ''}
+                </td>
                 <td class="text-end">${App.formatCurrency(item.unit_cost)}</td>
                 <td class="text-end fw-bold text-navy">${App.formatCurrency(item.qty * item.unit_cost)}</td>
             </tr>
@@ -507,8 +512,79 @@ const purchase_ordersModule = {
 
         document.getElementById('po-details-grand-total').textContent = App.formatCurrency(order.total);
 
+        // Update footer buttons
+        const footer = document.querySelector('#poDetailsModal .modal-footer');
+        footer.innerHTML = `
+            <button type="button" class="btn btn-primary px-4" onclick="purchase_ordersModule.printBC(${order.id})"><i class="fas fa-print me-2"></i>Print BC</button>
+            <button type="button" class="btn btn-navy px-4" data-bs-dismiss="modal">Close</button>
+        `;
+
         // Show Modal
         new bootstrap.Modal(document.getElementById('poDetailsModal')).show();
+    },
+
+    async printBC(id) {
+        const result = await App.api(`purchase_orders.php?action=get_details&id=${id}`);
+        if (!result) return;
+
+        const { order, items } = result;
+        const settings = App.state.settings || {};
+
+        // Create an iframe for printing
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        document.body.appendChild(iframe);
+
+        const doc = iframe.contentWindow.document;
+
+        // Fetch template content
+        const templateRes = await fetch('views/bc_template.html');
+        let html = await templateRes.text();
+
+        // Replace placeholders
+        html = html.replace('{{po_id}}', order.id);
+
+        doc.open();
+        doc.write(html);
+        doc.close();
+
+        // Wait for iframe to load, then populate and print
+        iframe.onload = function () {
+            const innerDoc = iframe.contentWindow.document;
+
+            innerDoc.getElementById('store-name').textContent = settings.store_name || 'DentalPOS';
+            innerDoc.getElementById('store-address').textContent = settings.address || '';
+            innerDoc.getElementById('store-phone').textContent = `Phone: ${settings.store_phone || ''}`;
+            innerDoc.getElementById('po-number').textContent = `#PO-${order.id}`;
+            innerDoc.getElementById('po-date').textContent = order.date;
+            innerDoc.getElementById('supplier-name').textContent = order.supplier_name;
+            innerDoc.getElementById('supplier-company').textContent = order.supplier_company || '';
+            innerDoc.getElementById('supplier-contact').textContent = `${order.supplier_email || ''} / ${order.supplier_phone || ''}`;
+            innerDoc.getElementById('po-status').textContent = order.status;
+            innerDoc.getElementById('po-payment-status').textContent = order.payment_status;
+
+            const tbody = innerDoc.getElementById('items-tbody');
+            tbody.innerHTML = items.map(item => `
+                <tr>
+                    <td>
+                        <strong>${item.product_name}</strong><br>
+                        <small>Barcode: ${item.barcode || 'N/A'}</small>
+                    </td>
+                    <td class="text-end">${item.qty}</td>
+                    <td class="text-end">${App.formatCurrency(item.old_unit_cost)}</td>
+                    <td class="text-end" style="border-bottom: 1px dotted #ccc; width: 100px;"></td>
+                    <td class="text-end">${App.formatCurrency(item.qty * item.unit_cost)}</td>
+                </tr>
+            `).join('');
+
+            innerDoc.getElementById('total-items').textContent = items.length;
+            innerDoc.getElementById('grand-total').textContent = App.formatCurrency(order.total);
+
+            setTimeout(() => {
+                iframe.contentWindow.print();
+                setTimeout(() => document.body.removeChild(iframe), 1000);
+            }, 500);
+        };
     },
 
     // Shortcut from Suppliers module
