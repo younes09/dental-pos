@@ -118,28 +118,26 @@ try {
             ");
             $update_stmt->execute([$expected, $closing_balance, $difference, $notes, $session['id']]);
             
-            // F10.1: Vault Integration - Transfer closed cash to main Vault account
-            // Only transfer net cash sales (not the opening balance, which was already deducted at open)
-            $vault_stmt = $pdo->query("SELECT id FROM vault_accounts WHERE type = 'Cash' ORDER BY id ASC LIMIT 1");
-            $vault_account = $vault_stmt->fetch(PDO::FETCH_ASSOC);
+            // F10.1: Vault Integration - Transfer ALL cash (opening balance + sales) to selected Vault account
+            // The opening balance was deducted from a vault on open, so it must be returned on close
+            $vault_id = $data['account_id'] ?? null;
 
-            $net_cash_to_vault = $cash_sales; // Only sales revenue, not the full closing_balance
-            if ($vault_account && $net_cash_to_vault > 0) {
-                $vault_id = $vault_account['id'];
-                
+            $total_cash_to_vault = $expected; // Full amount: opening_balance + cash_sales
+            if ($vault_id && $total_cash_to_vault > 0) {
                 // Record transaction
                 $tx_stmt = $pdo->prepare("INSERT INTO vault_transactions (account_id, type, amount, description, related_type, related_id, user_id) VALUES (?, 'Income', ?, ?, 'CashSession', ?, ?)");
                 $tx_stmt->execute([
                     $vault_id, 
-                    $net_cash_to_vault, 
-                    "Cash closing - Session #" . $session['id'],
+                    $total_cash_to_vault, 
+                    "Cash closing - Session #" . $session['id'] . " (Opening: " . number_format((float)$session['opening_balance'], 2) . " + Sales: " . number_format($cash_sales, 2) . ")",
                     $session['id'],
                     $user_id
                 ]);
                 
-
                 // Update account balance
-                $pdo->prepare("UPDATE vault_accounts SET balance = balance + ? WHERE id = ?")->execute([$net_cash_to_vault, $vault_id]);
+                $pdo->prepare("UPDATE vault_accounts SET balance = balance + ? WHERE id = ?")->execute([$total_cash_to_vault, $vault_id]);
+            } else {
+                error_log("Vault transfer skipped for session " . $session['id'] . ". Vault ID: " . ($vault_id ?: 'NONE') . ", Total: " . $total_cash_to_vault);
             }
             
             $pdo->commit();

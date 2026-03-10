@@ -14,13 +14,19 @@ const cash_registerModule = {
     },
 
     async loadAccounts() {
-        const select = document.getElementById('open-session-account-id');
-        if (!select) return;
+        const selectOpen = document.getElementById('open-session-account-id');
+        const selectClose = document.getElementById('close-session-account-id');
+        if (!selectOpen && !selectClose) return;
 
         const result = await App.api('vault.php?action=list_accounts');
         if (result && result.data) {
-            select.innerHTML = '<option value="">-- No automatic withdrawal --</option>' +
-                result.data.map(acc => `<option value="${acc.id}">${acc.name} (${App.formatCurrency(acc.balance)})</option>`).join('');
+            const options = result.data.map(acc => `<option value="${acc.id}">${acc.name} (${App.formatCurrency(acc.balance)})</option>`).join('');
+            if (selectOpen) {
+                selectOpen.innerHTML = '<option value="">-- Select source --</option>' + options;
+            }
+            if (selectClose) {
+                selectClose.innerHTML = '<option value="">-- select destination --</option>' + options;
+            }
         }
     },
 
@@ -34,6 +40,17 @@ const cash_registerModule = {
             e.preventDefault();
             this.closeSession(new FormData(e.target));
         };
+
+        // Real-time update: Refresh accounts when modals are opened
+        const modalOpen = document.getElementById('modalOpenSession');
+        if (modalOpen) {
+            modalOpen.addEventListener('show.bs.modal', () => this.loadAccounts());
+        }
+
+        const modalClose = document.getElementById('modalCloseSession');
+        if (modalClose) {
+            modalClose.addEventListener('show.bs.modal', () => this.loadAccounts());
+        }
     },
 
     async checkStatus() {
@@ -85,6 +102,7 @@ const cash_registerModule = {
     async closeSession(formData) {
         const data = {
             closing_balance: formData.get('closing_balance'),
+            account_id: formData.get('account_id'),
             notes: formData.get('notes')
         };
 
@@ -104,6 +122,10 @@ const cash_registerModule = {
     },
 
     async loadHistory() {
+        if (this.table) {
+            this.table.destroy();
+        }
+
         const result = await App.api('cash_register.php?action=history');
         if (!result || !result.data) return;
 
@@ -114,20 +136,20 @@ const cash_registerModule = {
 
             return `
                 <tr>
-                    <td>
+                    <td data-order="${row.opening_date}">
                         <span class="fw-bold small d-block">${App.formatDate(row.opening_date)}</span>
                         <small class="text-muted">${new Date(row.opening_date).toLocaleTimeString()}</small>
                     </td>
-                    <td>
+                    <td data-order="${row.closing_date || '9999-12-31'}">
                         ${row.closing_date ? `
                             <span class="fw-bold small d-block">${App.formatDate(row.closing_date)}</span>
                             <small class="text-muted">${new Date(row.closing_date).toLocaleTimeString()}</small>
                         ` : '<span class="badge bg-teal-soft text-teal rounded-pill">In progress</span>'}
                     </td>
                     <td><small class="fw-medium">${row.user_name}</small></td>
-                    <td class="small fw-bold">${App.formatCurrency(row.expected_balance)}</td>
-                    <td class="small fw-bold">${row.closing_balance ? App.formatCurrency(row.closing_balance) : '-'}</td>
-                    <td class="small fw-bold ${diffClass}">${row.closing_date ? App.formatCurrency(diff) : '-'}</td>
+                    <td class="small fw-bold" data-order="${row.expected_balance}">${App.formatCurrency(row.expected_balance)}</td>
+                    <td class="small fw-bold" data-order="${row.closing_balance || 0}">${row.closing_balance ? App.formatCurrency(row.closing_balance) : '-'}</td>
+                    <td class="small fw-bold ${diffClass}" data-order="${diff}">${row.closing_date ? App.formatCurrency(diff) : '-'}</td>
                     <td>
                         <span class="badge ${row.status === 'Open' ? 'bg-teal-soft text-teal' : 'bg-light text-muted'} rounded-pill">
                             ${row.status === 'Open' ? 'Open' : 'Closed'}
@@ -136,6 +158,15 @@ const cash_registerModule = {
                 </tr>
             `;
         }).join('');
+
+        this.table = $('#sessionsTable').DataTable({
+            order: [[0, 'desc']],
+            pageLength: 10,
+            language: {
+                search: "_INPUT_",
+                searchPlaceholder: "Search sessions..."
+            }
+        });
     }
 };
 

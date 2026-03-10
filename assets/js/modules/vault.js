@@ -41,27 +41,35 @@ const vaultModule = {
             return;
         }
 
-        container.innerHTML = this.accounts.map(acc => `
+        const typeConfig = {
+            'bank': { icon: 'university', color: 'info' },
+            'cash': { icon: 'cash-register', color: 'success' },
+            'safe': { icon: 'vault', color: 'teal' }
+        };
+
+        container.innerHTML = this.accounts.map(acc => {
+            const typeKey = String(acc.type || '').toLowerCase();
+            const config = typeConfig[typeKey] || { icon: 'vault', color: 'teal' };
+            return `
             <div class="col-md-4 mb-3">
                 <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
                     <div class="card-body p-4 position-relative">
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            <div class="rounded-circle bg-${acc.type === 'Bank' ? 'info' : 'teal'}-subtle d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
-                                <i class="fas fa-${acc.type === 'Bank' ? 'university' : 'vault'} text-${acc.type === 'Bank' ? 'info' : 'teal'}"></i>
+                            <div class="rounded-circle bg-${config.color}-subtle d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
+                                <i class="fas fa-${config.icon} text-${config.color}"></i>
                             </div>
-                            <span class="badge ${acc.status === 'Active' ? 'bg-success-subtle text-success' : 'bg-light'} rounded-pill px-3 small">${acc.status}</span>
                         </div>
                         <h6 class="text-muted small fw-bold text-uppercase mb-1 tracking-wider">${acc.name}</h6>
                         <h3 class="fw-bold mb-0 text-navy">${App.formatCurrency(acc.balance)}</h3>
                         
                         <!-- Decorative element -->
                         <div class="position-absolute opacity-10" style="bottom: -20px; right: -10px; font-size: 80px;">
-                            <i class="fas fa-${acc.type === 'Bank' ? 'university' : 'vault'}"></i>
+                            <i class="fas fa-${config.icon}"></i>
                         </div>
                     </div>
                 </div>
             </div>
-        `).join('');
+        `}).join('');
     },
 
     populateSelectors() {
@@ -82,6 +90,10 @@ const vaultModule = {
     },
 
     async loadTransactions() {
+        if (this.table) {
+            this.table.destroy();
+        }
+
         const accountId = document.getElementById('filter-account')?.value || '';
         const result = await App.api(`vault.php?action=list_transactions&account_id=${accountId}`);
 
@@ -107,7 +119,7 @@ const vaultModule = {
 
             return `
                 <tr>
-                    <td>
+                    <td data-order="${tx.date}">
                         <div class="fw-bold small">${App.formatDate(tx.date)}</div>
                         <small class="text-muted">${new Date(tx.date).toLocaleTimeString()}</small>
                     </td>
@@ -117,11 +129,20 @@ const vaultModule = {
                         <div class="small fw-medium">${tx.description}</div>
                         ${tx.related_type ? `<small class="text-muted">Réf: ${tx.related_type} #${tx.related_id}</small>` : ''}
                     </td>
-                    <td class="text-end fw-bold ${amountClass}">${amountPrefix}${App.formatCurrency(tx.amount)}</td>
+                    <td class="text-end fw-bold ${amountClass}" data-order="${tx.amount}">${amountPrefix}${App.formatCurrency(tx.amount)}</td>
                     <td><small class="text-muted">${tx.user_name}</small></td>
                 </tr>
             `;
         }).join('');
+
+        this.table = $('#vaultTransactionsTable').DataTable({
+            order: [[0, 'desc']],
+            pageLength: 10,
+            language: {
+                search: "_INPUT_",
+                searchPlaceholder: "Search transactions..."
+            }
+        });
     },
 
     openAddTransactionModal() {
