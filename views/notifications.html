@@ -1,0 +1,34 @@
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold mb-0">Notification History</h4>
+            <p class="text-muted small mb-0">View all your past and present alerts.</p>
+        </div>
+        <button class="btn btn-teal-outline px-4" onclick="notificationsModule.markAllAsRead()">
+            <i class="fas fa-check-double me-2"></i>Mark All As Read
+        </button>
+    </div>
+
+    <!-- Table Card -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="card-body p-4">
+            <div class="table-responsive">
+                <table id="notificationsTable" class="table table-hover align-middle w-100">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 50px;">Type</th>
+                            <th>Title</th>
+                            <th>Message</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Content loaded via AJAX -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

@@ -262,7 +262,7 @@ if (!isset($_SESSION['user_id'])) {
                                 <li class="p-3 text-center text-muted small">Loading notifications...</li>
                             </div>
                             <li class="text-center p-2 border-top notification-footer">
-                                <a href="#" class="small text-muted text-decoration-none">View All Notifications</a>
+                                <a href="#notifications" class="small text-muted text-decoration-none">View All Notifications</a>
                             </li>
                         </ul>
                     </div>

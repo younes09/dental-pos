@@ -34,7 +34,8 @@ const App = {
             'salaries': ['Admin'],
             'balance': ['Admin'],
             'settings': ['Admin'],
-            'profile': ['Admin', 'Cashier', 'Stock Manager']
+            'profile': ['Admin', 'Cashier', 'Stock Manager'],
+            'notifications': ['Admin', 'Cashier', 'Stock Manager']
         }
     },
 

@@ -51,6 +51,17 @@ try {
             echo json_encode(['data' => $notifications]);
             break;
 
+        case 'history':
+            $stmt = $pdo->prepare("
+                SELECT * FROM notifications 
+                WHERE (user_id = ? OR role = ? OR (user_id IS NULL AND role IS NULL))
+                ORDER BY created_at DESC
+            ");
+            $stmt->execute([$user_id, $user_role]);
+            $notifications = $stmt->fetchAll();
+            echo json_encode(['data' => $notifications]);
+            break;
+
         case 'mark_read':
             $id = $_GET['id'] ?? null;
             if (!$id) throw new Exception('Notification ID required');
