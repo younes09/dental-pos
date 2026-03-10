@@ -248,38 +248,20 @@ if (!isset($_SESSION['user_id'])) {
                     <div class="dropdown">
                         <button class="btn btn-link text-dark p-2 position-relative" type="button" data-bs-toggle="dropdown">
                             <i class="fas fa-bell"></i>
-                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notificationCount">
-                                3
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notificationCount" style="display: none;">
+                                0
                             </span>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 mt-3 p-0" style="width: 300px;">
                             <li class="p-3 border-bottom d-flex justify-content-between align-items-center">
                                 <h6 class="mb-0 fw-bold">Notifications</h6>
-                                <small class="text-teal pointer">Mark all as read</small>
+                                <small class="text-teal pointer" onclick="App.markAllNotificationsRead()">Mark all as read</small>
                             </li>
-                            <li class="notification-item p-3 border-bottom unread">
-                                <div class="d-flex align-items-center">
-                                    <div class="icon-circle bg-warning-subtle text-warning me-3">
-                                        <i class="fas fa-exclamation-triangle"></i>
-                                    </div>
-                                    <div>
-                                        <p class="mb-1 small fw-medium">Low stock: Latex Gloves</p>
-                                        <small class="text-muted">5 minutes ago</small>
-                                    </div>
-                                </div>
-                            </li>
-                            <li class="notification-item p-3 border-bottom">
-                                <div class="d-flex align-items-center">
-                                    <div class="icon-circle bg-info-subtle text-info me-3">
-                                        <i class="fas fa-truck"></i>
-                                    </div>
-                                    <div>
-                                        <p class="mb-1 small fw-medium">New PO received: #PO-123</p>
-                                        <small class="text-muted">1 hour ago</small>
-                                    </div>
-                                </div>
-                            </li>
-                            <li class="text-center p-2">
+                            <div class="notification-list" style="max-height: 300px; overflow-y: auto;">
+                                <!-- Dynamic content -->
+                                <li class="p-3 text-center text-muted small">Loading notifications...</li>
+                            </div>
+                            <li class="text-center p-2 border-top notification-footer">
                                 <a href="#" class="small text-muted text-decoration-none">View All Notifications</a>
                             </li>
                         </ul>

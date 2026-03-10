@@ -140,6 +140,13 @@ try {
                 error_log("Vault transfer skipped for session " . $session['id'] . ". Vault ID: " . ($vault_id ?: 'NONE') . ", Total: " . $total_cash_to_vault);
             }
             
+            // M11: Notification Trigger - Cash Session Closed
+            $ins_notif = $pdo->prepare("INSERT INTO notifications (role, title, message, type, link) VALUES (?, ?, ?, ?, ?)");
+            $diff_text = ($difference != 0) ? " (Difference: " . number_format($difference, 2) . ")" : "";
+            $msg = "Cash session #" . $session['id'] . " has been closed by " . ($_SESSION['user_name'] ?? 'User') . "." . $diff_text;
+            $type = ($difference != 0) ? 'warning' : 'info';
+            $ins_notif->execute(['Admin', 'Cash Session Closed', $msg, $type, '#cash_register']);
+
             $pdo->commit();
             echo json_encode(['success' => 'Session closed successfully and funds transferred to Vault', 'difference' => $difference]);
             break;

@@ -45,6 +45,11 @@ const App = {
         this.handleRouting();
         this.applySettings();
         this.loadSidebarState();
+
+        // Start Notifications
+        this.loadNotifications();
+        setInterval(() => this.loadNotifications(), 60000); // Check every minute
+
         console.log('DentalPOS Initialized');
     },
 
@@ -465,6 +470,70 @@ const App = {
             reverseButtons: true
         });
         return result.isConfirmed;
+    },
+
+    async loadNotifications() {
+        const result = await this.api('notifications.php?action=list');
+        if (result && result.data) {
+            this.renderNotifications(result.data);
+        }
+    },
+
+    renderNotifications(notifications) {
+        const countEl = document.getElementById('notificationCount');
+        const listEl = document.querySelector('.dropdown-menu .notification-list'); // I will add this class to index.php
+
+        if (!countEl) return;
+
+        const count = notifications.length;
+        countEl.textContent = count;
+        countEl.style.display = count > 0 ? 'block' : 'none';
+
+        if (!listEl) return;
+
+        if (count === 0) {
+            listEl.innerHTML = `
+                <li class="p-5 text-center text-muted">
+                    <i class="fas fa-bell-slash fa-3x mb-3 opacity-25"></i>
+                    <p class="mb-0 small">No new notifications</p>
+                </li>`;
+            return;
+        }
+
+        listEl.innerHTML = notifications.map(n => `
+            <li class="notification-item p-3 border-bottom unread pointer" onclick="App.handleNotificationClick(${n.id}, '${n.link || ''}')">
+                <div class="d-flex align-items-center">
+                    <div class="icon-circle bg-${n.type}-subtle text-${n.type} me-3">
+                        <i class="fas ${this.getNotificationIcon(n.type)}"></i>
+                    </div>
+                    <div>
+                        <p class="mb-1 small fw-medium">${n.title}</p>
+                        <small class="text-muted">${n.message}</small>
+                    </div>
+                </div>
+            </li>
+        `).join('');
+    },
+
+    getNotificationIcon(type) {
+        const icons = {
+            'warning': 'fa-exclamation-triangle',
+            'info': 'fa-info-circle',
+            'success': 'fa-check-circle',
+            'danger': 'fa-exclamation-circle'
+        };
+        return icons[type] || 'fa-bell';
+    },
+
+    async handleNotificationClick(id, link) {
+        await this.api(`notifications.php?action=mark_read&id=${id}`);
+        if (link) window.location.hash = link;
+        this.loadNotifications();
+    },
+
+    async markAllNotificationsRead() {
+        await this.api('notifications.php?action=mark_all_read');
+        this.loadNotifications();
     }
 };
 

@@ -196,6 +196,37 @@ try {
 
                 $stock_stmt->execute([$item['qty'], $item['id']]);
                 
+                // M11: Notification Trigger - Low Stock
+                $check_low_stmt = $pdo->prepare("SELECT name, stock_qty, min_stock FROM products WHERE id = ?");
+                $check_low_stmt->execute([$item['id']]);
+                $prod_status = $check_low_stmt->fetch();
+                
+                if ($prod_status && $prod_status['stock_qty'] <= $prod_status['min_stock']) {
+                    // Check if an unread notification already exists for this product
+                    $notif_exists = $pdo->prepare("SELECT id FROM notifications WHERE title LIKE ? AND is_read = 0");
+                    $notif_exists->execute(["%Low stock: " . $prod_status['name'] . "%"]);
+                    
+                    if (!$notif_exists->fetch()) {
+                        $ins_notif = $pdo->prepare("INSERT INTO notifications (role, title, message, type, link) VALUES (?, ?, ?, ?, ?)");
+                        $ins_notif->execute([
+                            'Stock Manager', 
+                            'Low stock: ' . $prod_status['name'], 
+                            'Stock level is now ' . $prod_status['stock_qty'] . '. Minimum is ' . $prod_status['min_stock'], 
+                            'warning', 
+                            '#stock'
+                        ]);
+                        
+                        // Also for Admin
+                        $ins_notif->execute([
+                            'Admin', 
+                            'Low stock: ' . $prod_status['name'], 
+                            'Stock level is now ' . $prod_status['stock_qty'] . '. Minimum is ' . $prod_status['min_stock'], 
+                            'warning', 
+                            '#stock'
+                        ]);
+                    }
+                }
+                
                 // FIFO Batch Deduction
                 $remaining_to_deduct = $item['qty'];
                 $batches_stmt = $pdo->prepare("SELECT id, remaining_qty FROM stock_batches WHERE product_id = ? AND remaining_qty > 0 ORDER BY created_at ASC FOR UPDATE");

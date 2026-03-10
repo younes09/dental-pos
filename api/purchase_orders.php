@@ -104,6 +104,15 @@ try {
             }
 
             $pdo->commit();
+
+            // M11: Notification Trigger - New PO Created
+            if ($status === 'Pending') {
+                $ins_notif = $pdo->prepare("INSERT INTO notifications (role, title, message, type, link) VALUES (?, ?, ?, ?, ?)");
+                $po_msg = "New Purchase Order #$po_id has been created for " . $data['supplier_name'] . ". Status: Pending.";
+                $ins_notif->execute(['Admin', 'New PO: #' . $po_id, $po_msg, 'info', '#purchase_orders']);
+                $ins_notif->execute(['Stock Manager', 'New PO: #' . $po_id, $po_msg, 'info', '#purchase_orders']);
+            }
+
             echo json_encode(['success' => 'Purchase order saved successfully', 'id' => $po_id]);
             break;
 
@@ -225,6 +234,13 @@ try {
             }
 
             $pdo->commit();
+            
+            // M11: Notification Trigger - PO Received
+            $ins_notif = $pdo->prepare("INSERT INTO notifications (role, title, message, type, link) VALUES (?, ?, ?, ?, ?)");
+            $po_msg = "Order #$po_id has been " . (($new_status === 'Received') ? 'fully received.' : 'partially received.');
+            $ins_notif->execute(['Admin', 'PO Received: #' . $po_id, $po_msg, 'success', '#purchase_orders']);
+            $ins_notif->execute(['Stock Manager', 'PO Received: #' . $po_id, $po_msg, 'success', '#purchase_orders']);
+
             $msg = ($new_status === 'Received') ? 'Order fully received' : 'Order partially received';
             echo json_encode(['success' => $msg]);
             break;
