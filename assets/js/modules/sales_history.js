@@ -261,7 +261,11 @@ const sales_historyModule = {
             return;
         }
 
-        if (!confirm('Are you sure you want to process this return? Customer balance will be adjusted.')) return;
+        const confirmed = await App.confirm(
+            'Process Return?',
+            'Are you sure you want to process this return? Customer balance will be adjusted.'
+        );
+        if (!confirmed) return;
 
         const result = await App.api('sales.php?action=process_return', 'POST', {
             sale_id: saleId,

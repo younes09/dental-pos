@@ -644,7 +644,11 @@ const purchase_ordersModule = {
             return;
         }
 
-        if (!confirm('Are you sure you want to process this return to supplier? Supplier balance will be adjusted and stock decreased.')) return;
+        const confirmed = await App.confirm(
+            'Confirm Purchase Return?',
+            'Are you sure you want to process this return to supplier? Supplier balance will be adjusted and stock decreased.'
+        );
+        if (!confirmed) return;
 
         const result = await App.api('purchase_orders.php?action=process_return', 'POST', {
             po_id: poId,

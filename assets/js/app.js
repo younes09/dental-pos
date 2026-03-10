@@ -450,6 +450,21 @@ const App = {
             icon: icon,
             title: title
         });
+    },
+
+    async confirm(title, text, icon = 'question') {
+        const result = await Swal.fire({
+            title: title,
+            text: text,
+            icon: icon,
+            showCancelButton: true,
+            confirmButtonColor: '#00BFA6',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Confirm',
+            cancelButtonText: 'Cancel',
+            reverseButtons: true
+        });
+        return result.isConfirmed;
     }
 };
 

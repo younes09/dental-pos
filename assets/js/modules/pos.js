@@ -212,7 +212,7 @@ const posModule = {
         `).reverse().join('');
     },
 
-    resumeSale(heldId) {
+    async resumeSale(heldId) {
         let heldSales = JSON.parse(localStorage.getItem('pos_held_sales') || '[]');
         const saleIndex = heldSales.findIndex(s => s.id === heldId);
 
@@ -222,7 +222,11 @@ const posModule = {
 
         // Ask for confirmation if current cart is not empty
         if (this.cart.length > 0) {
-            if (!confirm('This will replace your current cart. Continue?')) return;
+            const confirmed = await App.confirm(
+                'Resume Sale?',
+                'This will replace your current cart. Continue?'
+            );
+            if (!confirmed) return;
         }
 
         this.cart = sale.cart;
@@ -266,8 +270,13 @@ const posModule = {
         App.toast('success', 'Sale resumed');
     },
 
-    deleteHeldSale(heldId) {
-        if (!confirm('Are you sure you want to delete this held sale?')) return;
+    async deleteHeldSale(heldId) {
+        const confirmed = await App.confirm(
+            'Delete Held Sale?',
+            'Are you sure you want to delete this held sale?',
+            'warning'
+        );
+        if (!confirmed) return;
 
         let heldSales = JSON.parse(localStorage.getItem('pos_held_sales') || '[]');
         heldSales = heldSales.filter(s => s.id !== heldId);
