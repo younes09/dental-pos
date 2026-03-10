@@ -343,6 +343,15 @@ try {
             }
 
             $pdo->commit();
+            
+            // M11: Notification Trigger - Supplier Return
+            $ins_notif = $pdo->prepare("INSERT INTO notifications (role, title, message, type, link) VALUES (?, ?, ?, ?, ?)");
+            $ret_msg = "Return to supplier processed for PO #$po_id. Amount: " . number_format($total_return_amount, 2);
+            if ($reason) $ret_msg .= " Reason: $reason";
+            
+            $ins_notif->execute(['Admin', 'Supplier Return Processed', $ret_msg, 'warning', '#purchase_orders']);
+            $ins_notif->execute(['Stock Manager', 'Supplier Return Processed', $ret_msg, 'warning', '#purchase_orders']);
+
             echo json_encode(['success' => 'Supplier return processed successfully', 'return_id' => $return_id]);
             break;
 

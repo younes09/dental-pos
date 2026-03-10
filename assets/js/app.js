@@ -486,6 +486,23 @@ const App = {
         if (!countEl) return;
 
         const count = notifications.length;
+
+        // Real-time toast logic: If count increased, show the newest notification
+        const previousCount = parseInt(countEl.textContent) || 0;
+        if (count > previousCount && notifications.length > 0) {
+            const newest = notifications[0]; // Assuming API returns newest first
+            Swal.fire({
+                toast: true,
+                position: 'bottom-end',
+                showConfirmButton: false,
+                timer: 5000,
+                timerProgressBar: true,
+                icon: newest.type === 'danger' ? 'error' : newest.type, // Map 'danger' to SweetAlert's 'error'
+                title: newest.title,
+                text: newest.message
+            });
+        }
+
         countEl.textContent = count;
         countEl.style.display = count > 0 ? 'block' : 'none';
 

@@ -413,6 +413,13 @@ try {
             }
 
             $pdo->commit();
+            
+            // M11: Notification Trigger - Customer Return
+            $ins_notif = $pdo->prepare("INSERT INTO notifications (role, title, message, type, link) VALUES (?, ?, ?, ?, ?)");
+            $ret_msg = "Customer return processed for Sale #$sale_id by " . ($_SESSION['user_name'] ?? 'User') . ". Amount: " . number_format($total_return_amount, 2);
+            if ($reason) $ret_msg .= " Reason: $reason";
+            $ins_notif->execute(['Admin', 'Customer Return Processed', $ret_msg, 'warning', '#sales_history']);
+
             echo json_encode(['success' => 'Return processed successfully', 'return_id' => $return_id]);
             break;
 

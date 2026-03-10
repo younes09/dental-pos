@@ -39,8 +39,20 @@ try {
                     VALUES (?, ?, ?, ?)
                 ");
                 $stmt->execute([$name, $purchase_price, $condition_status, $quantity]);
+                $id = $pdo->lastInsertId(); // Get ID for new items
                 echo json_encode(['success' => 'Equipment added successfully']);
             }
+            
+            // M11: Notification Trigger - Equipment Damage
+            if (in_array($condition_status, ['Poor', 'Needs Repair'])) {
+                $ins_notif = $pdo->prepare("INSERT INTO notifications (role, title, message, type, link) VALUES (?, ?, ?, ?, ?)");
+                $eq_msg = "Equipment '$name' status changed to '$condition_status' by " . ($_SESSION['user_name'] ?? 'User') . ".";
+                $type = ($condition_status === 'Needs Repair') ? 'danger' : 'warning';
+                
+                // Avoid spamming if already reported recently (optional enhancement, simple version for now)
+                $ins_notif->execute(['Admin', 'Equipment Alert: ' . $name, $eq_msg, $type, '#equipment']);
+            }
+            
             break;
 
         case 'delete':
