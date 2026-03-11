@@ -71,7 +71,7 @@ const settingsModule = {
 
         const result = await App.api('settings.php', 'POST', data);
         if (result && result.success) {
-            App.toast('success', 'Business settings saved successfully');
+            App.toast('success', App.t('settings.js.business_saved') || 'Business settings saved successfully');
 
             // Update app state for immediate effect
             Object.assign(App.state.settings, data);
@@ -86,7 +86,7 @@ const settingsModule = {
 
         const result = await App.api('settings.php', 'POST', data);
         if (result && result.success) {
-            App.toast('success', 'Tax configuration updated');
+            App.toast('success', App.t('settings.js.tax_updated') || 'Tax configuration updated');
 
             // Update app state
             if (data.vat_rate) App.state.settings.vat_rate = data.vat_rate;
@@ -100,7 +100,7 @@ const settingsModule = {
 
         const result = await App.api('settings.php', 'POST', data);
         if (result && result.success) {
-            App.toast('success', 'Loyalty settings updated');
+            App.toast('success', App.t('settings.js.loyalty_updated') || 'Loyalty settings updated');
 
             // Immediately update the app state
             if (data.loyalty_earning_rate) App.state.settings.loyalty_earning_rate = data.loyalty_earning_rate;
@@ -109,14 +109,14 @@ const settingsModule = {
     },
 
     backupDB() {
-        App.toast('info', 'Generating SQL backup... please wait');
+        App.toast('info', App.t('settings.js.backup_generating') || 'Generating SQL backup... please wait');
         // Trigger download via hidden iframe or direct navigation
         // Direct navigation is often simplest for downloads
         window.location.href = 'api/settings.php?action=backup';
 
         // Hide loading message after a short delay (the browser will handle the download in background)
         setTimeout(() => {
-            App.toast('success', 'Backup request sent');
+            App.toast('success', App.t('settings.js.backup_sent') || 'Backup request sent');
         }, 2000);
     },
 
@@ -130,14 +130,14 @@ const settingsModule = {
         const file = input.files[0];
 
         const { isConfirmed } = await Swal.fire({
-            title: 'Restore Database?',
-            text: "This will OVERWRITE your current data with the backup file. This action cannot be undone!",
+            title: App.t('settings.js.restore_title') || 'Restore Database?',
+            text: App.t('settings.js.restore_text') || "This will OVERWRITE your current data with the backup file. This action cannot be undone!",
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#d33',
             cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Yes, restore it!',
-            cancelButtonText: 'Cancel'
+            confirmButtonText: App.t('settings.js.btn_restore') || 'Yes, restore it!',
+            cancelButtonText: App.t('btn_cancel') || 'Cancel'
         });
 
         if (!isConfirmed) {
@@ -145,7 +145,7 @@ const settingsModule = {
             return;
         }
 
-        App.toast('info', 'Restoring database... please do not close the window');
+        App.toast('info', App.t('settings.js.restoring') || 'Restoring database... please do not close the window');
 
         const formData = new FormData();
         formData.append('backup_file', file);
@@ -160,17 +160,17 @@ const settingsModule = {
 
             if (result && result.success) {
                 await Swal.fire({
-                    title: 'Restored!',
-                    text: 'Database has been successfully restored. The application will now reload.',
+                    title: App.t('settings.js.restore_success_title') || 'Restored!',
+                    text: App.t('settings.js.restore_success_text') || 'Database has been successfully restored. The application will now reload.',
                     icon: 'success'
                 });
                 window.location.reload();
             } else {
-                App.toast('error', result.error || 'Restore failed');
+                App.toast('error', result.error || App.t('settings.js.restore_fail') || 'Restore failed');
             }
         } catch (error) {
             console.error('Restore Error:', error);
-            App.toast('error', 'Network error during restore');
+            App.toast('error', App.t('settings.js.restore_error') || 'Network error during restore');
         } finally {
             input.value = ''; // Reset input
         }
@@ -178,12 +178,13 @@ const settingsModule = {
 
     clearCache() {
         Swal.fire({
-            title: 'Clear Cache?',
-            text: "This will reset local preferences!",
+            title: App.t('settings.js.cache_title') || 'Clear Cache?',
+            text: App.t('settings.js.cache_text') || "This will reset local preferences!",
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#00BFA6',
-            confirmButtonText: 'Yes, clear it'
+            confirmButtonText: App.t('settings.js.btn_clear') || 'Yes, clear it',
+            cancelButtonText: App.t('btn_cancel') || 'Cancel'
         }).then((result) => {
             if (result.isConfirmed) {
                 localStorage.clear();

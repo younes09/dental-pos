@@ -13,7 +13,7 @@ const sales_historyModule = {
 
     bindEvents() {
         document.getElementById('btn-export-sales').onclick = () => {
-            App.toast('info', 'Export functionality coming soon');
+            App.toast('info', App.t('sh.msg.export_soon') || 'Export functionality coming soon');
         };
 
         document.getElementById('btn-print-receipt').onclick = () => {
@@ -51,7 +51,7 @@ const sales_historyModule = {
                 },
                 {
                     data: 'customer_name',
-                    render: (data) => data || '<span class="text-muted">Walk-in Customer</span>'
+                    render: (data) => data || `<span class="text-muted">${App.t('sh.text.walk_in') || 'Walk-in Customer'}</span>`
                 },
                 { data: 'user_name' },
                 {
@@ -90,20 +90,16 @@ const sales_historyModule = {
                         <div class="dropdown">
                             <button class="btn btn-sm btn-light" data-bs-toggle="dropdown"><i class="fas fa-ellipsis-v"></i></button>
                             <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
-                                <li><a class="dropdown-item" href="javascript:void(0)" onclick="sales_historyModule.viewDetails(${data.id})"><i class="fas fa-eye me-2 text-info"></i>View Details</a></li>
-                                <li><a class="dropdown-item" href="javascript:void(0)" onclick="sales_historyModule.directPrint(${data.id})"><i class="fas fa-print me-2 text-teal"></i>Print Receipt</a></li>
+                                <li><a class="dropdown-item" href="javascript:void(0)" onclick="sales_historyModule.viewDetails(${data.id})"><i class="fas fa-eye me-2 text-info"></i>${App.t('sh.action.view_details') || 'View Details'}</a></li>
+                                <li><a class="dropdown-item" href="javascript:void(0)" onclick="sales_historyModule.directPrint(${data.id})"><i class="fas fa-print me-2 text-teal"></i>${App.t('sh.action.print_receipt') || 'Print Receipt'}</a></li>
                                 <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="javascript:void(0)" onclick="sales_historyModule.openReturnModal(${data.id})"><i class="fas fa-undo me-2 text-warning"></i>Return Items</a></li>
+                                <li><a class="dropdown-item" href="javascript:void(0)" onclick="sales_historyModule.openReturnModal(${data.id})"><i class="fas fa-undo me-2 text-warning"></i>${App.t('sh.action.return_items') || 'Return Items'}</a></li>
                             </ul>
                         </div>
                     `
                 }
             ],
-            language: {
-                search: "_INPUT_",
-                searchPlaceholder: "Search transactions...",
-                lengthMenu: "_MENU_",
-            },
+            language: App.getDataTableLanguage(),
             dom: '<"d-flex justify-content-between align-items-center mb-3"lf>rt<"d-flex justify-content-between align-items-center mt-3"ip>'
         });
     },
@@ -124,27 +120,27 @@ const sales_historyModule = {
 
         // Populate Customer Info
         document.getElementById('sale-details-customer-info').innerHTML = `
-            <div class="fw-bold fs-5 text-teal mb-1">${sale.customer_name || 'Walk-in Customer'}</div>
-            <div class="small mb-1"><i class="fas fa-phone me-2 text-muted"></i>${sale.customer_phone || 'No phone provided'}</div>
-            <div class="small"><i class="fas fa-user-tag me-2 text-muted"></i>Payment: <strong>${sale.payment_method}</strong></div>
+            <div class="fw-bold fs-5 text-teal mb-1">${sale.customer_name || (App.t('sh.text.walk_in') || 'Walk-in Customer')}</div>
+            <div class="small mb-1"><i class="fas fa-phone me-2 text-muted"></i>${sale.customer_phone || (App.t('sh.text.no_phone') || 'No phone provided')}</div>
+            <div class="small"><i class="fas fa-user-tag me-2 text-muted"></i>${App.t('sh.text.payment') || 'Payment'}: <strong>${sale.payment_method}</strong></div>
         `;
 
         // Populate Sale Metadata
         document.getElementById('sale-details-meta-info').innerHTML = `
             <div class="d-flex justify-content-between mb-2">
-                <span>Cashier:</span>
+                <span>${App.t('sh.text.cashier') || 'Cashier'}:</span>
                 <span class="fw-bold">${sale.user_name}</span>
             </div>
             <div class="d-flex justify-content-between mb-2">
-                <span>Status:</span>
-                <span class="badge bg-success px-2">Completed</span>
+                <span>${App.t('sh.text.status') || 'Status'}:</span>
+                <span class="badge bg-success px-2">${App.t('sh.text.completed') || 'Completed'}</span>
             </div>
             <div class="d-flex justify-content-between mb-2">
-                <span>Doc Type:</span>
+                <span>${App.t('sh.text.doc_type') || 'Doc Type'}:</span>
                 <span class="badge ${sale.invoice_type === 'BL' ? 'bg-warning text-dark' : 'bg-primary'} px-2">${sale.invoice_type || 'BV'}</span>
             </div>
             <div class="d-flex justify-content-between">
-                <span>Date:</span>
+                <span>${App.t('sh.text.date') || 'Date'}:</span>
                 <span class="fw-bold text-nowrap">${new Date(sale.date).toLocaleDateString()}</span>
             </div>
         `;
@@ -201,7 +197,7 @@ const sales_historyModule = {
 
         const { sale, items } = result;
         document.getElementById('return-sale-id').value = sale.id;
-        document.getElementById('sale-return-subtitle').textContent = `Invoice #INV-${sale.id} | ${sale.customer_name || 'Walk-in'}`;
+        document.getElementById('sale-return-subtitle').textContent = `Invoice #INV-${sale.id} | ${sale.customer_name || (App.t('sh.text.walk_in') || 'Walk-in')}`;
         document.getElementById('return-reason').value = '';
 
         const tbody = document.querySelector('#sale-return-items-table tbody');
@@ -257,13 +253,13 @@ const sales_historyModule = {
         });
 
         if (items.length === 0) {
-            App.toast('warning', 'Please select at least one item to return');
+            App.toast('warning', App.t('sh.msg.select_return_item') || 'Please select at least one item to return');
             return;
         }
 
         const confirmed = await App.confirm(
-            'Process Return?',
-            'Are you sure you want to process this return? Customer balance will be adjusted.'
+            App.t('sh.confirm.return_title') || 'Process Return?',
+            App.t('sh.confirm.return_desc') || 'Are you sure you want to process this return? Customer balance will be adjusted.'
         );
         if (!confirmed) return;
 

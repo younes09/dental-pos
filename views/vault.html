@@ -1,15 +1,15 @@
 <div class="row mb-4 animate__animated animate__fadeIn">
     <div class="col-12 d-flex justify-content-between align-items-center">
         <div>
-            <h3 class="fw-bold mb-0">Treasury Management</h3>
-            <p class="text-muted small">Tracking funds (Vault, Bank) and transaction history.</p>
+            <h3 class="fw-bold mb-0" data-i18n="vault.page_title">Treasury Management</h3>
+            <p class="text-muted small" data-i18n="vault.page_subtitle">Tracking funds (Vault, Bank) and transaction history.</p>
         </div>
         <div>
             <button class="btn btn-teal rounded-pill px-4 me-2" onclick="vaultModule.openTransferModal()">
-                <i class="fas fa-exchange-alt me-2"></i>Internal Transfer
+                <i class="fas fa-exchange-alt me-2"></i><span data-i18n="vault.btn.transfer">Internal Transfer</span>
             </button>
             <button class="btn btn-navy rounded-pill px-4" onclick="vaultModule.openAddTransactionModal()">
-                <i class="fas fa-plus me-2"></i>New Transaction
+                <i class="fas fa-plus me-2"></i><span data-i18n="vault.btn.new_transaction">New Transaction</span>
             </button>
         </div>
     </div>
@@ -28,11 +28,11 @@
         <div class="card border-0 shadow-sm rounded-4">
             <div class="card-body p-4">
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="fw-bold mb-0">Transaction History</h5>
+                    <h5 class="fw-bold mb-0" data-i18n="vault.title.history">Transaction History</h5>
                     <div class="d-flex gap-2">
                         <select id="filter-account" class="form-select form-select-sm rounded-pill"
                             style="width: 200px;" onchange="vaultModule.loadTransactions()">
-                            <option value="">All Accounts</option>
+                            <option value="" data-i18n="vault.filter.all_accounts">All Accounts</option>
                         </select>
                         <button class="btn btn-light btn-sm rounded-pill px-3" onclick="vaultModule.loadTransactions()">
                             <i class="fas fa-sync-alt"></i>
@@ -44,12 +44,12 @@
                     <table id="vaultTransactionsTable" class="table table-hover align-middle">
                         <thead class="bg-light">
                             <tr>
-                                <th>Date</th>
-                                <th>Account</th>
-                                <th>Type</th>
-                                <th>Description</th>
-                                <th class="text-end">Amount</th>
-                                <th>User</th>
+                                <th data-i18n="vault.table.date">Date</th>
+                                <th data-i18n="vault.table.account">Account</th>
+                                <th data-i18n="vault.table.type">Type</th>
+                                <th data-i18n="vault.table.description">Description</th>
+                                <th class="text-end" data-i18n="vault.table.amount">Amount</th>
+                                <th data-i18n="vault.table.user">User</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -67,24 +67,24 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4">
             <div class="modal-header border-0 p-4 pb-0">
-                <h5 class="fw-bold">New Transaction</h5>
+                <h5 class="fw-bold" data-i18n="vault.modal.new_transaction">New Transaction</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="formAddTransaction">
                 <div class="modal-body p-4">
                     <div class="mb-3">
-                        <label class="form-label small fw-bold">Account</label>
+                        <label class="form-label small fw-bold" data-i18n="vault.modal.account">Account</label>
                         <select name="account_id" class="form-select rounded-3" required></select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label small fw-bold">Movement Type</label>
+                        <label class="form-label small fw-bold" data-i18n="vault.modal.movement_type">Movement Type</label>
                         <select name="type" class="form-select rounded-3" required>
-                            <option value="Income">Income (Revenue)</option>
-                            <option value="Expense">Expense (Outflow)</option>
+                            <option value="Income" data-i18n="vault.modal.income">Income (Revenue)</option>
+                            <option value="Expense" data-i18n="vault.modal.expense">Expense (Outflow)</option>
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label small fw-bold">Amount</label>
+                        <label class="form-label small fw-bold" data-i18n="vault.modal.amount">Amount</label>
                         <div class="input-group">
                             <input type="number" name="amount" step="0.01" class="form-control rounded-3"
                                 placeholder="0.00" required>
@@ -92,15 +92,15 @@
                         </div>
                     </div>
                     <div class="mb-0">
-                        <label class="form-label small fw-bold">Description / Notes</label>
+                        <label class="form-label small fw-bold" data-i18n="vault.modal.notes">Description / Notes</label>
                         <textarea name="description" class="form-control rounded-3" rows="3"
-                            placeholder="Ex: Supply purchase, Deposit..."></textarea>
+                            placeholder="Ex: Supply purchase, Deposit..." data-i18n="vault.modal.notes_placeholder" data-i18n-target="placeholder"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer border-0 p-4 pt-0">
                     <button type="button" class="btn btn-light rounded-pill px-4"
-                        data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-teal rounded-pill px-4">Save</button>
+                        data-bs-dismiss="modal" data-i18n="vault.modal.btn.cancel">Cancel</button>
+                    <button type="submit" class="btn btn-teal rounded-pill px-4" data-i18n="vault.modal.btn.save">Save</button>
                 </div>
             </form>
         </div>
@@ -112,21 +112,21 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4">
             <div class="modal-header border-0 p-4 pb-0">
-                <h5 class="fw-bold">Internal Transfer</h5>
+                <h5 class="fw-bold" data-i18n="vault.modal.internal_transfer">Internal Transfer</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="formTransfer">
                 <div class="modal-body p-4">
                     <div class="mb-3">
-                        <label class="form-label small fw-bold">From (Source)</label>
+                        <label class="form-label small fw-bold" data-i18n="vault.modal.from">From (Source)</label>
                         <select name="from_id" class="form-select rounded-3" required></select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label small fw-bold">To (Destination)</label>
+                        <label class="form-label small fw-bold" data-i18n="vault.modal.to">To (Destination)</label>
                         <select name="to_id" class="form-select rounded-3" required></select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label small fw-bold">Amount</label>
+                        <label class="form-label small fw-bold" data-i18n="vault.modal.amount">Amount</label>
                         <div class="input-group">
                             <input type="number" name="amount" step="0.01" class="form-control rounded-3"
                                 placeholder="0.00" required>
@@ -134,15 +134,15 @@
                         </div>
                     </div>
                     <div class="mb-0">
-                        <label class="form-label small fw-bold">Notes</label>
+                        <label class="form-label small fw-bold" data-i18n="vault.modal.transfer_notes">Notes</label>
                         <input type="text" name="description" class="form-control rounded-3"
-                            placeholder="Ex: Bank deposit">
+                            placeholder="Ex: Bank deposit" data-i18n="vault.modal.transfer_notes_placeholder" data-i18n-target="placeholder">
                     </div>
                 </div>
                 <div class="modal-footer border-0 p-4 pt-0">
                     <button type="button" class="btn btn-light rounded-pill px-4"
-                        data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-teal rounded-pill px-4">Perform</button>
+                        data-bs-dismiss="modal" data-i18n="vault.modal.btn.cancel">Cancel</button>
+                    <button type="submit" class="btn btn-teal rounded-pill px-4" data-i18n="vault.modal.btn.perform">Perform</button>
                 </div>
             </form>
         </div>

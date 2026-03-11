@@ -1,8 +1,8 @@
 <div class="row mb-4 animate__animated animate__fadeIn">
     <div class="col-12 d-flex justify-content-between align-items-center">
         <div>
-            <h3 class="fw-bold mb-0">Cash Management</h3>
-            <p class="text-muted">Manage register opening and closing sessions</p>
+            <h3 class="fw-bold mb-0" data-i18n="cr.page_title">Cash Management</h3>
+            <p class="text-muted" data-i18n="cr.page_subtitle">Manage register opening and closing sessions</p>
         </div>
     </div>
 </div>
@@ -12,7 +12,7 @@
     <div class="col-lg-4 mb-4">
         <div class="card border-0 shadow-sm rounded-4 h-100">
             <div class="card-body p-4">
-                <h5 class="fw-bold mb-4">Session Status</h5>
+                <h5 class="fw-bold mb-4" data-i18n="cr.title.session_status">Session Status</h5>
 
                 <div id="session-status-container" class="text-center py-4">
                     <div class="spinner-border text-teal" role="status">
@@ -25,10 +25,10 @@
                     <div class="icon-circle bg-light text-muted mx-auto mb-3" style="width: 80px; height: 80px;">
                         <i class="fas fa-lock fa-2x"></i>
                     </div>
-                    <h6 class="fw-bold text-muted mb-3">The register is closed</h6>
+                    <h6 class="fw-bold text-muted mb-3" data-i18n="cr.status.closed">The register is closed</h6>
                     <button class="btn btn-teal w-100 rounded-pill py-2" data-bs-toggle="modal"
                         data-bs-target="#modalOpenSession">
-                        <i class="fas fa-key me-2"></i>Open Register
+                        <i class="fas fa-key me-2"></i><span data-i18n="cr.btn.open_register">Open Register</span>
                     </button>
                 </div>
 
@@ -37,35 +37,35 @@
                     <div class="icon-circle bg-teal-soft text-teal mx-auto mb-3" style="width: 80px; height: 80px;">
                         <i class="fas fa-cash-register fa-2x"></i>
                     </div>
-                    <h6 class="fw-bold text-teal mb-3">The register is open</h6>
+                    <h6 class="fw-bold text-teal mb-3" data-i18n="cr.status.open">The register is open</h6>
 
                     <div class="bg-light rounded-4 p-3 mb-4 text-start">
                         <div class="d-flex justify-content-between mb-2">
-                            <span class="text-muted small">Opened by:</span>
+                            <span class="text-muted small" data-i18n="cr.info.opened_by">Opened by:</span>
                             <span class="fw-bold small" id="session-user">-</span>
                         </div>
                         <div class="d-flex justify-content-between mb-2">
-                            <span class="text-muted small">Since:</span>
+                            <span class="text-muted small" data-i18n="cr.info.since">Since:</span>
                             <span class="fw-bold small" id="session-start">-</span>
                         </div>
                         <hr>
                         <div class="d-flex justify-content-between mb-2">
-                            <span class="text-muted small">Opening Balance:</span>
+                            <span class="text-muted small" data-i18n="cr.info.opening_balance">Opening Balance:</span>
                             <span class="fw-bold text-teal" id="session-opening-bal">0.00 DZD</span>
                         </div>
                         <div class="d-flex justify-content-between mb-2">
-                            <span class="text-muted small">Sales (Cash):</span>
+                            <span class="text-muted small" data-i18n="cr.info.sales_cash">Sales (Cash):</span>
                             <span class="fw-bold text-navy" id="session-sales">0.00 DZD</span>
                         </div>
                         <div class="d-flex justify-content-between mt-3 pt-2 border-top">
-                            <span class="fw-bold">Expected Total:</span>
+                            <span class="fw-bold" data-i18n="cr.info.expected_total">Expected Total:</span>
                             <span class="fw-bold text-teal h5 mb-0" id="session-expected">0.00 DZD</span>
                         </div>
                     </div>
 
                     <button class="btn btn-outline-danger w-100 rounded-pill py-2" data-bs-toggle="modal"
                         data-bs-target="#modalCloseSession">
-                        <i class="fas fa-door-closed me-2"></i>Close Session
+                        <i class="fas fa-door-closed me-2"></i><span data-i18n="cr.btn.close_session">Close Session</span>
                     </button>
                 </div>
             </div>
@@ -77,9 +77,9 @@
         <div class="card border-0 shadow-sm rounded-4 h-100">
             <div class="card-body p-4">
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="fw-bold mb-0">Session History</h5>
+                    <h5 class="fw-bold mb-0" data-i18n="cr.title.history">Session History</h5>
                     <button class="btn btn-light btn-sm rounded-pill px-3" onclick="cash_registerModule.loadHistory()">
-                        <i class="fas fa-sync-alt me-1"></i> Refresh
+                        <i class="fas fa-sync-alt me-1"></i> <span data-i18n="cr.btn.refresh">Refresh</span>
                     </button>
                 </div>
 
@@ -87,13 +87,13 @@
                     <table class="table table-hover align-middle custom-table" id="sessionsTable">
                         <thead class="bg-light">
                             <tr>
-                                <th>Opening</th>
-                                <th>Closing</th>
-                                <th>User</th>
-                                <th>Expected</th>
-                                <th>Counted</th>
-                                <th>Difference</th>
-                                <th>Status</th>
+                                <th data-i18n="cr.table.opening">Opening</th>
+                                <th data-i18n="cr.table.closing">Closing</th>
+                                <th data-i18n="cr.table.user">User</th>
+                                <th data-i18n="cr.table.expected">Expected</th>
+                                <th data-i18n="cr.table.counted">Counted</th>
+                                <th data-i18n="cr.table.difference">Difference</th>
+                                <th data-i18n="cr.table.status">Status</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -111,13 +111,13 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow rounded-4">
             <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title fw-bold">Open Register</h5>
+                <h5 class="modal-title fw-bold" data-i18n="cr.modal.open_title">Open Register</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="formOpenSession">
                 <div class="modal-body p-4">
                     <div class="mb-3">
-                        <label class="form-label fw-medium">Initial Opening Balance (DZD)</label>
+                        <label class="form-label fw-medium" data-i18n="cr.modal.initial_balance">Initial Opening Balance (DZD)</label>
                         <div class="input-group">
                             <span class="input-group-text bg-light border-0"><i
                                     class="fas fa-money-bill-wave"></i></span>
@@ -126,19 +126,19 @@
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-medium">Source Account (Treasury)</label>
+                        <label class="form-label fw-medium" data-i18n="cr.modal.source_account">Source Account (Treasury)</label>
                         <select name="account_id" id="open-session-account-id"
                             class="form-select bg-light border-0 rounded-3" required>
-                            <option value="">-- Select source --</option>
+                            <option value="" data-i18n="cr.modal.select_source">-- Select source --</option>
                         </select>
-                        <small class="text-muted mt-2 d-block">Select the account where this opening balance comes from
+                        <small class="text-muted mt-2 d-block" data-i18n="cr.modal.source_help">Select the account where this opening balance comes from
                             to deduct it automatically.</small>
                     </div>
                 </div>
                 <div class="modal-footer border-0 pt-0">
                     <button type="button" class="btn btn-light rounded-pill px-4"
-                        data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-teal rounded-pill px-4">Open Session</button>
+                        data-bs-dismiss="modal" data-i18n="cr.modal.btn.cancel">Cancel</button>
+                    <button type="submit" class="btn btn-teal rounded-pill px-4" data-i18n="cr.modal.btn.open">Open Session</button>
                 </div>
             </form>
         </div>
@@ -150,44 +150,44 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow rounded-4">
             <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title fw-bold">Close Register</h5>
+                <h5 class="modal-title fw-bold" data-i18n="cr.modal.close_title">Close Register</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="formCloseSession">
                 <div class="modal-body p-4">
                     <div class="bg-teal-soft text-teal p-3 rounded-4 mb-4 text-center">
-                        <span class="small d-block mb-1">Expected Amount (Cash)</span>
+                        <span class="small d-block mb-1" data-i18n="cr.modal.expected_amount">Expected Amount (Cash)</span>
                         <h4 class="fw-bold mb-0" id="close-modal-expected">0.00 DZD</h4>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label fw-medium">Actual Counted Amount (DZD)</label>
+                        <label class="form-label fw-medium" data-i18n="cr.modal.counted_amount">Actual Counted Amount (DZD)</label>
                         <div class="input-group">
                             <span class="input-group-text bg-light border-0"><i class="fas fa-calculator"></i></span>
                             <input type="number" step="0.01" class="form-control bg-light border-0"
-                                name="closing_balance" placeholder="0.00" required>
+                                name="closing_balance" placeholder="0.00" data-i18n="cr.modal.counted_placeholder" data-i18n-target="placeholder" required>
                         </div>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label fw-medium">Destination Account (Treasury)</label>
+                        <label class="form-label fw-medium" data-i18n="cr.modal.dest_account">Destination Account (Treasury)</label>
                         <select name="account_id" id="close-session-account-id"
                             class="form-select bg-light border-0 rounded-3" required>
-                            <option value="">-- Select destination --</option>
+                            <option value="" data-i18n="cr.modal.select_dest">-- Select destination --</option>
                         </select>
-                        <small class="text-muted mt-2 d-block">Select the account where this cash will be deposited.</small>
+                        <small class="text-muted mt-2 d-block" data-i18n="cr.modal.dest_help">Select the account where this cash will be deposited.</small>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label fw-medium">Notes (Optional)</label>
+                        <label class="form-label fw-medium" data-i18n="cr.modal.notes">Notes (Optional)</label>
                         <textarea class="form-control bg-light border-0" name="notes" rows="2"
-                            placeholder="Ex: Change error, register replenishment..."></textarea>
+                            placeholder="Ex: Change error, register replenishment..." data-i18n="cr.modal.notes_placeholder" data-i18n-target="placeholder"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer border-0 pt-0">
                     <button type="button" class="btn btn-light rounded-pill px-4"
-                        data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-danger rounded-pill px-4">Confirm Closure</button>
+                        data-bs-dismiss="modal" data-i18n="cr.modal.btn.cancel">Cancel</button>
+                    <button type="submit" class="btn btn-danger rounded-pill px-4" data-i18n="cr.modal.btn.confirm_close">Confirm Closure</button>
                 </div>
             </form>
         </div>

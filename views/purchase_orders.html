@@ -1,11 +1,11 @@
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h4 class="fw-bold mb-0">Purchase Orders</h4>
-            <p class="text-muted small mb-0">Manage and track your inventory procurement</p>
+            <h4 class="fw-bold mb-0" data-i18n="po.page_title">Purchase Orders</h4>
+            <p class="text-muted small mb-0" data-i18n="po.page_subtitle">Manage and track your inventory procurement</p>
         </div>
         <button class="btn btn-teal px-4" data-bs-toggle="modal" data-bs-target="#poModal" id="btn-new-po">
-            <i class="fas fa-plus-circle me-2"></i>New Purchase Order
+            <i class="fas fa-plus-circle me-2"></i><span data-i18n="po.btn_new">New Purchase Order</span>
         </button>
     </div>
 
@@ -18,7 +18,7 @@
                         <i class="fas fa-file-invoice"></i>
                     </div>
                     <div>
-                        <h6 class="text-muted mb-0 small">Total Orders</h6>
+                        <h6 class="text-muted mb-0 small" data-i18n="po.stat.total">Total Orders</h6>
                         <h4 class="fw-bold mb-0" id="stat-total-po">0</h4>
                     </div>
                 </div>
@@ -31,7 +31,7 @@
                         <i class="fas fa-clock"></i>
                     </div>
                     <div>
-                        <h6 class="text-muted mb-0 small">Pending</h6>
+                        <h6 class="text-muted mb-0 small" data-i18n="po.stat.pending">Pending</h6>
                         <h4 class="fw-bold mb-0" id="stat-pending-po">0</h4>
                     </div>
                 </div>
@@ -44,7 +44,7 @@
                         <i class="fas fa-check-circle"></i>
                     </div>
                     <div>
-                        <h6 class="text-muted mb-0 small">Received</h6>
+                        <h6 class="text-muted mb-0 small" data-i18n="po.stat.received">Received</h6>
                         <h4 class="fw-bold mb-0" id="stat-received-po">0</h4>
                     </div>
                 </div>
@@ -57,7 +57,7 @@
                         <i class="fas fa-dollar-sign"></i>
                     </div>
                     <div>
-                        <h6 class="text-muted mb-0 small">Total Value</h6>
+                        <h6 class="text-muted mb-0 small" data-i18n="po.stat.value">Total Value</h6>
                         <h4 class="fw-bold mb-0" id="stat-total-value">0.00 <span class="currency-symbol">$</span></h4>
                     </div>
                 </div>
@@ -72,14 +72,14 @@
                 <table id="poTable" class="table table-hover align-middle w-100">
                     <thead class="table-light">
                         <tr>
-                            <th>Order ID</th>
-                            <th>Date</th>
-                            <th>Supplier</th>
-                            <th>Total Amount</th>
-                            <th>Paid Amount</th>
-                            <th>Status</th>
-                            <th>Payment Status</th>
-                            <th>Actions</th>
+                            <th data-i18n="po.table.order_id">Order ID</th>
+                            <th data-i18n="po.table.date">Date</th>
+                            <th data-i18n="po.table.supplier">Supplier</th>
+                            <th data-i18n="po.table.total_amount">Total Amount</th>
+                            <th data-i18n="po.table.paid_amount">Paid Amount</th>
+                            <th data-i18n="po.table.status">Status</th>
+                            <th data-i18n="po.table.payment_status">Payment Status</th>
+                            <th data-i18n="po.table.actions">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -96,7 +96,7 @@
     <div class="modal-dialog modal-xl modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4">
             <div class="modal-header border-bottom-0 p-4">
-                <h5 class="modal-title fw-bold">Create Purchase Order</h5>
+                <h5 class="modal-title fw-bold" data-i18n="po.modal.create_title">Create Purchase Order</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-4 pt-0">
@@ -105,46 +105,46 @@
                         <!-- Left: Info -->
                         <div class="col-lg-4">
                             <div class="p-3 bg-light rounded-4">
-                                <h6 class="fw-bold mb-3">Order Information</h6>
+                                <h6 class="fw-bold mb-3" data-i18n="po.modal.info_title">Order Information</h6>
                                 <div class="mb-3">
-                                    <label class="form-label small fw-bold">Supplier</label>
+                                    <label class="form-label small fw-bold" data-i18n="po.modal.supplier_label">Supplier</label>
                                     <select name="supplier_id" id="po-supplier-select" class="form-select rounded-3"
                                         required>
-                                        <option value="">Select Supplier</option>
+                                        <option value="" data-i18n="po.modal.supplier_select">Select Supplier</option>
                                     </select>
                                 </div>
                                 <div class="mb-3">
-                                    <label class="form-label small fw-bold">Order Date</label>
+                                    <label class="form-label small fw-bold" data-i18n="po.modal.date_label">Order Date</label>
                                     <input type="date" name="date" id="po-date" class="form-control rounded-3" required>
                                 </div>
                                 <div class="mb-3">
-                                    <label class="form-label small fw-bold">Status</label>
+                                    <label class="form-label small fw-bold" data-i18n="po.modal.status_label">Status</label>
                                     <select name="status" id="po-status" class="form-select rounded-3">
-                                        <option value="Pending">Pending</option>
-                                        <option value="Received">Received (Update Stock)</option>
+                                        <option value="Pending" data-i18n="po.modal.status_pending">Pending</option>
+                                        <option value="Received" data-i18n="po.modal.status_received">Received (Update Stock)</option>
                                     </select>
                                 </div>
                                 <div class="mb-3 d-none" id="po-purchase-type-container">
-                                    <label class="form-label small fw-bold">Purchase Type <span
+                                    <label class="form-label small fw-bold"><span data-i18n="po.modal.type_label">Purchase Type</span> <span
                                             class="text-danger">*</span></label>
                                     <select name="purchase_type" id="po-purchase-type" class="form-select rounded-3">
-                                        <option value="BA">Purchase Order (BA)</option>
-                                        <option value="BL">Delivery Note (BL)</option>
+                                        <option value="BA" data-i18n="po.modal.type_ba">Purchase Order (BA)</option>
+                                        <option value="BL" data-i18n="po.modal.type_bl">Delivery Note (BL)</option>
                                     </select>
                                 </div>
                                 <div class="mb-3 d-none" id="po-paid-amount-container">
-                                    <label class="form-label small fw-bold">Amount Paid to Supplier</label>
+                                    <label class="form-label small fw-bold" data-i18n="po.modal.paid_label">Amount Paid to Supplier</label>
                                     <div class="input-group">
                                         <input type="number" step="0.01" min="0" name="paid_amount" id="po-paid-amount"
                                             class="form-control rounded-start-3" placeholder="0.00">
                                         <span class="input-group-text currency-symbol rounded-end-3">$</span>
                                     </div>
-                                    <small class="text-muted d-block mt-1">Leave empty or 0 if unpaid.</small>
+                                    <small class="text-muted d-block mt-1" data-i18n="po.modal.paid_info">Leave empty or 0 if unpaid.</small>
                                 </div>
                                 <div class="mb-3 d-none" id="po-account-container">
-                                    <label class="form-label small fw-bold">Source Account (Treasury)</label>
+                                    <label class="form-label small fw-bold" data-i18n="po.modal.account_label">Source Account (Treasury)</label>
                                     <select name="account_id" id="po-account-id" class="form-select rounded-3">
-                                        <option value="">-- No Treasury Update --</option>
+                                        <option value="" data-i18n="po.modal.account_no">-- No Treasury Update --</option>
                                     </select>
                                 </div>
                             </div>
@@ -153,9 +153,9 @@
                         <!-- Right: Items -->
                         <div class="col-lg-8">
                             <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h6 class="fw-bold mb-0">Order Items</h6>
+                                <h6 class="fw-bold mb-0" data-i18n="po.modal.items_title">Order Items</h6>
                                 <button type="button" class="btn btn-sm btn-teal-outline" id="btn-add-item">
-                                    <i class="fas fa-plus me-1"></i>Add Product
+                                    <i class="fas fa-plus me-1"></i><span data-i18n="po.modal.btn_add_product">Add Product</span>
                                 </button>
                             </div>
 
@@ -163,10 +163,10 @@
                                 <table class="table table-sm align-middle" id="po-items-table">
                                     <thead class="text-muted small">
                                         <tr>
-                                            <th style="width: 45%;">Product</th>
-                                            <th style="width: 20%;">Qty</th>
-                                            <th style="width: 20%;">Unit Cost</th>
-                                            <th style="width: 15%;">Total</th>
+                                            <th style="width: 45%;" data-i18n="po.modal.th_product">Product</th>
+                                            <th style="width: 20%;" data-i18n="po.modal.th_qty">Qty</th>
+                                            <th style="width: 20%;" data-i18n="po.modal.th_unit_cost">Unit Cost</th>
+                                            <th style="width: 15%;" data-i18n="po.modal.th_total">Total</th>
                                             <th></th>
                                         </tr>
                                     </thead>
@@ -178,7 +178,7 @@
 
                             <div
                                 class="mt-4 p-3 bg-navy text-white rounded-4 d-flex justify-content-between align-items-center">
-                                <span class="fw-semibold">Estimated Total</span>
+                                <span class="fw-semibold" data-i18n="po.modal.estimated_total">Estimated Total</span>
                                 <h4 class="fw-bold mb-0" id="po-total-display">0.00 <span
                                         class="currency-symbol">$</span></h4>
                             </div>
@@ -187,9 +187,9 @@
                 </form>
             </div>
             <div class="modal-footer border-top-0 p-4">
-                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal" data-i18n="po.modal.btn_cancel">Cancel</button>
                 <button type="submit" form="poForm" class="btn btn-teal px-4" id="btn-save-po">
-                    <i class="fas fa-save me-2"></i>Save Purchase Order
+                    <i class="fas fa-save me-2"></i><span data-i18n="po.modal.btn_save">Save Purchase Order</span>
                 </button>
             </div>
         </div>
@@ -202,8 +202,8 @@
         <div class="modal-content border-0 shadow-lg rounded-4">
             <div class="modal-header border-bottom-0 p-4">
                 <div>
-                    <h5 class="modal-title fw-bold" id="po-details-title">Purchase Order Details</h5>
-                    <p class="text-muted small mb-0" id="po-details-subtitle">Order information and items</p>
+                    <h5 class="modal-title fw-bold" id="po-details-title" data-i18n="po.details.title">Purchase Order Details</h5>
+                    <p class="text-muted small mb-0" id="po-details-subtitle" data-i18n="po.details.subtitle">Order information and items</p>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -211,7 +211,7 @@
                 <div class="row g-4 mb-4">
                     <div class="col-md-6">
                         <div class="p-3 bg-light rounded-4 h-100">
-                            <h6 class="fw-bold mb-2 small text-uppercase text-muted">Supplier Information</h6>
+                            <h6 class="fw-bold mb-2 small text-uppercase text-muted" data-i18n="po.details.supplier_info">Supplier Information</h6>
                             <div id="po-details-supplier-info">
                                 <!-- Populated by JS -->
                             </div>
@@ -219,7 +219,7 @@
                     </div>
                     <div class="col-md-6">
                         <div class="p-3 bg-navy text-white rounded-4 h-100">
-                            <h6 class="fw-bold mb-2 small text-uppercase opacity-75">Order Metadata</h6>
+                            <h6 class="fw-bold mb-2 small text-uppercase opacity-75" data-i18n="po.details.meta">Order Metadata</h6>
                             <div id="po-details-meta-info">
                                 <!-- Populated by JS -->
                             </div>
@@ -227,17 +227,17 @@
                     </div>
                 </div>
 
-                <h6 class="fw-bold mb-3">Order Items</h6>
+                <h6 class="fw-bold mb-3" data-i18n="po.modal.items_title">Order Items</h6>
                 <div class="table-responsive rounded-4 border">
                     <table class="table table-hover align-middle mb-0" id="po-details-items-table">
                         <thead class="table-light small">
                             <tr>
-                                <th>Product</th>
-                                <th>Barcode</th>
-                                <th class="text-center">Qty</th>
-                                <th class="text-end">Old Price</th>
-                                <th class="text-end">New Price</th>
-                                <th class="text-end">Total</th>
+                                <th data-i18n="po.modal.th_product">Product</th>
+                                <th data-i18n="po.details.th_barcode">Barcode</th>
+                                <th class="text-center" data-i18n="po.modal.th_qty">Qty</th>
+                                <th class="text-end" data-i18n="po.details.th_old_price">Old Price</th>
+                                <th class="text-end" data-i18n="po.details.th_new_price">New Price</th>
+                                <th class="text-end" data-i18n="po.modal.th_total">Total</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -245,7 +245,7 @@
                         </tbody>
                         <tfoot class="table-light fw-bold">
                             <tr>
-                                <td colspan="4" class="text-end">Grand Total</td>
+                                <td colspan="4" class="text-end" data-i18n="po.details.grand_total">Grand Total</td>
                                 <td class="text-end text-navy" id="po-details-grand-total">0.00 <span
                                         class="currency-symbol">$</span></td>
                             </tr>
@@ -254,7 +254,7 @@
                 </div>
             </div>
             <div class="modal-footer border-top-0 p-4">
-                <button type="button" class="btn btn-navy px-4" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-navy px-4" data-bs-dismiss="modal" data-i18n="po.details.btn_close">Close</button>
             </div>
         </div>
     </div>
@@ -265,56 +265,56 @@
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4">
             <div class="modal-header border-bottom-0 p-4">
-                <h5 class="modal-title fw-bold">Receive Purchase Order Items</h5>
+                <h5 class="modal-title fw-bold" data-i18n="po.receive.title">Receive Purchase Order Items</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-4 pt-0">
                 <form id="receivePoForm">
                     <input type="hidden" id="receive-po-id" name="po_id">
-                    <p class="text-muted mb-4">Select the purchase type for this specific reception and enter the exact
+                    <p class="text-muted mb-4" data-i18n="po.receive.desc">Select the purchase type for this specific reception and enter the exact
                         quantities received for each item.</p>
 
                     <div class="mb-4 bg-light p-3 rounded-3">
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="form-label small fw-bold">Purchase Type for this Reception <span
+                                <label class="form-label small fw-bold"><span data-i18n="po.receive.type_label">Purchase Type for this Reception</span> <span
                                         class="text-danger">*</span></label>
                                 <select name="purchase_type" id="receive-po-purchase-type" class="form-select rounded-3"
                                     required>
-                                    <option value="BA">Purchase Order (BA)</option>
-                                    <option value="BL">Delivery Note (BL)</option>
+                                    <option value="BA" data-i18n="po.modal.type_ba">Purchase Order (BA)</option>
+                                    <option value="BL" data-i18n="po.modal.type_bl">Delivery Note (BL)</option>
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label small fw-bold">Amount Paid Now</label>
+                                <label class="form-label small fw-bold" data-i18n="po.receive.paid_now_label">Amount Paid Now</label>
                                 <div class="input-group">
                                     <input type="number" step="0.01" min="0" name="paid_amount"
                                         id="receive-po-paid-amount" class="form-control rounded-start-3"
                                         placeholder="0.00">
                                     <span class="input-group-text currency-symbol rounded-end-3">$</span>
                                 </div>
-                                <small class="text-muted d-block mt-1">Leave empty or 0 if no payment is made
+                                <small class="text-muted d-block mt-1" data-i18n="po.receive.paid_now_info">Leave empty or 0 if no payment is made
                                     now.</small>
                             </div>
                             <div class="col-12 mt-3">
-                                <label class="form-label small fw-bold">Source Account (Treasury)</label>
+                                <label class="form-label small fw-bold" data-i18n="po.modal.account_label">Source Account (Treasury)</label>
                                 <select name="account_id" id="receive-po-account-id" class="form-select rounded-3">
-                                    <option value="">-- No Treasury Update --</option>
+                                    <option value="" data-i18n="po.modal.account_no">-- No Treasury Update --</option>
                                 </select>
-                                <small class="text-muted">Select the account from which the payment was made.</small>
+                                <small class="text-muted" data-i18n="po.receive.account_info">Select the account from which the payment was made.</small>
                             </div>
                         </div>
                     </div>
 
-                    <h6 class="fw-bold mb-3">Items to Receive</h6>
+                    <h6 class="fw-bold mb-3" data-i18n="po.receive.items_title">Items to Receive</h6>
                     <div class="table-responsive border rounded-4">
                         <table class="table table-hover align-middle mb-0" id="receive-po-items-table">
                             <thead class="table-light small">
                                 <tr>
-                                    <th>Product</th>
-                                    <th class="text-center">Ordered</th>
-                                    <th class="text-center">Prev. Received</th>
-                                    <th class="text-center" style="width: 150px;">Now Receiving</th>
+                                    <th data-i18n="po.modal.th_product">Product</th>
+                                    <th class="text-center" data-i18n="po.receive.th_ordered">Ordered</th>
+                                    <th class="text-center" data-i18n="po.receive.th_prev_received">Prev. Received</th>
+                                    <th class="text-center" style="width: 150px;" data-i18n="po.receive.th_now_receiving">Now Receiving</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -325,9 +325,9 @@
                 </form>
             </div>
             <div class="modal-footer border-top-0 p-4">
-                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal" data-i18n="po.modal.btn_cancel">Cancel</button>
                 <button type="submit" form="receivePoForm" class="btn btn-success px-4" id="btn-submit-receive">
-                    <i class="fas fa-check me-2"></i>Confirm Reception
+                    <i class="fas fa-check me-2"></i><span data-i18n="po.receive.btn_confirm">Confirm Reception</span>
                 </button>
             </div>
         </div>
@@ -340,8 +340,8 @@
         <div class="modal-content border-0 shadow-lg rounded-4">
             <div class="modal-header border-bottom-0 p-4">
                 <div>
-                    <h5 class="modal-title fw-bold">Process Supplier Return</h5>
-                    <p class="text-muted small mb-0" id="purchase-return-subtitle">Select items to return to supplier
+                    <h5 class="modal-title fw-bold" data-i18n="po.return.title">Process Supplier Return</h5>
+                    <p class="text-muted small mb-0" id="purchase-return-subtitle" data-i18n="po.return.subtitle">Select items to return to supplier
                     </p>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -350,20 +350,20 @@
                 <form id="purchaseReturnForm">
                     <input type="hidden" id="return-po-id">
                     <div class="mb-3">
-                        <label class="form-label fw-bold small text-uppercase">Return Reason</label>
+                        <label class="form-label fw-bold small text-uppercase" data-i18n="po.return.reason_label">Return Reason</label>
                         <textarea class="form-control rounded-3" id="purchase-return-reason" rows="2"
-                            placeholder="Defective, Wrong item, etc."></textarea>
+                            placeholder="Defective, Wrong item, etc." data-i18n-ph="po.return.reason_ph"></textarea>
                     </div>
 
                     <div class="table-responsive rounded-4 border">
                         <table class="table table-hover align-middle mb-0" id="purchase-return-items-table">
                             <thead class="table-light small">
                                 <tr>
-                                    <th>Product</th>
-                                    <th class="text-center">Received</th>
-                                    <th class="text-center">Returned</th>
-                                    <th class="text-center" style="width: 120px;">Qty to Return</th>
-                                    <th class="text-end">Value</th>
+                                    <th data-i18n="po.modal.th_product">Product</th>
+                                    <th class="text-center" data-i18n="po.receive.th_prev_received">Received</th>
+                                    <th class="text-center" data-i18n="po.return.th_returned">Returned</th>
+                                    <th class="text-center" style="width: 120px;" data-i18n="po.return.th_qty_return">Qty to Return</th>
+                                    <th class="text-end" data-i18n="po.return.th_value">Value</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -371,7 +371,7 @@
                             </tbody>
                             <tfoot class="table-light small fw-bold">
                                 <tr>
-                                    <td colspan="4" class="text-end">Total Return Value</td>
+                                    <td colspan="4" class="text-end" data-i18n="po.return.total_value">Total Return Value</td>
                                     <td class="text-end text-danger" id="purchase-return-total">0.00 <span
                                             class="currency-symbol">$</span></td>
                                 </tr>
@@ -381,9 +381,9 @@
                 </form>
             </div>
             <div class="modal-footer border-top-0 p-4">
-                <button type="button" class="btn btn-navy px-4" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-navy px-4" data-bs-dismiss="modal" data-i18n="po.modal.btn_cancel">Cancel</button>
                 <button type="button" class="btn btn-teal px-4" id="btn-confirm-purchase-return">
-                    <i class="fas fa-undo me-2"></i>Confirm Return
+                    <i class="fas fa-undo me-2"></i><span data-i18n="po.return.btn_confirm">Confirm Return</span>
                 </button>
             </div>
         </div>

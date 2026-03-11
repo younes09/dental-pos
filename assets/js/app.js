@@ -41,6 +41,9 @@ const App = {
 
     async init() {
         this.applyTheme();
+        this.renderLanguageSelector();
+        this.translate(); // Translate index.php core UI
+
         await this.loadAppSettings();
         this.bindEvents();
         this.handleRouting();
@@ -54,6 +57,49 @@ const App = {
         console.log('DentalPOS Initialized');
     },
 
+    // Translation Helpers
+    t(key) {
+        const lang = localStorage.getItem('app_language') || 'fr';
+        // Fallback to English if translation is missing
+        return (locales[lang] && locales[lang][key]) || (locales['en'] && locales['en'][key]) || key;
+    },
+
+    getDataTableLanguage() {
+        return {
+            emptyTable: this.t('dt.emptyTable'),
+            info: this.t('dt.info'),
+            infoEmpty: this.t('dt.infoEmpty'),
+            infoFiltered: this.t('dt.infoFiltered'),
+            lengthMenu: this.t('dt.lengthMenu'),
+            loadingRecords: this.t('dt.loadingRecords'),
+            processing: this.t('dt.processing'),
+            search: this.t('dt.search'),
+            zeroRecords: this.t('dt.zeroRecords'),
+            paginate: {
+                first: this.t('dt.paginate.first'),
+                last: this.t('dt.paginate.last'),
+                next: this.t('dt.paginate.next'),
+                previous: this.t('dt.paginate.previous')
+            }
+        };
+    },
+
+    translate(container = document) {
+        container.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            const target = el.getAttribute('data-i18n-target') || 'text';
+            const translation = this.t(key);
+
+            if (target === 'text') {
+                el.textContent = translation;
+            } else if (target === 'html') {
+                el.innerHTML = translation;
+            } else if (target === 'placeholder') {
+                el.setAttribute('placeholder', translation);
+            }
+        });
+    },
+
     applyTheme() {
         const theme = localStorage.getItem('theme');
         const icon = document.querySelector('#darkModeToggle i');
@@ -64,6 +110,27 @@ const App = {
         } else {
             document.body.classList.remove('dark-mode');
             if (icon) icon.classList.replace('fa-sun', 'fa-moon');
+        }
+    },
+
+    renderLanguageSelector() {
+        const container = document.getElementById('languageSelector');
+        if (!container) return;
+
+        const currentLang = localStorage.getItem('app_language') || 'fr';
+
+        if (currentLang === 'fr') {
+            container.innerHTML = `
+                <button class="btn btn-link text-decoration-none p-1 tooltip-btn" title="Switch to English" onclick="App.setLanguage('en')">
+                    <span class="fi fi-gb fis fs-5 shadow-sm rounded-circle"></span>
+                </button>
+            `;
+        } else {
+            container.innerHTML = `
+                <button class="btn btn-link text-decoration-none p-1 tooltip-btn" title="Passer en Français" onclick="App.setLanguage('fr')">
+                    <span class="fi fi-fr fis fs-5 shadow-sm rounded-circle"></span>
+                </button>
+            `;
         }
     },
 
@@ -345,6 +412,9 @@ const App = {
             // Update static currency symbols in the newly loaded view
             this.updateStaticCurrency();
 
+            // Translate View
+            this.translate(viewport);
+
             // Initialize module logic
             this.initModule(viewName);
 
@@ -386,6 +456,11 @@ const App = {
                 window[moduleObjectName].init();
             }
         }
+    },
+
+    setLanguage(lang) {
+        localStorage.setItem('app_language', lang);
+        window.location.reload();
     },
 
     toggleDarkMode() {
@@ -433,7 +508,7 @@ const App = {
 
     formatCurrency(amount) {
         const symbol = this.state.settings.currency || '$';
-        return `${parseFloat(amount).toFixed(2)} ${symbol}`;
+        return `${parseFloat(amount).toFixed(2)} ${symbol} `;
     },
 
     formatDate(dateString) {
@@ -511,26 +586,26 @@ const App = {
 
         if (count === 0) {
             listEl.innerHTML = `
-                <li class="p-5 text-center text-muted">
+                < li class="p-5 text-center text-muted" >
                     <i class="fas fa-bell-slash fa-3x mb-3 opacity-25"></i>
                     <p class="mb-0 small">No new notifications</p>
-                </li>`;
+                </li > `;
             return;
         }
 
         listEl.innerHTML = notifications.map(n => `
-            <li class="notification-item p-3 border-bottom unread pointer" onclick="App.handleNotificationClick(${n.id}, '${n.link || ''}')">
-                <div class="d-flex align-items-center">
-                    <div class="icon-circle bg-${n.type}-subtle text-${n.type} me-3">
-                        <i class="fas ${this.getNotificationIcon(n.type)}"></i>
-                    </div>
-                    <div>
-                        <p class="mb-1 small fw-medium">${n.title}</p>
-                        <small class="text-muted">${n.message}</small>
-                    </div>
-                </div>
-            </li>
-        `).join('');
+    < li class="notification-item p-3 border-bottom unread pointer" onclick = "App.handleNotificationClick(${n.id}, '${n.link || ''}')" >
+        <div class="d-flex align-items-center">
+            <div class="icon-circle bg-${n.type}-subtle text-${n.type} me-3">
+                <i class="fas ${this.getNotificationIcon(n.type)}"></i>
+            </div>
+            <div>
+                <p class="mb-1 small fw-medium">${n.title}</p>
+                <small class="text-muted">${n.message}</small>
+            </div>
+        </div>
+            </li >
+    `).join('');
     },
 
     getNotificationIcon(type) {
@@ -544,7 +619,7 @@ const App = {
     },
 
     async handleNotificationClick(id, link) {
-        await this.api(`notifications.php?action=mark_read&id=${id}`);
+        await this.api(`notifications.php ? action = mark_read & id=${id} `);
         if (link) window.location.hash = link;
         this.loadNotifications();
     },

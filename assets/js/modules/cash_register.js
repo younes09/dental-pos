@@ -22,10 +22,10 @@ const cash_registerModule = {
         if (result && result.data) {
             const options = result.data.map(acc => `<option value="${acc.id}">${acc.name} (${App.formatCurrency(acc.balance)})</option>`).join('');
             if (selectOpen) {
-                selectOpen.innerHTML = '<option value="">-- Select source --</option>' + options;
+                selectOpen.innerHTML = `<option value="">${App.t('cr.js.select_source') || '-- Select source --'}</option>` + options;
             }
             if (selectClose) {
-                selectClose.innerHTML = '<option value="">-- select destination --</option>' + options;
+                selectClose.innerHTML = `<option value="">${App.t('cr.js.select_dest') || '-- select destination --'}</option>` + options;
             }
         }
     },
@@ -109,9 +109,9 @@ const cash_registerModule = {
         const result = await App.api('cash_register.php?action=close_session', 'POST', data);
         if (result && result.success) {
             const diff = parseFloat(result.difference);
-            let msg = 'Register closed successfully.';
+            let msg = App.t('cr.js.msg.close_success') || 'Register closed successfully.';
             if (diff !== 0) {
-                msg += ` Discrepancy of ${App.formatCurrency(diff)}`;
+                msg += ` ${App.t('cr.js.msg.discrepancy') || 'Discrepancy of'} ${App.formatCurrency(diff)}`;
             }
 
             App.toast(diff === 0 ? 'success' : 'info', msg);
@@ -144,7 +144,7 @@ const cash_registerModule = {
                         ${row.closing_date ? `
                             <span class="fw-bold small d-block">${App.formatDate(row.closing_date)}</span>
                             <small class="text-muted">${new Date(row.closing_date).toLocaleTimeString()}</small>
-                        ` : '<span class="badge bg-teal-soft text-teal rounded-pill">In progress</span>'}
+                        ` : `<span class="badge bg-teal-soft text-teal rounded-pill">${App.t('cr.js.status.in_progress') || 'In progress'}</span>`}
                     </td>
                     <td><small class="fw-medium">${row.user_name}</small></td>
                     <td class="small fw-bold" data-order="${row.expected_balance}">${App.formatCurrency(row.expected_balance)}</td>
@@ -152,7 +152,7 @@ const cash_registerModule = {
                     <td class="small fw-bold ${diffClass}" data-order="${diff}">${row.closing_date ? App.formatCurrency(diff) : '-'}</td>
                     <td>
                         <span class="badge ${row.status === 'Open' ? 'bg-teal-soft text-teal' : 'bg-light text-muted'} rounded-pill">
-                            ${row.status === 'Open' ? 'Open' : 'Closed'}
+                            ${row.status === 'Open' ? (App.t('cr.js.status.open') || 'Open') : (App.t('cr.js.status.closed') || 'Closed')}
                         </span>
                     </td>
                 </tr>
@@ -162,10 +162,7 @@ const cash_registerModule = {
         this.table = $('#sessionsTable').DataTable({
             order: [[0, 'desc']],
             pageLength: 10,
-            language: {
-                search: "_INPUT_",
-                searchPlaceholder: "Search sessions..."
-            }
+            language: App.getDataTableLanguage(),
         });
     }
 };

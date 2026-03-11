@@ -6,10 +6,10 @@
                 <div class="kpi-icon bg-primary-subtle text-primary">
                     <i class="fas fa-hand-holding-dollar"></i>
                 </div>
-                <h6 class="text-muted mb-1">Today's Revenue</h6>
+                <h6 class="text-muted mb-1" data-i18n="dashboard.kpi.revenue">Today's Revenue</h6>
                 <h4 class="fw-bold mb-0" id="kpi-revenue">0.00 <span class="currency-symbol">$</span></h4>
                 <div class="mt-2" id="today-revenue-growth-container">
-                    <small class="text-muted" id="today-revenue-growth">-- vs yesterday</small>
+                    <small class="text-muted" id="today-revenue-growth" data-i18n="dashboard.kpi.vs_yesterday">-- vs yesterday</small>
                 </div>
             </div>
         </div>
@@ -18,10 +18,10 @@
                 <div class="kpi-icon bg-teal-subtle text-teal">
                     <i class="fas fa-shopping-cart"></i>
                 </div>
-                <h6 class="text-muted mb-1">Monthly Sales</h6>
+                <h6 class="text-muted mb-1" data-i18n="dashboard.kpi.monthly_sales">Monthly Sales</h6>
                 <h4 class="fw-bold mb-0" id="kpi-sales">0</h4>
                 <div class="mt-2" id="monthly-sales-growth-container">
-                    <small class="text-muted" id="monthly-sales-growth">-- vs last month</small>
+                    <small class="text-muted" id="monthly-sales-growth" data-i18n="dashboard.kpi.vs_last_month">-- vs last month</small>
                 </div>
             </div>
         </div>
@@ -30,9 +30,9 @@
                 <div class="kpi-icon bg-danger-subtle text-danger">
                     <i class="fas fa-warning"></i>
                 </div>
-                <h6 class="text-muted mb-1">Low Stock</h6>
+                <h6 class="text-muted mb-1" data-i18n="dashboard.kpi.low_stock">Low Stock</h6>
                 <h4 class="fw-bold mb-0" id="kpi-low-stock">0</h4>
-                <small class="text-danger">Action required</small>
+                <small class="text-danger" data-i18n="dashboard.kpi.action_required">Action required</small>
             </div>
         </div>
         <div class="col-md-4 col-xl-2">
@@ -40,9 +40,9 @@
                 <div class="kpi-icon bg-info-subtle text-info">
                     <i class="fas fa-user-check"></i>
                 </div>
-                <h6 class="text-muted mb-1">Active Customers</h6>
+                <h6 class="text-muted mb-1" data-i18n="dashboard.kpi.active_customers">Active Customers</h6>
                 <h4 class="fw-bold mb-0" id="kpi-customers">0</h4>
-                <small class="text-muted">Total registered</small>
+                <small class="text-muted" data-i18n="dashboard.kpi.total_registered">Total registered</small>
             </div>
         </div>
         <div class="col-md-4 col-xl-2">
@@ -50,9 +50,9 @@
                 <div class="kpi-icon bg-warning-subtle text-warning">
                     <i class="fas fa-clock-rotate-left"></i>
                 </div>
-                <h6 class="text-muted mb-1">Pending Orders</h6>
+                <h6 class="text-muted mb-1" data-i18n="dashboard.kpi.pending_orders">Pending Orders</h6>
                 <h4 class="fw-bold mb-0" id="kpi-pending-po">0</h4>
-                <small class="text-muted">Supplier orders</small>
+                <small class="text-muted" data-i18n="dashboard.kpi.supplier_orders">Supplier orders</small>
             </div>
         </div>
         <div class="col-md-4 col-xl-2">
@@ -60,7 +60,7 @@
                 <div class="kpi-icon bg-success-subtle text-success">
                     <i class="fas fa-percentage"></i>
                 </div>
-                <h6 class="text-muted mb-1">Profit Margin</h6>
+                <h6 class="text-muted mb-1" data-i18n="dashboard.kpi.profit_margin">Profit Margin</h6>
                 <h4 class="fw-bold mb-0" id="kpi-profit">0%</h4>
                 <div class="mt-2" id="profit-growth-container">
                     <small class="text-muted" id="profit-growth">--</small>
@@ -75,11 +75,11 @@
             <div class="card border-0 shadow-sm rounded-4">
                 <div class="card-body p-4">
                     <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h5 class="fw-bold mb-0">Sales Analytics</h5>
+                        <h5 class="fw-bold mb-0" data-i18n="dashboard.sales_analytics">Sales Analytics</h5>
                         <div class="btn-group btn-group-sm">
-                            <button class="btn btn-outline-secondary active">Daily</button>
-                            <button class="btn btn-outline-secondary">Weekly</button>
-                            <button class="btn btn-outline-secondary">Monthly</button>
+                            <button class="btn btn-outline-secondary active" data-i18n="dashboard.filter.daily">Daily</button>
+                            <button class="btn btn-outline-secondary" data-i18n="dashboard.filter.weekly">Weekly</button>
+                            <button class="btn btn-outline-secondary" data-i18n="dashboard.filter.monthly">Monthly</button>
                         </div>
                     </div>
                     <div style="height: 350px;">
@@ -93,7 +93,7 @@
         <div class="col-lg-4">
             <div class="card border-0 shadow-sm rounded-4 h-100">
                 <div class="card-body p-4">
-                    <h5 class="fw-bold mb-4">Top Selling Products</h5>
+                    <h5 class="fw-bold mb-4" data-i18n="dashboard.top_products">Top Selling Products</h5>
                     <div style="height: 350px;">
                         <canvas id="productsChart"></canvas>
                     </div>
@@ -107,17 +107,17 @@
         <div class="col-lg-8">
             <div class="card border-0 shadow-sm rounded-4">
                 <div class="card-body p-4">
-                    <h5 class="fw-bold mb-4">Recent Transactions</h5>
+                    <h5 class="fw-bold mb-4" data-i18n="dashboard.recent_tx">Recent Transactions</h5>
                     <div class="table-responsive">
                         <table class="table table-hover align-middle">
                             <thead class="table-light">
                                 <tr>
-                                    <th>ID</th>
-                                    <th>Customer</th>
-                                    <th>Date</th>
-                                    <th>Total</th>
-                                    <th>Status</th>
-                                    <th>Action</th>
+                                    <th data-i18n="dashboard.table.id">ID</th>
+                                    <th data-i18n="dashboard.table.customer">Customer</th>
+                                    <th data-i18n="dashboard.table.date">Date</th>
+                                    <th data-i18n="dashboard.table.total">Total</th>
+                                    <th data-i18n="dashboard.table.status">Status</th>
+                                    <th data-i18n="dashboard.table.action">Action</th>
                                 </tr>
                             </thead>
                             <tbody id="recentTransactionsTable">
@@ -125,7 +125,7 @@
                                 <tr>
                                     <td colspan="6" class="text-center py-4">
                                         <div class="spinner-border spinner-border-sm text-teal" role="status"></div>
-                                        <span class="ms-2">Loading transactions...</span>
+                                        <span class="ms-2" data-i18n="dashboard.loading_tx">Loading transactions...</span>
                                     </td>
                                 </tr>
                             </tbody>
@@ -139,15 +139,15 @@
         <div class="col-lg-4">
             <div class="card border-0 shadow-sm rounded-4">
                 <div class="card-body p-4">
-                    <h5 class="fw-bold mb-4">Stock Alerts</h5>
+                    <h5 class="fw-bold mb-4" data-i18n="dashboard.alerts.title">Stock Alerts</h5>
                     <div id="stockAlertsList">
                         <!-- Loaded via JS -->
                         <div class="text-center py-4">
-                            <span class="text-muted">Loading alerts...</span>
+                            <span class="text-muted" data-i18n="dashboard.alerts.loading">Loading alerts...</span>
                         </div>
                     </div>
                     <div class="text-center mt-3">
-                        <a href="#stock" class="text-teal text-decoration-none small fw-bold">View Inventory <i
+                        <a href="#stock" class="text-teal text-decoration-none small fw-bold"><span data-i18n="dashboard.alerts.view_inventory">View Inventory</span> <i
                                 class="fas fa-arrow-right"></i></a>
                     </div>
                 </div>
@@ -162,8 +162,8 @@
         <div class="modal-content border-0 shadow-lg rounded-4">
             <div class="modal-header border-bottom-0 p-4">
                 <div>
-                    <h5 class="modal-title fw-bold">Sale Transaction Details</h5>
-                    <p class="text-muted small mb-0" id="sale-details-subtitle">Invoice information</p>
+                    <h5 class="modal-title fw-bold" data-i18n="dashboard.modal.title">Sale Transaction Details</h5>
+                    <p class="text-muted small mb-0" id="sale-details-subtitle" data-i18n="dashboard.modal.subtitle">Invoice information</p>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -171,7 +171,7 @@
                 <div class="row g-4 mb-4">
                     <div class="col-md-6">
                         <div class="p-3 bg-light rounded-4 h-100">
-                            <h6 class="fw-bold mb-2 small text-uppercase text-muted">Customer Information</h6>
+                            <h6 class="fw-bold mb-2 small text-uppercase text-muted" data-i18n="dashboard.modal.customer_info">Customer Information</h6>
                             <div id="sale-details-customer-info">
                                 <!-- Populated by JS -->
                             </div>
@@ -179,7 +179,7 @@
                     </div>
                     <div class="col-md-6">
                         <div class="p-3 bg-navy text-white rounded-4 h-100">
-                            <h6 class="fw-bold mb-2 small text-uppercase opacity-75">Sale Metadata</h6>
+                            <h6 class="fw-bold mb-2 small text-uppercase opacity-75" data-i18n="dashboard.modal.meta">Sale Metadata</h6>
                             <div id="sale-details-meta-info">
                                 <!-- Populated by JS -->
                             </div>
@@ -187,15 +187,15 @@
                     </div>
                 </div>
 
-                <h6 class="fw-bold mb-3">Itemized Receipt</h6>
+                <h6 class="fw-bold mb-3" data-i18n="dashboard.modal.receipt">Itemized Receipt</h6>
                 <div class="table-responsive rounded-4 border">
                     <table class="table table-hover align-middle mb-0" id="sale-details-items-table">
                         <thead class="table-light small">
                             <tr>
-                                <th>Product</th>
-                                <th class="text-center">Qty</th>
-                                <th class="text-end">Unit Price</th>
-                                <th class="text-end">Total</th>
+                                <th data-i18n="dashboard.modal.product">Product</th>
+                                <th class="text-center" data-i18n="dashboard.modal.qty">Qty</th>
+                                <th class="text-end" data-i18n="dashboard.modal.unit_price">Unit Price</th>
+                                <th class="text-end" data-i18n="dashboard.table.total">Total</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -203,23 +203,23 @@
                         </tbody>
                         <tfoot class="table-light small">
                             <tr>
-                                <td colspan="3" class="text-end">Subtotal</td>
+                                <td colspan="3" class="text-end" data-i18n="dashboard.modal.subtotal">Subtotal</td>
                                 <td class="text-end fw-bold" id="sale-details-subtotal">0.00 <span
                                         class="currency-symbol">$</span></td>
                             </tr>
                             <tr>
-                                <td colspan="3" class="text-end">Discount</td>
+                                <td colspan="3" class="text-end" data-i18n="dashboard.modal.discount">Discount</td>
                                 <td class="text-end text-danger fw-bold" id="sale-details-discount">0.00 <span
                                         class="currency-symbol">$</span></td>
                             </tr>
                             <tr>
-                                <td colspan="3" class="text-end">Tax (VAT <span class="vat-rate-display">15</span>%)
+                                <td colspan="3" class="text-end"><span data-i18n="dashboard.modal.tax">Tax (VAT </span><span class="vat-rate-display">15</span>%)
                                 </td>
                                 <td class="text-end fw-bold" id="sale-details-tax">0.00 <span
                                         class="currency-symbol">$</span></td>
                             </tr>
                             <tr class="fw-bold fs-5">
-                                <td colspan="3" class="text-end text-navy">Grand Total</td>
+                                <td colspan="3" class="text-end text-navy" data-i18n="dashboard.modal.grand_total">Grand Total</td>
                                 <td class="text-end text-navy" id="sale-details-total">0.00 <span
                                         class="currency-symbol">$</span></td>
                             </tr>
@@ -229,9 +229,9 @@
             </div>
             <div class="modal-footer border-top-0 p-4">
                 <button type="button" class="btn btn-outline-teal px-4 me-auto" id="btn-print-receipt">
-                    <i class="fas fa-print me-2"></i>Print Receipt
+                    <i class="fas fa-print me-2"></i><span data-i18n="dashboard.btn.print">Print Receipt</span>
                 </button>
-                <button type="button" class="btn btn-navy px-4" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-navy px-4" data-bs-dismiss="modal" data-i18n="btn.close">Close</button>
             </div>
         </div>
     </div>

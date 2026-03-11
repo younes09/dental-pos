@@ -1,12 +1,12 @@
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="fw-bold mb-0">Business Reports</h4>
+        <h4 class="fw-bold mb-0" data-i18n="reports.page_title">Business Reports</h4>
         <div class="d-flex gap-2">
             <button class="btn btn-teal-outline" id="btn-export-pdf">
-                <i class="fas fa-file-pdf me-2"></i>Export PDF
+                <i class="fas fa-file-pdf me-2"></i><span data-i18n="reports.btn.export_pdf">Export PDF</span>
             </button>
             <button class="btn btn-teal-outline" id="btn-export-excel">
-                <i class="fas fa-file-excel me-2"></i>Export Excel
+                <i class="fas fa-file-excel me-2"></i><span data-i18n="reports.btn.export_excel">Export Excel</span>
             </button>
         </div>
     </div>
@@ -16,25 +16,25 @@
         <div class="card-body p-4">
             <form id="report-filter-form" class="row g-3 align-items-end">
                 <div class="col-md-3">
-                    <label class="form-label small fw-bold">Report Type</label>
+                    <label class="form-label small fw-bold" data-i18n="reports.filter.report_type">Report Type</label>
                     <select class="form-select" id="report-type">
-                        <option value="sales">Sales Report</option>
-                        <option value="stock">Stock Report</option>
-                        <option value="customers">Customer Report</option>
-                        <option value="suppliers">Supplier Report</option>
+                        <option value="sales" data-i18n="reports.filter.type.sales">Sales Report</option>
+                        <option value="stock" data-i18n="reports.filter.type.stock">Stock Report</option>
+                        <option value="customers" data-i18n="reports.filter.type.customers">Customer Report</option>
+                        <option value="suppliers" data-i18n="reports.filter.type.suppliers">Supplier Report</option>
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label small fw-bold">From Date</label>
+                    <label class="form-label small fw-bold" data-i18n="reports.filter.from_date">From Date</label>
                     <input type="date" class="form-control" id="date-from">
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label small fw-bold">To Date</label>
+                    <label class="form-label small fw-bold" data-i18n="reports.filter.to_date">To Date</label>
                     <input type="date" class="form-control" id="date-to">
                 </div>
                 <div class="col-md-3">
                     <button type="submit" class="btn btn-teal w-100">
-                        <i class="fas fa-sync-alt me-2"></i>Generate Report
+                        <i class="fas fa-sync-alt me-2"></i><span data-i18n="reports.btn.generate">Generate Report</span>
                     </button>
                 </div>
             </form>
@@ -44,7 +44,7 @@
     <!-- Report Table Content -->
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
         <div class="card-body p-4">
-            <h5 class="fw-bold mb-4" id="report-title">Sales Report</h5>
+            <h5 class="fw-bold mb-4" id="report-title" data-i18n="reports.filter.type.sales">Sales Report</h5>
             <div class="table-responsive">
                 <table id="reportsTable" class="table table-hover align-middle w-100">
                     <thead class="table-light" id="reportsTableHeader">

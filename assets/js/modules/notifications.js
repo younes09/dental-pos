@@ -31,13 +31,13 @@ const notificationsModule = {
                 <td class="text-muted small">${n.message}</td>
                 <td>
                     ${n.is_read == 0
-                ? '<span class="badge bg-danger-subtle text-danger border border-danger p-2"><i class="fas fa-envelope me-1"></i>Unread</span>'
-                : '<span class="badge bg-success-subtle text-success border border-success p-2"><i class="fas fa-envelope-open me-1"></i>Read</span>'}
+                ? `<span class="badge bg-danger-subtle text-danger border border-danger p-2"><i class="fas fa-envelope me-1"></i>${App.t('notif.js.unread')}</span>`
+                : `<span class="badge bg-success-subtle text-success border border-success p-2"><i class="fas fa-envelope-open me-1"></i>${App.t('notif.js.read')}</span>`}
                 </td>
                 <td class="small text-muted" data-sort="${n.created_at}">${App.formatDate(n.created_at)} <span class="d-block" style="font-size: 0.75rem;">${n.created_at.split(' ')[1]}</span></td>
                 <td class="text-end">
-                    ${n.link ? `<a href="${n.link}" class="btn btn-sm btn-light-primary me-2 tooltip-btn" title="Go to Linked Module" onclick="notificationsModule.markAsReadAndGo(${n.id}, '${n.link}')"><i class="fas fa-external-link-alt"></i></a>` : ''}
-                    ${n.is_read == 0 ? `<button class="btn btn-sm btn-outline-secondary tooltip-btn" title="Mark as Read" onclick="notificationsModule.markAsRead(${n.id})"><i class="fas fa-check"></i></button>` : ''}
+                    ${n.link ? `<a href="${n.link}" class="btn btn-sm btn-light-primary me-2 tooltip-btn" title="${App.t('notif.js.go_link')}" onclick="notificationsModule.markAsReadAndGo(${n.id}, '${n.link}')"><i class="fas fa-external-link-alt"></i></a>` : ''}
+                    ${n.is_read == 0 ? `<button class="btn btn-sm btn-outline-secondary tooltip-btn" title="${App.t('notif.js.mark_read')}" onclick="notificationsModule.markAsRead(${n.id})"><i class="fas fa-check"></i></button>` : ''}
                 </td>
             </tr>
         `).join('');
@@ -52,10 +52,7 @@ const notificationsModule = {
                 { extend: 'pdf', className: 'btn btn-outline-secondary btn-sm', text: '<i class="fas fa-file-pdf me-1"></i> PDF' },
                 { extend: 'print', className: 'btn btn-outline-secondary btn-sm', text: '<i class="fas fa-print me-1"></i> Print' }
             ],
-            language: {
-                search: "",
-                searchPlaceholder: "Search notifications..."
-            },
+            language: App.getDataTableLanguage(),
             drawCallback: function () {
                 $('.dataTables_filter input').addClass('form-control form-control-sm');
                 // Re-initialize tooltips after redraw
@@ -82,11 +79,11 @@ const notificationsModule = {
     },
 
     async markAllAsRead() {
-        const confirmed = await App.confirm('Mark All Read?', 'Are you sure you want to mark all notifications as read?', 'question');
+        const confirmed = await App.confirm(App.t('notif.js.mark_all_title'), App.t('notif.js.mark_all_text'), 'question');
         if (confirmed) {
             const response = await App.api('notifications.php?action=mark_all_read');
             if (response && response.success) {
-                App.toast('success', 'All notifications marked as read');
+                App.toast('success', App.t('notif.js.mark_all_success'));
                 App.loadNotifications(); // Update the header bell
                 await this.loadData();    // Reload the table
             }

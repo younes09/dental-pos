@@ -89,35 +89,71 @@ if (isset($_SESSION['user_id'])) {
                 <i class="fas fa-tooth"></i>
                 <h2>Dental<span>POS</span></h2>
             </div>
-            <p class="mb-0 mt-2 opacity-75">Clinical Stock & POS Management</p>
+            <p class="mb-0 mt-2 opacity-75" data-i18n="login.subtitle">Clinical Stock & POS Management</p>
         </div>
         <div class="card-body p-4">
             <form id="loginForm">
                 <div class="mb-3">
-                    <label class="form-label small fw-bold">Email Address</label>
-                    <input type="email" name="email" class="form-control" placeholder="admin@dentalpos.com" required>
+                    <label class="form-label small fw-bold" data-i18n="login.email">Email Address</label>
+                    <input type="email" name="email" id="emailInput" class="form-control" placeholder="admin@dentalpos.com" required>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label small fw-bold">Password</label>
-                    <input type="password" name="password" class="form-control" placeholder="••••••••" required>
+                    <label class="form-label small fw-bold" data-i18n="login.password">Password</label>
+                    <input type="password" name="password" id="passwordInput" class="form-control" placeholder="••••••••" required>
                 </div>
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" id="remember">
-                        <label class="form-check-label small" for="remember">Remember me</label>
+                        <label class="form-check-label small" for="remember" data-i18n="login.remember">Remember me</label>
                     </div>
-                    <a href="#" class="small text-teal text-decoration-none">Forgot password?</a>
+                    <a href="#" class="small text-teal text-decoration-none" data-i18n="login.forgot">Forgot password?</a>
                 </div>
-                <button type="submit" class="btn btn-teal">SIGN IN</button>
+                <button type="submit" class="btn btn-teal" data-i18n="login.btn_signin">SIGN IN</button>
             </form>
             <div class="text-center mt-4">
-                <p class="small text-muted">Demo Credentials: admin@dentalpos.com / admin123</p>
+                <p class="small text-muted" data-i18n="login.demo">Demo Credentials: admin@dentalpos.com / admin123</p>
+            </div>
+            
+            <!-- Language Switcher -->
+            <div class="text-center mt-3 border-top pt-3">
+                <button onclick="setLang('en')" class="btn btn-sm btn-outline-secondary rounded-circle px-2 py-1 mx-1 border-0" title="English">
+                    <img src="https://flagcdn.com/w20/us.png" width="20" alt="EN">
+                </button>
+                <button onclick="setLang('fr')" class="btn btn-sm btn-outline-secondary rounded-circle px-2 py-1 mx-1 border-0" title="Français">
+                    <img src="https://flagcdn.com/w20/fr.png" width="20" alt="FR">
+                </button>
             </div>
         </div>
     </div>
 
+    <script src="assets/js/locales.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+        // Simple I18n for Login Page
+        function t(key) {
+            const lang = localStorage.getItem('app_language') || 'en';
+            return locales[lang][key] || key;
+        }
+
+        function translate() {
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                el.innerText = t(key);
+            });
+            // Update placeholders
+            document.getElementById('emailInput').placeholder = t('login.email_ph');
+            document.getElementById('passwordInput').placeholder = t('login.password_ph');
+            document.title = t('login.title');
+        }
+
+        function setLang(lang) {
+            localStorage.setItem('app_language', lang);
+            translate();
+        }
+
+        // Run on load
+        translate();
+
         document.getElementById('loginForm').onsubmit = async (e) => {
             e.preventDefault();
             const formData = new FormData(e.target);
@@ -134,8 +170,8 @@ if (isset($_SESSION['user_id'])) {
                 } else {
                     Swal.fire({
                         icon: 'error',
-                        title: 'Login Failed',
-                        text: result.error || 'Invalid credentials',
+                        title: t('login.failed_title'),
+                        text: result.error || t('login.failed_text'),
                         confirmButtonColor: '#00BFA6'
                     });
                 }

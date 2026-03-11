@@ -110,7 +110,7 @@ const stockModule = {
             document.getElementById('productForm').reset();
             document.getElementById('product-id').value = '';
             document.getElementById('existing-image').value = '';
-            document.getElementById('productModalLabel').textContent = 'Add New Product';
+            document.getElementById('productModalLabel').textContent = App.t('stock.modal.title.add_product') || 'Add New Product';
             document.getElementById('product-img-preview').src = 'assets/img/img_holder.png';
             document.getElementById('btn-remove-image').classList.add('d-none');
         };
@@ -131,13 +131,13 @@ const stockModule = {
                 const result = await App.api(`products.php?${queryParams.toString()}`);
 
                 if (result && result.success) {
-                    App.toast('success', result.success);
+                    App.toast('success', result.success); // Server success
                     bootstrap.Modal.getInstance(document.getElementById('adjustmentModal')).hide();
                     this.table.ajax.reload();
                     this.fetchStats();
                     adjForm.reset();
                 } else {
-                    App.toast('error', result ? result.error : 'Adjustment failed');
+                    App.toast('error', result ? result.error : (App.t('stock.msg.adj_failed') || 'Adjustment failed'));
                 }
             };
         }
@@ -156,8 +156,8 @@ const stockModule = {
                     data: 'name',
                     className: 'fw-semibold'
                 },
-                { data: 'category_name', render: (data) => `<span class="badge bg-light text-dark border">${data || 'Uncategorized'}</span>` },
-                { data: 'brand_name', render: (data) => `<span class="badge bg-light text-dark border">${data || 'Generic'}</span>` },
+                { data: 'category_name', render: (data) => `<span class="badge bg-light text-dark border">${data || (App.t('stock.badge.uncategorized') || 'Uncategorized')}</span>` },
+                { data: 'brand_name', render: (data) => `<span class="badge bg-light text-dark border">${data || (App.t('stock.badge.generic') || 'Generic')}</span>` },
                 {
                     data: 'selling_price',
                     type: 'num',
@@ -180,12 +180,12 @@ const stockModule = {
                     render: (data, type, row) => {
                         if (type === 'display') {
                             if (data <= 0) {
-                                return `<span class="badge bg-danger-subtle text-danger border border-danger p-1 small" style="font-size: 0.75rem;"><i class="fas fa-exclamation-circle me-1"></i>Out of Stock (${data})</span>`;
+                                return `<span class="badge bg-danger-subtle text-danger border border-danger p-1 small" style="font-size: 0.75rem;"><i class="fas fa-exclamation-circle me-1"></i>${App.t('stock.badge.out_of_stock', { qty: data }) || `Out of Stock (${data})`}</span>`;
                             } else if (data <= row.min_stock) {
-                                return `<span class="badge bg-warning-subtle text-warning-emphasis border border-warning p-1 small" style="font-size: 0.75rem;"><i class="fas fa-clock me-1"></i>Low Stock (${data})</span>`;
+                                return `<span class="badge bg-warning-subtle text-warning-emphasis border border-warning p-1 small" style="font-size: 0.75rem;"><i class="fas fa-clock me-1"></i>${App.t('stock.badge.low_stock', { qty: data }) || `Low Stock (${data})`}</span>`;
                             }
                         }
-                        return `<span class="badge bg-success-subtle text-success border border-success p-1 small" style="font-size: 0.75rem;"><i class="fas fa-check-circle me-1"></i>In Stock (${data})</span>`;
+                        return `<span class="badge bg-success-subtle text-success border border-success p-1 small" style="font-size: 0.75rem;"><i class="fas fa-check-circle me-1"></i>${App.t('stock.badge.in_stock', { qty: data }) || `In Stock (${data})`}</span>`;
                     }
                 },
                 {
@@ -198,7 +198,7 @@ const stockModule = {
 
                             // Expired
                             if (expiry <= today) {
-                                return `<span class="badge bg-danger-subtle text-danger border border-danger p-1 small" style="font-size: 0.75rem;"><i class="fas fa-exclamation-circle me-1"></i>Expired (${data})</span>`;
+                                return `<span class="badge bg-danger-subtle text-danger border border-danger p-1 small" style="font-size: 0.75rem;"><i class="fas fa-exclamation-circle me-1"></i>${App.t('stock.badge.expired', { date: data }) || `Expired (${data})`}</span>`;
                             }
 
                             // Near Expiry (within 30 days)
@@ -206,7 +206,7 @@ const stockModule = {
                             oneMonthFromNow.setMonth(today.getMonth() + 1);
 
                             if (expiry <= oneMonthFromNow) {
-                                return `<span class="badge bg-warning-subtle text-warning-emphasis border border-warning p-1 small" style="font-size: 0.75rem;"><i class="fas fa-clock me-1"></i>Near (${data})</span>`;
+                                return `<span class="badge bg-warning-subtle text-warning-emphasis border border-warning p-1 small" style="font-size: 0.75rem;"><i class="fas fa-clock me-1"></i>${App.t('stock.badge.near_expiry', { date: data }) || `Near (${data})`}</span>`;
                             }
 
                             return `<span class="small">${data}</span>`;
@@ -219,7 +219,7 @@ const stockModule = {
                     render: (data) => {
                         const status = data || 'Active';
                         const color = status === 'Active' ? 'success' : 'secondary';
-                        const label = status === 'Active' ? 'Active' : 'Inactive';
+                        const label = status === 'Active' ? (App.t('stock.badge.status_active') || 'Active') : (App.t('stock.badge.status_inactive') || 'Inactive');
                         return `<span class="badge bg-${color}-subtle text-${color} px-3">${label}</span>`;
                     }
                 },
@@ -230,20 +230,16 @@ const stockModule = {
                         <div class="dropdown">
                             <button class="btn btn-sm btn-light" data-bs-toggle="dropdown"><i class="fas fa-ellipsis-v"></i></button>
                             <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
-                                <li><a class="dropdown-item" href="javascript:void(0)" onclick="stockModule.editProduct(${data.id})"><i class="fas fa-edit me-2 text-primary"></i>Edit</a></li>
-                                <li><a class="dropdown-item" href="javascript:void(0)" onclick="stockModule.adjustStock(${data.id})"><i class="fas fa-arrows-rotate me-2 text-warning"></i>Adjust Stock</a></li>
+                                <li><a class="dropdown-item" href="javascript:void(0)" onclick="stockModule.editProduct(${data.id})"><i class="fas fa-edit me-2 text-primary"></i>${App.t('stock.action.edit') || 'Edit'}</a></li>
+                                <li><a class="dropdown-item" href="javascript:void(0)" onclick="stockModule.adjustStock(${data.id})"><i class="fas fa-arrows-rotate me-2 text-warning"></i>${App.t('stock.action.adjust') || 'Adjust Stock'}</a></li>
                                 <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item text-danger" href="javascript:void(0)" onclick="stockModule.deleteProduct(${data.id})"><i class="fas fa-trash me-2"></i>Delete</a></li>
+                                <li><a class="dropdown-item text-danger" href="javascript:void(0)" onclick="stockModule.deleteProduct(${data.id})"><i class="fas fa-trash me-2"></i>${App.t('stock.action.delete') || 'Delete'}</a></li>
                             </ul>
                         </div>
                     `
                 }
             ],
-            language: {
-                search: "_INPUT_",
-                searchPlaceholder: "Search inventory...",
-                lengthMenu: "_MENU_",
-            },
+            language: App.getDataTableLanguage(),
             dom: '<"d-flex justify-content-between align-items-center mb-3"lf>rt<"d-flex justify-content-between align-items-center mt-3"ip>'
         });
     },
@@ -271,11 +267,16 @@ const stockModule = {
             const brandOptions = meta.brands.map(b => `<option value="${b.name}">${b.name}</option>`).join('');
             const brandIdOptions = meta.brands.map(b => `<option value="${b.id}">${b.name}</option>`).join('');
 
-            if (catSelect) catSelect.innerHTML = '<option value="">Select Category</option>' + catIdOptions;
-            if (brandSelect) brandSelect.innerHTML = '<option value="">Select Brand</option>' + brandIdOptions;
+            const selectCategoryTxt = App.t('stock.modal.category_select') || 'Select Category';
+            const selectBrandTxt = App.t('stock.modal.brand_select') || 'Select Brand';
+            const allCategoriesTxt = App.t('stock.filter.all_categories') || 'All Categories';
+            const allBrandsTxt = App.t('stock.filter.all_brands') || 'All Brands';
 
-            if (filterCat) filterCat.innerHTML = '<option value="">All Categories</option>' + catOptions;
-            if (filterBrand) filterBrand.innerHTML = '<option value="">All Brands</option>' + brandOptions;
+            if (catSelect) catSelect.innerHTML = `<option value="">${selectCategoryTxt}</option>` + catIdOptions;
+            if (brandSelect) brandSelect.innerHTML = `<option value="">${selectBrandTxt}</option>` + brandIdOptions;
+
+            if (filterCat) filterCat.innerHTML = `<option value="">${allCategoriesTxt}</option>` + catOptions;
+            if (filterBrand) filterBrand.innerHTML = `<option value="">${allBrandsTxt}</option>` + brandOptions;
         }
     },
 
@@ -299,7 +300,7 @@ const stockModule = {
                 App.toast('error', result.error);
             }
         } catch (error) {
-            App.toast('error', 'Failed to save product');
+            App.toast('error', App.t('error.save_product') || 'Failed to save product');
         }
     },
 
@@ -334,20 +335,21 @@ const stockModule = {
             document.getElementById('btn-remove-image').classList.add('d-none');
         }
 
-        document.getElementById('productModalLabel').textContent = 'Edit Product';
+        document.getElementById('productModalLabel').textContent = App.t('stock.modal.title.edit_product') || 'Edit Product';
 
         new bootstrap.Modal(document.getElementById('productModal')).show();
     },
 
     async deleteProduct(id) {
         const confirm = await Swal.fire({
-            title: 'Delete Product?',
-            text: "This action cannot be undone!",
+            title: App.t('stock.modal.delete_title') || 'Delete Product?',
+            text: App.t('stock.modal.delete_desc') || "This action cannot be undone!",
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#00BFA6',
             cancelButtonColor: '#d33',
-            confirmButtonText: 'Yes, delete it!'
+            confirmButtonText: App.t('stock.modal.btn.delete') || 'Yes, delete it!',
+            cancelButtonText: App.t('btn.cancel') || 'Cancel'
         });
 
         if (confirm.isConfirmed) {
@@ -393,7 +395,7 @@ const stockModule = {
 
         if (file) {
             if (!file.name.endsWith('.csv')) {
-                App.toast('error', 'Please select a valid CSV file');
+                App.toast('error', App.t('stock.msg.import_invalid') || 'Please select a valid CSV file');
                 return;
             }
             nameEl.textContent = file.name;
@@ -420,7 +422,7 @@ const stockModule = {
         progressContainer.classList.remove('d-none');
         btnSubmit.disabled = true;
         progressBar.style.width = '0%';
-        statusText.textContent = 'Uploading...';
+        statusText.textContent = App.t('stock.msg.import_uploading') || 'Uploading...';
 
         try {
             // Using XHR for progress tracking
@@ -430,14 +432,14 @@ const stockModule = {
                 if (e.lengthComputable) {
                     const percent = (e.loaded / e.total) * 100;
                     progressBar.style.width = percent + '%';
-                    if (percent === 100) statusText.textContent = 'Processing CSV data...';
+                    if (percent === 100) statusText.textContent = App.t('stock.msg.import_processing') || 'Processing CSV data...';
                 }
             };
 
             xhr.onload = () => {
                 const result = JSON.parse(xhr.responseText);
                 if (result.success) {
-                    App.toast('success', result.success);
+                    App.toast('success', result.success); // Keep dynamic backend messages if translated, otherwise you could pass dynamic messages too
                     bootstrap.Modal.getInstance(document.getElementById('importModal')).hide();
                     this.table.ajax.reload();
                     this.fetchStats();
@@ -446,15 +448,15 @@ const stockModule = {
                     this.handleImportFileSelect(null);
                     progressContainer.classList.add('d-none');
                 } else {
-                    App.toast('error', result.error || 'Import failed');
+                    App.toast('error', result.error || (App.t('stock.msg.import_failed') || 'Import failed'));
                     progressBar.style.width = '0%';
-                    statusText.textContent = 'Error occurred';
+                    statusText.textContent = App.t('stock.msg.import_error') || 'Error occurred';
                     btnSubmit.disabled = false;
                 }
             };
 
             xhr.onerror = () => {
-                App.toast('error', 'Network error occurred');
+                App.toast('error', App.t('stock.msg.import_network') || 'Network error occurred');
                 btnSubmit.disabled = false;
             };
 
@@ -462,7 +464,7 @@ const stockModule = {
             xhr.send(formData);
 
         } catch (error) {
-            App.toast('error', 'Failed to process import');
+            App.toast('error', App.t('stock.msg.import_failed') || 'Failed to process import');
             btnSubmit.disabled = false;
         }
     }

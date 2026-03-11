@@ -20,7 +20,7 @@ const suppliersModule = {
         document.getElementById('btn-add-supplier').onclick = () => {
             document.getElementById('supplierForm').reset();
             document.getElementById('supplier-id').value = '';
-            document.getElementById('supplierModalLabel').textContent = 'Add New Supplier';
+            document.getElementById('supplierModalLabel').textContent = App.t('suppliers.js.add_title') || 'Add New Supplier';
         };
 
         const settleDebtForm = document.getElementById('settleDebtForm');
@@ -45,8 +45,8 @@ const suppliersModule = {
                     `
                 },
                 { data: 'company', visible: false },
-                { data: 'phone', render: (data) => data || '<span class="text-muted">N/A</span>' },
-                { data: 'email', render: (data) => data || '<span class="text-muted">N/A</span>' },
+                { data: 'phone', render: (data) => data || `<span class="text-muted">${App.t('suppliers.js.na') || 'N/A'}</span>` },
+                { data: 'email', render: (data) => data || `<span class="text-muted">${App.t('suppliers.js.na') || 'N/A'}</span>` },
                 {
                     data: 'total_purchases',
                     render: (data, type) => {
@@ -75,22 +75,18 @@ const suppliersModule = {
                         <div class="dropdown">
                             <button class="btn btn-sm btn-light" data-bs-toggle="dropdown"><i class="fas fa-ellipsis-v"></i></button>
                             <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
-                                <li><a class="dropdown-item" href="javascript:void(0)" onclick="suppliersModule.editSupplier(${data.id})"><i class="fas fa-edit me-2 text-primary"></i>Edit Supplier</a></li>
-                                <li><a class="dropdown-item" href="javascript:void(0)" onclick="suppliersModule.viewProducts(${data.id}, '${data.name.replace(/'/g, "\\'")}')"><i class="fas fa-box me-2 text-info"></i>View Products</a></li>
-                                <li><a class="dropdown-item" href="javascript:void(0)" onclick="suppliersModule.createPO(${data.id})"><i class="fas fa-cart-plus me-2 text-teal"></i>Create Purchase Order</a></li>
-                                <li><a class="dropdown-item" href="javascript:void(0)" onclick="suppliersModule.openSettleDebt(${data.id})"><i class="fas fa-money-bill-wave me-2 text-success"></i>Settle Debt</a></li>
+                                <li><a class="dropdown-item" href="javascript:void(0)" onclick="suppliersModule.editSupplier(${data.id})"><i class="fas fa-edit me-2 text-primary"></i>${App.t('suppliers.js.action.edit') || 'Edit Supplier'}</a></li>
+                                <li><a class="dropdown-item" href="javascript:void(0)" onclick="suppliersModule.viewProducts(${data.id}, '${data.name.replace(/'/g, "\\'")}')"><i class="fas fa-box me-2 text-info"></i>${App.t('suppliers.js.action.view_products') || 'View Products'}</a></li>
+                                <li><a class="dropdown-item" href="javascript:void(0)" onclick="suppliersModule.createPO(${data.id})"><i class="fas fa-cart-plus me-2 text-teal"></i>${App.t('suppliers.js.action.create_po') || 'Create Purchase Order'}</a></li>
+                                <li><a class="dropdown-item" href="javascript:void(0)" onclick="suppliersModule.openSettleDebt(${data.id})"><i class="fas fa-money-bill-wave me-2 text-success"></i>${App.t('suppliers.js.action.settle') || 'Settle Debt'}</a></li>
                                 <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item text-danger" href="javascript:void(0)" onclick="suppliersModule.deleteSupplier(${data.id})"><i class="fas fa-trash me-2"></i>Delete</a></li>
+                                <li><a class="dropdown-item text-danger" href="javascript:void(0)" onclick="suppliersModule.deleteSupplier(${data.id})"><i class="fas fa-trash me-2"></i>${App.t('suppliers.js.action.delete') || 'Delete'}</a></li>
                             </ul>
                         </div>
                     `
                 }
             ],
-            language: {
-                search: "_INPUT_",
-                searchPlaceholder: "Search suppliers...",
-                lengthMenu: "_MENU_",
-            },
+            language: App.getDataTableLanguage(),
             dom: '<"d-flex justify-content-between align-items-center mb-3"lf>rt<"d-flex justify-content-between align-items-center mt-3"ip>'
         });
     },
@@ -114,7 +110,7 @@ const suppliersModule = {
                 App.toast('error', result.error);
             }
         } catch (error) {
-            App.toast('error', 'Failed to save supplier');
+            App.toast('error', App.t('suppliers.js.save_fail') || 'Failed to save supplier');
         }
     },
 
@@ -128,19 +124,20 @@ const suppliersModule = {
         document.querySelector('[name="phone"]').value = supplier.phone;
         document.querySelector('[name="email"]').value = supplier.email;
 
-        document.getElementById('supplierModalLabel').textContent = 'Edit Supplier Info';
+        document.getElementById('supplierModalLabel').textContent = App.t('suppliers.js.edit_title') || 'Edit Supplier Info';
         new bootstrap.Modal(document.getElementById('supplierModal')).show();
     },
 
     async deleteSupplier(id) {
         const confirm = await Swal.fire({
-            title: 'Delete Supplier?',
-            text: "All associated order history will be affected!",
+            title: App.t('suppliers.js.delete_title') || 'Delete Supplier?',
+            text: App.t('suppliers.js.delete_text') || "All associated order history will be affected!",
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#00BFA6',
             cancelButtonColor: '#d33',
-            confirmButtonText: 'Yes, delete!'
+            confirmButtonText: App.t('suppliers.js.btn_yes') || 'Yes, delete!',
+            cancelButtonText: App.t('btn_cancel') || 'Cancel'
         });
 
         if (confirm.isConfirmed) {
@@ -178,7 +175,7 @@ const suppliersModule = {
         const maxAmount = parseFloat(amountInput.dataset.max) || 0;
 
         if (amount > maxAmount) {
-            App.toast('error', `Payment cannot exceed the current debt of ${App.formatCurrency(maxAmount)}`);
+            App.toast('error', (App.t('customers.js.error_exceed') || `Payment cannot exceed the current debt of `) + App.formatCurrency(maxAmount)); // reused from customers
             amountInput.classList.add('is-invalid');
             return;
         }
@@ -203,7 +200,7 @@ const suppliersModule = {
                 App.toast('error', result.error);
             }
         } catch (error) {
-            App.toast('error', 'Failed to settle debt: ' + error.message);
+            App.toast('error', (App.t('customers.js.error_settle_fail') || 'Failed to settle debt: ') + error.message);
         }
     },
 
@@ -219,10 +216,10 @@ const suppliersModule = {
             ajax: `api/suppliers.php?action=products&id=${id}`,
             columns: [
                 { data: 'name', render: (data) => `<span class="fw-bold">${data}</span>` },
-                { data: 'barcode', render: (data) => data || '<span class="text-muted">N/A</span>' },
+                { data: 'barcode', render: (data) => data || `<span class="text-muted">${App.t('suppliers.js.na') || 'N/A'}</span>` },
                 {
                     data: null,
-                    render: (data, type, row) => `${row.category_name || '<span class="text-muted">Uncategorized</span>'} <br> <small class="text-muted">${row.brand_name || 'No Brand'}</small>`
+                    render: (data, type, row) => `${row.category_name || `<span class="text-muted">${App.t('suppliers.js.uncategorized') || 'Uncategorized'}</span>`} <br> <small class="text-muted">${row.brand_name || App.t('suppliers.js.no_brand') || 'No Brand'}</small>`
                 },
                 {
                     data: 'total_supplied_qty',
@@ -237,14 +234,10 @@ const suppliersModule = {
                 },
                 {
                     data: 'last_purchase_date',
-                    render: (data) => data ? App.formatDate(data) : '<span class="text-muted">Never</span>'
+                    render: (data) => data ? App.formatDate(data) : `<span class="text-muted">${App.t('suppliers.js.never') || 'Never'}</span>`
                 }
             ],
-            language: {
-                search: "_INPUT_",
-                searchPlaceholder: "Search products...",
-                emptyTable: "No products currently linked to this supplier."
-            },
+            language: App.getDataTableLanguage(),
             dom: '<"d-flex justify-content-between align-items-center mb-3"f>rt<"d-flex justify-content-between align-items-center mt-3"p>',
             pageLength: 5
         });

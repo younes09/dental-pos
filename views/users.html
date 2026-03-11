@@ -1,11 +1,11 @@
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h4 class="fw-bold mb-1">User Management</h4>
-            <p class="text-muted small mb-0">Manage system users and access levels</p>
+            <h4 class="fw-bold mb-1" data-i18n="users.page_title">User Management</h4>
+            <p class="text-muted small mb-0" data-i18n="users.page_subtitle">Manage system users and access levels</p>
         </div>
         <button class="btn btn-teal" id="btn-add-user">
-            <i class="fas fa-user-plus me-2"></i>Add New User
+            <i class="fas fa-user-plus me-2"></i><span data-i18n="users.btn.add_user">Add New User</span>
         </button>
     </div>
 
@@ -15,12 +15,12 @@
                 <table class="table table-hover align-middle w-100" id="usersTable">
                     <thead class="table-light">
                         <tr>
-                            <th>User</th>
-                            <th>Role</th>
-                            <th>Phone</th>
-                            <th>Status</th>
-                            <th>Joined</th>
-                            <th class="text-end">Actions</th>
+                            <th data-i18n="users.table.user">User</th>
+                            <th data-i18n="users.table.role">Role</th>
+                            <th data-i18n="users.table.phone">Phone</th>
+                            <th data-i18n="users.table.status">Status</th>
+                            <th data-i18n="users.table.joined">Joined</th>
+                            <th class="text-end" data-i18n="users.table.actions">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -37,55 +37,55 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
             <div class="modal-header border-bottom-0 p-4 pb-0">
-                <h5 class="modal-title fw-bold" id="userModalLabel">Add New User</h5>
+                <h5 class="modal-title fw-bold" id="userModalLabel" data-i18n="users.modal.add_title">Add New User</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4">
                 <form id="userForm">
                     <input type="hidden" name="id" id="user-id">
                     <div class="mb-3">
-                        <label class="form-label small fw-bold text-muted">Full Name</label>
+                        <label class="form-label small fw-bold text-muted" data-i18n="users.modal.full_name">Full Name</label>
                         <div class="input-group">
                             <span class="input-group-text bg-light border-end-0"><i class="fas fa-user text-muted"></i></span>
-                            <input type="text" class="form-control bg-light border-start-0" name="name" required placeholder="John Doe">
+                            <input type="text" class="form-control bg-light border-start-0" name="name" required placeholder="John Doe" data-i18n="users.modal.name_placeholder" data-i18n-target="placeholder">
                         </div>
                     </div>
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
-                            <label class="form-label small fw-bold text-muted">Email Address</label>
-                            <input type="email" class="form-control bg-light" name="email" required placeholder="john@example.com">
+                            <label class="form-label small fw-bold text-muted" data-i18n="users.modal.email">Email Address</label>
+                            <input type="email" class="form-control bg-light" name="email" required placeholder="john@example.com" data-i18n="users.modal.email_placeholder" data-i18n-target="placeholder">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-bold text-muted">Phone Number</label>
-                            <input type="text" class="form-control bg-light" name="phone" placeholder="+123456789">
+                            <label class="form-label small fw-bold text-muted" data-i18n="users.modal.phone">Phone Number</label>
+                            <input type="text" class="form-control bg-light" name="phone" placeholder="+123456789" data-i18n="users.modal.phone_placeholder" data-i18n-target="placeholder">
                         </div>
                     </div>
                     <div class="row g-3 mb-4">
                         <div class="col-md-6">
-                            <label class="form-label small fw-bold text-muted">System Role</label>
+                            <label class="form-label small fw-bold text-muted" data-i18n="users.modal.role">System Role</label>
                             <select class="form-select bg-light" name="role" required>
-                                <option value="Cashier">Cashier</option>
-                                <option value="Stock Manager">Stock Manager</option>
-                                <option value="Admin">Admin</option>
+                                <option value="Cashier" data-i18n="users.modal.role.cashier">Cashier</option>
+                                <option value="Stock Manager" data-i18n="users.modal.role.stock_manager">Stock Manager</option>
+                                <option value="Admin" data-i18n="users.modal.role.admin">Admin</option>
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-bold text-muted">Account Status</label>
+                            <label class="form-label small fw-bold text-muted" data-i18n="users.modal.status">Account Status</label>
                             <select class="form-select bg-light" name="status">
-                                <option value="Active">Active</option>
-                                <option value="Inactive">Inactive</option>
+                                <option value="Active" data-i18n="users.modal.status.active">Active</option>
+                                <option value="Inactive" data-i18n="users.modal.status.inactive">Inactive</option>
                             </select>
                         </div>
                     </div>
                     <div class="mb-4">
-                        <label class="form-label small fw-bold text-muted">Password</label>
+                        <label class="form-label small fw-bold text-muted" data-i18n="users.modal.password">Password</label>
                         <div class="input-group">
                             <span class="input-group-text bg-light border-end-0"><i class="fas fa-lock text-muted"></i></span>
-                            <input type="password" class="form-control bg-light border-start-0" name="password" id="user-password" placeholder="Leave blank to keep current">
+                            <input type="password" class="form-control bg-light border-start-0" name="password" id="user-password" placeholder="Leave blank to keep current" data-i18n="users.modal.password_placeholder_edit" data-i18n-target="placeholder">
                         </div>
-                        <div class="form-text small text-muted mt-1"><i class="fas fa-info-circle me-1"></i>Min 6 characters recommended</div>
+                        <div class="form-text small text-muted mt-1"><i class="fas fa-info-circle me-1"></i><span data-i18n="users.modal.password_help">Min 6 characters recommended</span></div>
                     </div>
-                    <button type="submit" class="btn btn-teal w-100 py-2 fw-bold shadow-sm">Save User Account</button>
+                    <button type="submit" class="btn btn-teal w-100 py-2 fw-bold shadow-sm" data-i18n="users.modal.btn.save">Save User Account</button>
                 </form>
             </div>
         </div>

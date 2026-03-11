@@ -285,7 +285,7 @@
 
 <body>
     <button class="print-btn no-print" onclick="window.print()">
-        <i class="fas fa-print"></i> Print Receipt
+        <i class="fas fa-print"></i> <span data-i18n="receipt.btn_print">Print Receipt</span>
     </button>
 
     <div class="receipt-container" id="receipt-content">
@@ -295,13 +295,13 @@
                 <div class="brand-sub" id="receipt-brand-sub">Premium Dental store Management</div>
             </div>
             <div class="invoice-meta">
-                <h2 id="receipt-title">Receipt</h2>
+                <h2 id="receipt-title" data-i18n="receipt.title">Receipt</h2>
                 <div class="meta-item">
-                    <span class="meta-label">Invoice Number</span>
+                    <span class="meta-label" data-i18n="receipt.invoice_no">Invoice Number</span>
                     <span class="meta-value" id="receipt-id">#INV-0000</span>
                 </div>
                 <div class="meta-item">
-                    <span class="meta-label">Date Issued</span>
+                    <span class="meta-label" data-i18n="receipt.date_issued">Date Issued</span>
                     <span class="meta-value" id="receipt-date">March 03, 2026</span>
                 </div>
             </div>
@@ -309,7 +309,7 @@
 
         <div class="info-grid">
             <div class="info-section">
-                <h3>From</h3>
+                <h3 data-i18n="receipt.from">From</h3>
                 <div class="info-content">
                     <div class="info-name" id="shop-name">DentalPOS Premium</div>
                     <div id="shop-address">123 Clinical Way, Medical District</div>
@@ -318,11 +318,11 @@
                 </div>
             </div>
             <div class="info-section">
-                <h3>Bill To</h3>
+                <h3 data-i18n="receipt.bill_to">Bill To</h3>
                 <div class="info-content">
                     <div class="info-name" id="customer-name">Walk-in Customer</div>
                     <div id="customer-phone">No phone provided</div>
-                    <div>Payment Method: <strong id="payment-method">Cash</strong></div>
+                    <div><span data-i18n="receipt.payment_method">Payment Method</span>: <strong id="payment-method">Cash</strong></div>
                 </div>
             </div>
         </div>
@@ -330,10 +330,10 @@
         <table class="items-table" style="flex-grow: 1;">
             <thead>
                 <tr>
-                    <th>Description</th>
-                    <th class="text-center">Qty</th>
-                    <th class="text-end">Unit Price</th>
-                    <th class="text-end">Amount</th>
+                    <th data-i18n="receipt.th_desc">Description</th>
+                    <th class="text-center" data-i18n="receipt.th_qty">Qty</th>
+                    <th class="text-end" data-i18n="receipt.th_unit_price">Unit Price</th>
+                    <th class="text-end" data-i18n="receipt.th_amount">Amount</th>
                 </tr>
             </thead>
             <tbody id="receipt-items">
@@ -344,11 +344,11 @@
         <div class="totals-section">
             <div class="totals-box">
                 <div class="total-row">
-                    <span>Subtotal</span>
+                    <span data-i18n="receipt.subtotal">Subtotal</span>
                     <span id="receipt-subtotal">$0.00</span>
                 </div>
                 <div class="total-row">
-                    <span>Discount</span>
+                    <span data-i18n="receipt.discount">Discount</span>
                     <span id="receipt-discount">-$0.00</span>
                 </div>
                 <div class="total-row">
@@ -356,21 +356,21 @@
                     <span id="receipt-tax">$0.00</span>
                 </div>
                 <div class="total-row grand-total">
-                    <span>Grand Total</span>
+                    <span data-i18n="receipt.grand_total">Grand Total</span>
                     <span id="receipt-total">$0.00</span>
                 </div>
             </div>
         </div>
 
         <div class="footer" style="margin-top: auto; page-break-inside: avoid;">
-            <p>Thank you for choosing our Store!</p>
-            <p class="small">This is a system generated receipt.</p>
+            <p data-i18n="receipt.footer_thanks">Thank you for choosing our Store!</p>
+            <p class="small" data-i18n="receipt.footer_system">This is a system generated receipt.</p>
         </div>
     </div>
 
     <script>
         // Function to populate receipt data
-        function populateReceipt(data) {
+        function populateReceipt(data, t) {
             const { sale, items, settings } = data;
             const currency = settings?.currency || '$';
             const vatRate = settings?.vat_rate || 15;
@@ -392,7 +392,7 @@
                 // Set dynamic VAT label if exists
                 const taxLabel = document.getElementById('receipt-tax-label');
                 if (taxLabel) {
-                    taxLabel.textContent = `Tax (${vatRate}%)`;
+                    taxLabel.textContent = `${t('receipt.tax')} (${vatRate}%)`;
                 }
             }
 
@@ -400,7 +400,7 @@
             const receiptTitle = document.getElementById('receipt-title');
             if (receiptTitle) {
                 const isBL = sale.invoice_type === 'BL';
-                receiptTitle.textContent = isBL ? 'Delivery Note' : 'Sales Receipt';
+                receiptTitle.textContent = isBL ? t('receipt.delivery_note') : t('receipt.sales_receipt');
 
                 // Adjust font size for longer titles
                 receiptTitle.style.fontSize = isBL ? '24px' : '32px';
@@ -412,9 +412,9 @@
             });
 
             // Set Customer Info
-            document.getElementById('customer-name').textContent = sale.customer_name || 'Walk-in Customer';
-            document.getElementById('customer-phone').textContent = sale.customer_phone || 'No phone provided';
-            document.getElementById('payment-method').textContent = sale.payment_method;
+            document.getElementById('customer-name').textContent = sale.customer_name || t('pos.walking_customer');
+            document.getElementById('customer-phone').textContent = sale.customer_phone || t('sh.text.no_phone');
+            document.getElementById('payment-method').textContent = t(`customers.method.${sale.payment_method.toLowerCase()}`) || sale.payment_method;
 
             // Populate Items
             const itemsTbody = document.getElementById('receipt-items');
@@ -441,9 +441,15 @@
         // Listen for data from parent window
         window.addEventListener('message', function (event) {
             if (event.data && event.data.type === 'POPULATE_RECEIPT') {
-                populateReceipt(event.data.payload);
-                // Optional: Auto-trigger print after a short delay
-                // setTimeout(() => window.print(), 500);
+                const t = window.opener && window.opener.App && window.opener.App.t ? window.opener.App.t : (k) => k.split('.').pop();
+                
+                // Translate static UI elements
+                document.querySelectorAll('[data-i18n]').forEach(el => {
+                    const key = el.getAttribute('data-i18n');
+                    el.innerHTML = t(key);
+                });
+
+                populateReceipt(event.data.payload, t);
             }
         });
     </script>

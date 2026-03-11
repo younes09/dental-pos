@@ -1,15 +1,15 @@
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h4 class="fw-bold mb-0">Sales History</h4>
-            <p class="text-muted small mb-0">Track and review all previous sales transactions</p>
+            <h4 class="fw-bold mb-0" data-i18n="sh.page_title">Sales History</h4>
+            <p class="text-muted small mb-0" data-i18n="sh.page_subtitle">Track and review all previous sales transactions</p>
         </div>
         <div class="d-flex gap-2">
             <button class="btn btn-outline-teal px-3" id="btn-export-sales">
-                <i class="fas fa-file-export me-2"></i>Export
+                <i class="fas fa-file-export me-2"></i><span data-i18n="sh.btn.export">Export</span>
             </button>
             <a href="#pos" class="btn btn-teal px-4">
-                <i class="fas fa-cart-plus me-2"></i>New Sale
+                <i class="fas fa-cart-plus me-2"></i><span data-i18n="sh.btn.new_sale">New Sale</span>
             </a>
         </div>
     </div>
@@ -21,14 +21,14 @@
                 <table id="salesHistoryTable" class="table table-hover align-middle w-100">
                     <thead class="table-light">
                         <tr>
-                            <th>Invoice #</th>
-                            <th>Date & Time</th>
-                            <th>Customer</th>
-                            <th>Cashier</th>
-                            <th>Payment</th>
-                            <th>Doc</th>
-                            <th>Total Amount</th>
-                            <th>Actions</th>
+                            <th data-i18n="sh.table.invoice">Invoice #</th>
+                            <th data-i18n="sh.table.datetime">Date & Time</th>
+                            <th data-i18n="sh.table.customer">Customer</th>
+                            <th data-i18n="sh.table.cashier">Cashier</th>
+                            <th data-i18n="sh.table.payment">Payment</th>
+                            <th data-i18n="sh.table.doc">Doc</th>
+                            <th data-i18n="sh.table.total">Total Amount</th>
+                            <th data-i18n="sh.table.actions">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -46,8 +46,8 @@
         <div class="modal-content border-0 shadow-lg rounded-4">
             <div class="modal-header border-bottom-0 p-4">
                 <div>
-                    <h5 class="modal-title fw-bold">Sale Transaction Details</h5>
-                    <p class="text-muted small mb-0" id="sale-details-subtitle">Invoice information</p>
+                    <h5 class="modal-title fw-bold" data-i18n="sh.modal.details_title">Sale Transaction Details</h5>
+                    <p class="text-muted small mb-0" id="sale-details-subtitle" data-i18n="sh.modal.details_subtitle">Invoice information</p>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -55,7 +55,7 @@
                 <div class="row g-4 mb-4">
                     <div class="col-md-6">
                         <div class="p-3 bg-light rounded-4 h-100">
-                            <h6 class="fw-bold mb-2 small text-uppercase text-muted">Customer Information</h6>
+                            <h6 class="fw-bold mb-2 small text-uppercase text-muted" data-i18n="sh.modal.customer_info">Customer Information</h6>
                             <div id="sale-details-customer-info">
                                 <!-- Populated by JS -->
                             </div>
@@ -63,7 +63,7 @@
                     </div>
                     <div class="col-md-6">
                         <div class="p-3 bg-navy text-white rounded-4 h-100">
-                            <h6 class="fw-bold mb-2 small text-uppercase opacity-75">Sale Metadata</h6>
+                            <h6 class="fw-bold mb-2 small text-uppercase opacity-75" data-i18n="sh.modal.sale_meta">Sale Metadata</h6>
                             <div id="sale-details-meta-info">
                                 <!-- Populated by JS -->
                             </div>
@@ -71,15 +71,15 @@
                     </div>
                 </div>
 
-                <h6 class="fw-bold mb-3">Itemized Receipt</h6>
+                <h6 class="fw-bold mb-3" data-i18n="sh.modal.receipt">Itemized Receipt</h6>
                 <div class="table-responsive rounded-4 border">
                     <table class="table table-hover align-middle mb-0" id="sale-details-items-table">
                         <thead class="table-light small">
                             <tr>
-                                <th>Product</th>
-                                <th class="text-center">Qty</th>
-                                <th class="text-end">Unit Price</th>
-                                <th class="text-end">Total</th>
+                                <th data-i18n="sh.table.product">Product</th>
+                                <th class="text-center" data-i18n="sh.table.qty">Qty</th>
+                                <th class="text-end" data-i18n="sh.table.unit_price">Unit Price</th>
+                                <th class="text-end" data-i18n="stock.table.total">Total</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -87,23 +87,23 @@
                         </tbody>
                         <tfoot class="table-light small">
                             <tr>
-                                <td colspan="3" class="text-end">Subtotal</td>
+                                <td colspan="3" class="text-end" data-i18n="sh.table.subtotal">Subtotal</td>
                                 <td class="text-end fw-bold" id="sale-details-subtotal">0.00 <span
                                         class="currency-symbol">$</span></td>
                             </tr>
                             <tr>
-                                <td colspan="3" class="text-end">Discount</td>
+                                <td colspan="3" class="text-end" data-i18n="sh.table.discount">Discount</td>
                                 <td class="text-end text-danger fw-bold" id="sale-details-discount">0.00 <span
                                         class="currency-symbol">$</span></td>
                             </tr>
                             <tr>
-                                <td colspan="3" class="text-end">Tax (VAT <span class="vat-rate-display">15</span>%)
+                                <td colspan="3" class="text-end"><span data-i18n="sh.table.tax">Tax (VAT</span> <span class="vat-rate-display">15</span>%)
                                 </td>
                                 <td class="text-end fw-bold" id="sale-details-tax">0.00 <span
                                         class="currency-symbol">$</span></td>
                             </tr>
                             <tr class="fw-bold fs-5">
-                                <td colspan="3" class="text-end text-navy">Grand Total</td>
+                                <td colspan="3" class="text-end text-navy" data-i18n="sh.table.grand_total">Grand Total</td>
                                 <td class="text-end text-navy" id="sale-details-total">0.00 <span
                                         class="currency-symbol">$</span></td>
                             </tr>
@@ -113,9 +113,9 @@
             </div>
             <div class="modal-footer border-top-0 p-4">
                 <button type="button" class="btn btn-outline-teal px-4 me-auto" id="btn-print-receipt">
-                    <i class="fas fa-print me-2"></i>Print Receipt
+                    <i class="fas fa-print me-2"></i><span data-i18n="sh.modal.btn.print">Print Receipt</span>
                 </button>
-                <button type="button" class="btn btn-navy px-4" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-navy px-4" data-bs-dismiss="modal" data-i18n="sh.modal.btn.close">Close</button>
             </div>
         </div>
     </div>
@@ -127,8 +127,8 @@
         <div class="modal-content border-0 shadow-lg rounded-4">
             <div class="modal-header border-bottom-0 p-4">
                 <div>
-                    <h5 class="modal-title fw-bold">Process Return</h5>
-                    <p class="text-muted small mb-0" id="sale-return-subtitle">Select items to return</p>
+                    <h5 class="modal-title fw-bold" data-i18n="sh.modal.return_title">Process Return</h5>
+                    <p class="text-muted small mb-0" id="sale-return-subtitle" data-i18n="sh.modal.return_subtitle">Select items to return</p>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -136,19 +136,19 @@
                 <form id="saleReturnForm">
                     <input type="hidden" id="return-sale-id">
                     <div class="mb-3">
-                        <label class="form-label fw-bold small text-uppercase">Return Reason</label>
-                        <textarea class="form-control rounded-3" id="return-reason" rows="2" placeholder="Damage, Customer choice, etc."></textarea>
+                        <label class="form-label fw-bold small text-uppercase" data-i18n="sh.modal.return_reason">Return Reason</label>
+                        <textarea class="form-control rounded-3" id="return-reason" rows="2" placeholder="Damage, Customer choice, etc." data-i18n="sh.modal.return_reason_placeholder" data-i18n-target="placeholder"></textarea>
                     </div>
 
                     <div class="table-responsive rounded-4 border">
                         <table class="table table-hover align-middle mb-0" id="sale-return-items-table">
                             <thead class="table-light small">
                                 <tr>
-                                    <th>Product</th>
-                                    <th class="text-center">Purchased</th>
-                                    <th class="text-center">Returned</th>
-                                    <th class="text-center" style="width: 120px;">Qty to Return</th>
-                                    <th class="text-end">Credit Amount</th>
+                                    <th data-i18n="sh.table.product">Product</th>
+                                    <th class="text-center" data-i18n="sh.table.purchased">Purchased</th>
+                                    <th class="text-center" data-i18n="sh.table.returned">Returned</th>
+                                    <th class="text-center" style="width: 120px;" data-i18n="sh.table.qty_to_return">Qty to Return</th>
+                                    <th class="text-end" data-i18n="sh.table.credit_amount">Credit Amount</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -156,7 +156,7 @@
                             </tbody>
                             <tfoot class="table-light small fw-bold">
                                 <tr>
-                                    <td colspan="4" class="text-end">Total Credit</td>
+                                    <td colspan="4" class="text-end" data-i18n="sh.table.total_credit">Total Credit</td>
                                     <td class="text-end text-teal" id="sale-return-total">0.00 <span class="currency-symbol">$</span></td>
                                 </tr>
                             </tfoot>
@@ -165,9 +165,9 @@
                 </form>
             </div>
             <div class="modal-footer border-top-0 p-4">
-                <button type="button" class="btn btn-navy px-4" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-navy px-4" data-bs-dismiss="modal" data-i18n="sh.modal.btn.cancel">Cancel</button>
                 <button type="button" class="btn btn-teal px-4" id="btn-confirm-return">
-                    <i class="fas fa-undo me-2"></i>Confirm Return
+                    <i class="fas fa-undo me-2"></i><span data-i18n="sh.modal.btn.confirm_return">Confirm Return</span>
                 </button>
             </div>
         </div>

@@ -16,9 +16,10 @@ const usersModule = {
         document.getElementById('btn-add-user').onclick = () => {
             document.getElementById('userForm').reset();
             document.getElementById('user-id').value = '';
-            document.getElementById('user-password').placeholder = 'Set account password';
+            document.getElementById('user-password').placeholder = App.t('users.modal.password_placeholder_add') || 'Set account password';
+            document.getElementById('user-password').setAttribute('data-i18n', 'users.modal.password_placeholder_add');
             document.getElementById('user-password').required = true;
-            document.getElementById('userModalLabel').textContent = 'Add New User';
+            document.getElementById('userModalLabel').textContent = App.t('users.modal.add_title') || 'Add New User';
             new bootstrap.Modal(document.getElementById('userModal')).show();
         };
 
@@ -49,22 +50,27 @@ const usersModule = {
                     data: 'role',
                     render: (data) => {
                         let color = 'secondary';
-                        if (data === 'Admin') color = 'primary';
-                        if (data === 'Stock Manager') color = 'info';
-                        return `<span class="badge bg-${color}-subtle text-${color} px-3">${data}</span>`;
+                        let label = data;
+                        if (data === 'Admin') { color = 'primary'; label = App.t('users.modal.role.admin') || data; }
+                        else if (data === 'Stock Manager') { color = 'info'; label = App.t('users.modal.role.stock_manager') || data; }
+                        else if (data === 'Cashier') { label = App.t('users.modal.role.cashier') || data; }
+                        return `<span class="badge bg-${color}-subtle text-${color} px-3">${label}</span>`;
                     }
                 },
                 {
                     data: 'phone',
-                    render: (data) => data || '<span class="text-muted small">Not provided</span>'
+                    render: (data) => data || `<span class="text-muted small">${App.t('users.js.not_provided') || 'Not provided'}</span>`
                 },
                 {
                     data: 'status',
-                    render: (data) => `
-                        <span class="badge bg-${data === 'Active' ? 'success' : 'danger'}-subtle text-${data === 'Active' ? 'success' : 'danger'} px-3">
-                            <i class="fas fa-circle me-1 small"></i>${data}
-                        </span>
-                    `
+                    render: (data) => {
+                        const label = data === 'Active' ? (App.t('users.modal.status.active') || data) : (App.t('users.modal.status.inactive') || data);
+                        return `
+                            <span class="badge bg-${data === 'Active' ? 'success' : 'danger'}-subtle text-${data === 'Active' ? 'success' : 'danger'} px-3">
+                                <i class="fas fa-circle me-1 small"></i>${label}
+                            </span>
+                        `;
+                    }
                 },
                 {
                     data: 'created_at',
@@ -86,7 +92,7 @@ const usersModule = {
             ],
             language: {
                 search: "_INPUT_",
-                searchPlaceholder: "Search users...",
+                searchPlaceholder: App.t('users.js.search') || "Search users...",
                 lengthMenu: "_MENU_",
             },
             dom: '<"d-flex justify-content-between align-items-center mb-3"lf>rt<"d-flex justify-content-between align-items-center mt-3"ip>'
@@ -112,7 +118,7 @@ const usersModule = {
                 App.toast('error', result.error);
             }
         } catch (error) {
-            App.toast('error', 'Failed to save user');
+            App.toast('error', App.t('users.js.save_fail') || 'Failed to save user');
         }
     },
 
@@ -127,22 +133,24 @@ const usersModule = {
         document.querySelector('[name="role"]').value = user.role;
         document.querySelector('[name="status"]').value = user.status;
         document.getElementById('user-password').value = '';
-        document.getElementById('user-password').placeholder = 'Leave blank to keep current';
+        document.getElementById('user-password').placeholder = App.t('users.modal.password_placeholder_edit') || 'Leave blank to keep current';
+        document.getElementById('user-password').setAttribute('data-i18n', 'users.modal.password_placeholder_edit');
         document.getElementById('user-password').required = false;
 
-        document.getElementById('userModalLabel').textContent = 'Edit User Account';
+        document.getElementById('userModalLabel').textContent = App.t('users.js.edit_title') || 'Edit User Account';
         new bootstrap.Modal(document.getElementById('userModal')).show();
     },
 
     async deleteUser(id) {
         const confirm = await Swal.fire({
-            title: 'Delete User?',
-            text: "This user will lose all system access!",
+            title: App.t('users.js.delete_title') || 'Delete User?',
+            text: App.t('users.js.delete_text') || "This user will lose all system access!",
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#00BFA6',
             cancelButtonColor: '#d33',
-            confirmButtonText: 'Yes, delete!'
+            confirmButtonText: App.t('users.js.btn_yes') || 'Yes, delete!',
+            cancelButtonText: App.t('btn_cancel') || 'Cancel'
         });
 
         if (confirm.isConfirmed) {

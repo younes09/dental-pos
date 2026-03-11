@@ -89,15 +89,15 @@ const salariesModule = {
                 <td>${App.formatCurrency(s.base_salary)}</td>
                 <td>
                     <span class="badge bg-${s.status === 'Active' ? 'success' : 'danger'}-subtle text-${s.status === 'Active' ? 'success' : 'danger'}">
-                        ${s.status === 'Active' ? 'Actif' : 'Inactif'}
+                        ${s.status === 'Active' ? (App.t('salaries.js.status.active') || 'Active') : (App.t('salaries.js.status.inactive') || 'Inactive')}
                     </span>
                 </td>
                 <td class="text-end">
                     <div class="btn-group btn-group-sm">
-                        <button class="btn btn-light-primary rounded-pill me-2" onclick="salariesModule.editStaff(${s.id})" title="Modifier">
+                        <button class="btn btn-light-primary rounded-pill me-2" onclick="salariesModule.editStaff(${s.id})" title="${App.t('salaries.js.btn_edit') || 'Edit'}">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button class="btn btn-light-danger rounded-pill" onclick="salariesModule.deleteStaff(${s.id})" title="Supprimer">
+                        <button class="btn btn-light-danger rounded-pill" onclick="salariesModule.deleteStaff(${s.id})" title="${App.t('salaries.js.btn_delete') || 'Delete'}">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
@@ -106,7 +106,7 @@ const salariesModule = {
         `).join('');
 
         this.staffTable = $('#staffTable').DataTable({
-            language: { search: "", searchPlaceholder: "Rechercher..." },
+            language: App.getDataTableLanguage(),
             pageLength: 10,
             dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
                 "<'row'<'col-sm-12'tr>>" +
@@ -119,7 +119,7 @@ const salariesModule = {
         const currentValue = select.value;
         const activeStaff = this.staff.filter(s => s.status === 'Active');
 
-        select.innerHTML = '<option value="">-- Choisir --</option>' +
+        select.innerHTML = `<option value="">${App.t('salaries.js.choose') || '-- Choose --'}</option>` +
             activeStaff.map(s => {
                 const position = s.position ? `(${s.position})` : '';
                 return `<option value="${s.id}">${s.name} ${position}</option>`;
@@ -133,7 +133,7 @@ const salariesModule = {
         if (result && result.data) {
             this.accounts = result.data;
             const select = document.getElementById('paymentVaultSelect');
-            select.innerHTML = '<option value="">-- Choisir --</option>' +
+            select.innerHTML = `<option value="">${App.t('salaries.js.choose') || '-- Choose --'}</option>` +
                 this.accounts.map(a =>
                     `<option value="${a.id}">${a.name} (${App.formatCurrency(a.balance)})</option>`
                 ).join('');
@@ -175,14 +175,14 @@ const salariesModule = {
 
     async deleteStaff(id) {
         const confirmed = await Swal.fire({
-            title: 'Êtes-vous sûr ?',
-            text: "Cette action supprimera également l'historique de ce membre.",
+            title: App.t('salaries.js.delete_staff_title') || 'Are you sure?',
+            text: App.t('salaries.js.delete_staff_text') || "This action will also delete this member's history.",
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#00BFA6',
             cancelButtonColor: '#d33',
-            confirmButtonText: 'Oui, supprimer !',
-            cancelButtonText: 'Annuler'
+            confirmButtonText: App.t('salaries.js.btn_yes') || 'Yes, delete!',
+            cancelButtonText: App.t('salaries.js.btn_cancel') || 'Cancel'
         });
 
         if (confirmed.isConfirmed) {
@@ -199,7 +199,7 @@ const salariesModule = {
             $('#paymentsTable').DataTable().destroy();
         }
         this.paymentsTable = $('#paymentsTable').DataTable({
-            language: { search: "", searchPlaceholder: "Rechercher un paiement..." },
+            language: App.getDataTableLanguage(),
             order: [[0, 'desc']],
             columns: [
                 { data: 'payment_date' },
@@ -207,7 +207,12 @@ const salariesModule = {
                 {
                     data: null,
                     render: (data) => {
-                        const months = ["Jan", "Fév", "Mar", "Avr", "Mai", "Jun", "Jul", "Aoû", "Sep", "Oct", "Nov", "Déc"];
+                        const months = [
+                            App.t('salaries.js.months.jan') || "Jan", App.t('salaries.js.months.feb') || "Feb", App.t('salaries.js.months.mar') || "Mar",
+                            App.t('salaries.js.months.apr') || "Apr", App.t('salaries.js.months.may') || "May", App.t('salaries.js.months.jun') || "Jun",
+                            App.t('salaries.js.months.jul') || "Jul", App.t('salaries.js.months.aug') || "Aug", App.t('salaries.js.months.sep') || "Sep",
+                            App.t('salaries.js.months.oct') || "Oct", App.t('salaries.js.months.nov') || "Nov", App.t('salaries.js.months.dec') || "Dec"
+                        ];
                         return `${months[data.period_month - 1]} ${data.period_year}`;
                     }
                 },
@@ -228,7 +233,7 @@ const salariesModule = {
                     data: 'id',
                     className: 'text-end',
                     render: (data) => `
-                        <button class="btn btn-light-danger rounded-pill px-2 py-1" onclick="salariesModule.deletePayment(${data})" title="Supprimer le paiement">
+                        <button class="btn btn-light-danger rounded-pill px-2 py-1" onclick="salariesModule.deletePayment(${data})" title="${App.t('salaries.js.delete_pay_btn_title') || 'Delete payment'}">
                             <i class="fas fa-trash fa-xs"></i>
                         </button>
                     `
@@ -260,14 +265,14 @@ const salariesModule = {
 
     async deletePayment(id) {
         const confirmed = await Swal.fire({
-            title: 'Sûr de vouloir supprimer ce paiement ?',
-            text: "Cette action n'annule pas la transaction en trésorerie.",
+            title: App.t('salaries.js.delete_pay_title') || 'Sure you want to delete this payment?',
+            text: App.t('salaries.js.delete_pay_text') || "This action does not cancel the treasury transaction.",
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#00BFA6',
             cancelButtonColor: '#d33',
-            confirmButtonText: 'Oui, supprimer',
-            cancelButtonText: 'Annuler'
+            confirmButtonText: App.t('salaries.js.btn_yes_del') || 'Yes, delete',
+            cancelButtonText: App.t('salaries.js.btn_cancel') || 'Cancel'
         });
 
         if (confirmed.isConfirmed) {

@@ -28,7 +28,7 @@ const profileModule = {
             if (nameEl) nameEl.textContent = user.name;
             if (roleEl) roleEl.textContent = user.role;
             if (emailEl) emailEl.textContent = user.email;
-            if (phoneEl) phoneEl.textContent = user.phone || 'Not set';
+            if (phoneEl) phoneEl.textContent = user.phone || App.t('profile.js.not_set');
             if (avatarEl) avatarEl.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=00BFA6&color=fff&size=128`;
 
             // Fill Inputs
@@ -84,7 +84,7 @@ const profileModule = {
                 const confirmPass = document.getElementById('confirmPassword').value;
 
                 if (newPass !== confirmPass) {
-                    App.toast('error', 'Passwords do not match');
+                    App.toast('error', App.t('profile.js.pwd_mismatch'));
                     return;
                 }
 
@@ -98,7 +98,7 @@ const profileModule = {
 
                 const response = await App.api('profile.php?action=update', 'POST', data);
                 if (response && response.success) {
-                    App.toast('success', 'Password updated successfully');
+                    App.toast('success', App.t('profile.js.pwd_success'));
                     newPassForm.reset();
                 }
             });

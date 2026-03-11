@@ -20,6 +20,9 @@ if (!isset($_SESSION['user_id'])) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     
+    <!-- Flag Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.0.0/css/flag-icons.min.css"/>
+    
     <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     
@@ -61,12 +64,12 @@ if (!isset($_SESSION['user_id'])) {
         
         <div class="sidebar-content">
             <ul class="list-unstyled components">
-            <!-- Operations Section -->
-            <li class="sidebar-label">Operations</li>
+            <!-- Main Section -->
+            <li class="sidebar-label" data-i18n="sidebar.main">Main</li>
             <li class="active">
                 <a href="#dashboard" class="nav-link">
-                    <i class="fas fa-chart-line"></i>
-                    <span>Dashboard</span>
+                    <i class="fas fa-chart-pie"></i>
+                    <span data-i18n="sidebar.dashboard">Dashboard</span>
                 </a>
             </li>
 
@@ -74,22 +77,22 @@ if (!isset($_SESSION['user_id'])) {
             <li>
                 <a href="#salesSubmenu" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle nav-link">
                     <i class="fas fa-cash-register"></i>
-                    <span>Sales</span>
+                    <span data-i18n="sidebar.sales">Sales</span>
                 </a>
                 <ul class="collapse list-unstyled submenu" id="salesSubmenu">
                     <li>
                         <a href="#pos">
-                            <i class="fas fa-plus"></i> Point of Sale
+                            <i class="fas fa-plus"></i> <span data-i18n="sidebar.pos">Point of Sale</span>
                         </a>
                     </li>
                     <li>
                         <a href="#cash_register">
-                            <i class="fas fa-cash-register"></i> Cash Management
+                            <i class="fas fa-money-bill-transfer"></i> <span data-i18n="sidebar.cash_register">Cash Register</span>
                         </a>
                     </li>
                     <li>
                         <a href="#sales_history">
-                            <i class="fas fa-history"></i> Sales History
+                            <i class="fas fa-history"></i> <span data-i18n="sidebar.sales_history">Sales History</span>
                         </a>
                     </li>
                 </ul>
@@ -97,58 +100,57 @@ if (!isset($_SESSION['user_id'])) {
             <?php endif; ?>
 
             <!-- Inventory Section -->
-            <li class="sidebar-label">Management</li>
+            <li class="sidebar-label" data-i18n="sidebar.stock_ops">Stock & Operations</li>
             <li>
                 <a href="#inventorySubmenu" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle nav-link">
                     <i class="fas fa-boxes-stacked"></i>
-                    <span>Inventory</span>
+                    <span data-i18n="sidebar.inventory">Inventory</span>
                 </a>
                 <ul class="collapse list-unstyled submenu" id="inventorySubmenu">
                     <?php if (in_array($_SESSION['user_role'] ?? '', ['Admin', 'Stock Manager'])): ?>
                     <li>
-                        <a href="#stock">
-                            <i class="fas fa-warehouse"></i> Stock Management
+                        <a href="#purchase_orders">
+                            <i class="fas fa-cart-arrow-down"></i> <span data-i18n="sidebar.purchase_orders">Purchase Orders</span>
                         </a>
                     </li>
                     <li>
-                        <a href="#purchase_orders">
-                            <i class="fas fa-file-invoice"></i> Purchase Orders
+                        <a href="#stock">
+                            <i class="fas fa-warehouse"></i> <span data-i18n="sidebar.stock">Stock Management</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#equipment">
+                            <i class="fas fa-stethoscope"></i> <span data-i18n="sidebar.equipment">Equipment</span>
                         </a>
                     </li>
                     <?php endif; ?>
                     <li>
                         <a href="#catalog">
-                            <i class="fas fa-list-ul"></i> Catalog
+                            <i class="fas fa-book-open"></i> <span data-i18n="sidebar.catalog">Catalog</span>
                         </a>
                     </li>
-                    <?php if (in_array($_SESSION['user_role'] ?? '', ['Admin', 'Stock Manager'])): ?>
-                    <li>
-                        <a href="#equipment">
-                            <i class="fas fa-tools"></i> Equipment
-                        </a>
-                    </li>
-                    <?php endif; ?>
                 </ul>
             </li>
 
             <!-- Contacts Section -->
+            <li class="sidebar-label" data-i18n="sidebar.contacts">Contacts</li>
             <li>
                 <a href="#contactsSubmenu" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle nav-link">
                     <i class="fas fa-user-group"></i>
-                    <span>Contacts</span>
+                    <span data-i18n="sidebar.contacts">Contacts</span>
                 </a>
                 <ul class="collapse list-unstyled submenu" id="contactsSubmenu">
                     <?php if (in_array($_SESSION['user_role'] ?? '', ['Admin', 'Cashier'])): ?>
                     <li>
                         <a href="#customers">
-                            <i class="fas fa-users"></i> Customers
+                            <i class="fas fa-users"></i> <span data-i18n="sidebar.customers">Customers</span>
                         </a>
                     </li>
                     <?php endif; ?>
                     <?php if (in_array($_SESSION['user_role'] ?? '', ['Admin', 'Stock Manager'])): ?>
                     <li>
                         <a href="#suppliers">
-                            <i class="fas fa-truck-field"></i> Suppliers
+                            <i class="fas fa-truck-field"></i> <span data-i18n="sidebar.suppliers">Suppliers</span>
                         </a>
                     </li>
                     <?php endif; ?>
@@ -156,50 +158,50 @@ if (!isset($_SESSION['user_id'])) {
             </li>
 
             <!-- Finance Section -->
-            <li class="sidebar-label">Finance</li>
+            <li class="sidebar-label" data-i18n="sidebar.finance">Finance</li>
             <li>
                 <a href="#vault" class="nav-link">
                     <i class="fas fa-vault"></i>
-                    <span>Treasury</span>
+                    <span data-i18n="sidebar.treasury">Treasury</span>
                 </a>
             </li>
             <?php if (($_SESSION['user_role'] ?? '') === 'Admin'): ?>
             <li>
                 <a href="#balance" class="nav-link">
                     <i class="fas fa-scale-balanced"></i>
-                    <span>Financial Balance</span>
+                    <span data-i18n="sidebar.balance">Financial Balance</span>
                 </a>
             </li>
             <li>
                 <a href="#salaries" class="nav-link">
                     <i class="fas fa-hand-holding-dollar"></i>
-                    <span>Payroll</span>
+                    <span data-i18n="sidebar.payroll">Payroll</span>
                 </a>
             </li>
             <?php endif; ?>
 
             <!-- Administration Section -->
             <?php if (($_SESSION['user_role'] ?? '') === 'Admin'): ?>
-            <li class="sidebar-label">Administration</li>
+            <li class="sidebar-label" data-i18n="sidebar.admin">Administration</li>
             <li>
                 <a href="#adminSubmenu" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle nav-link">
                     <i class="fas fa-user-shield"></i>
-                    <span>System Admin</span>
+                    <span data-i18n="sidebar.system_admin">System Admin</span>
                 </a>
                 <ul class="collapse list-unstyled submenu" id="adminSubmenu">
                     <li>
                         <a href="#users">
-                            <i class="fas fa-users-gear"></i> User Management
+                            <i class="fas fa-users-gear"></i> <span data-i18n="sidebar.users">User Management</span>
                         </a>
                     </li>
                     <li>
                         <a href="#reports">
-                            <i class="fas fa-file-invoice-dollar"></i> Reports
+                            <i class="fas fa-file-invoice-dollar"></i> <span data-i18n="sidebar.reports">Reports</span>
                         </a>
                     </li>
                     <li>
                         <a href="#settings">
-                            <i class="fas fa-cog"></i> Settings
+                            <i class="fas fa-cog"></i> <span data-i18n="sidebar.settings">Settings</span>
                         </a>
                     </li>
                 </ul>
@@ -238,9 +240,13 @@ if (!isset($_SESSION['user_id'])) {
                 <div class="ms-auto d-flex align-items-center">
                     <div class="search-box me-3 d-none d-lg-block">
                         <i class="fas fa-search"></i>
-                        <input type="text" id="globalSearchInput" class="form-control" placeholder="Search products...">
+                        <input type="text" id="globalSearchInput" class="form-control" placeholder="Search products..." data-i18n="topbar.search_placeholder" data-i18n-target="placeholder">
                     </div>
                     
+                    <div class="d-flex align-items-center me-2 border-end pe-2" id="languageSelector">
+                        <!-- Flag will be injected by app.js -->
+                    </div>
+
                     <button id="darkModeToggle" class="btn btn-link text-dark p-2 me-2">
                         <i class="fas fa-moon"></i>
                     </button>
@@ -254,15 +260,15 @@ if (!isset($_SESSION['user_id'])) {
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 mt-3 p-0" style="width: 300px;">
                             <li class="p-3 border-bottom d-flex justify-content-between align-items-center">
-                                <h6 class="mb-0 fw-bold">Notifications</h6>
-                                <small class="text-teal pointer" onclick="App.markAllNotificationsRead()">Mark all as read</small>
+                                <h6 class="mb-0 fw-bold" data-i18n="topbar.notifications">Notifications</h6>
+                                <small class="text-teal pointer" onclick="App.markAllNotificationsRead()" data-i18n="topbar.mark_all_read">Mark all as read</small>
                             </li>
                             <div class="notification-list" style="max-height: 300px; overflow-y: auto;">
                                 <!-- Dynamic content -->
-                                <li class="p-3 text-center text-muted small">Loading notifications...</li>
+                                <li class="p-3 text-center text-muted small" data-i18n="app.loading">Loading...</li>
                             </div>
                             <li class="text-center p-2 border-top notification-footer">
-                                <a href="#notifications" class="small text-muted text-decoration-none">View All Notifications</a>
+                                <a href="#notifications" class="small text-muted text-decoration-none" data-i18n="topbar.view_all">View All Notifications</a>
                             </li>
                         </ul>
                     </div>
@@ -321,8 +327,11 @@ if (!isset($_SESSION['user_id'])) {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
+    <!-- Translation Dictionary -->
+    <script src="assets/js/locales.js?v=<?= time() ?>"></script>
+    
     <!-- Core App Logic -->
-    <script src="assets/js/app.js"></script>
+    <script src="assets/js/app.js?v=<?= time() ?>"></script>
     <script>
         // Inject user session data for RBAC
         App.state.user = {

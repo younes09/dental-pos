@@ -13,14 +13,13 @@ const posModule = {
         this.loadSettings();
         this.loadCategories();
 
-        // Check for active session
         const session = await App.api('cash_register.php?action=get_status');
         if (!session || session.status !== 'open') {
             await Swal.fire({
-                title: 'Register Closed',
-                text: 'You must open a cash session before you can perform sales.',
+                title: App.t('pos.msg.register_closed_title') || 'Register Closed',
+                text: App.t('pos.msg.register_closed_desc') || 'You must open a cash session before you can perform sales.',
                 icon: 'warning',
-                confirmButtonText: 'Go to Cash Management',
+                confirmButtonText: App.t('pos.msg.go_to_cash') || 'Go to Cash Management',
                 allowOutsideClick: false
             });
             window.location.hash = '#cash_register';
@@ -184,7 +183,7 @@ const posModule = {
         if (!container) return;
 
         if (heldSales.length === 0) {
-            container.innerHTML = '<div class="text-center py-4 text-muted small">No held sales found.</div>';
+            container.innerHTML = `<div class="text-center py-4 text-muted small">${App.t('pos.modal.held.empty')}</div>`;
             return;
         }
 
@@ -223,8 +222,8 @@ const posModule = {
         // Ask for confirmation if current cart is not empty
         if (this.cart.length > 0) {
             const confirmed = await App.confirm(
-                'Resume Sale?',
-                'This will replace your current cart. Continue?'
+                App.t('pos.msg.resume_title') || 'Resume Sale?',
+                App.t('pos.msg.resume_desc') || 'This will replace your current cart. Continue?'
             );
             if (!confirmed) return;
         }
@@ -272,8 +271,8 @@ const posModule = {
 
     async deleteHeldSale(heldId) {
         const confirmed = await App.confirm(
-            'Delete Held Sale?',
-            'Are you sure you want to delete this held sale?',
+            App.t('pos.msg.delete_held_title') || 'Delete Held Sale?',
+            App.t('pos.msg.delete_held_desc') || 'Are you sure you want to delete this held sale?',
             'warning'
         );
         if (!confirmed) return;
@@ -319,7 +318,7 @@ const posModule = {
     selectCustomer(customerId) {
         if (customerId === null) {
             this.selectedCustomer = null;
-            document.getElementById('pos-selected-customer-name').textContent = 'Walking Customer';
+            document.getElementById('pos-selected-customer-name').textContent = App.t('pos.walking_customer') || 'Walking Customer';
             document.getElementById('pos-selected-customer-phone').textContent = '';
             document.getElementById('pos-selected-customer-points-container').classList.add('d-none');
             document.getElementById('cart-points-row').classList.add('d-none');
@@ -356,7 +355,7 @@ const posModule = {
         const result = await App.api('catalog.php?action=list&type=categories');
         const filter = document.getElementById('pos-category-filter');
         if (result && result.data && filter) {
-            filter.innerHTML = '<option value="">All Categories</option>' +
+            filter.innerHTML = `<option value="">${App.t('pos.all_categories') || 'All Categories'}</option>` +
                 result.data.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
         }
     },
@@ -372,9 +371,9 @@ const posModule = {
             let badges = '';
 
             if (p.stock_qty <= 0) {
-                badges += '<span class="badge bg-danger px-2">Out of Stock</span>';
+                badges += `<span class="badge bg-danger px-2">${App.t('pos.badge.out_of_stock') || 'Out of Stock'}</span>`;
             } else if (p.stock_qty <= 5) {
-                badges += '<span class="badge bg-warning text-dark px-2">Low Stock</span>';
+                badges += `<span class="badge bg-warning text-dark px-2">${App.t('pos.badge.low_stock') || 'Low Stock'}</span>`;
             }
 
             if (p.expiry_date) {
@@ -385,9 +384,9 @@ const posModule = {
                 nextMonth.setMonth(nextMonth.getMonth() + 1);
 
                 if (expDate < today) {
-                    badges += '<span class="badge bg-danger px-2">Expired</span>';
+                    badges += `<span class="badge bg-danger px-2">${App.t('pos.badge.expired') || 'Expired'}</span>`;
                 } else if (expDate <= nextMonth) {
-                    badges += '<span class="badge bg-warning text-dark px-2">Expiring Soon</span>';
+                    badges += `<span class="badge bg-warning text-dark px-2">${App.t('pos.badge.expiring_soon') || 'Expiring Soon'}</span>`;
                 }
             }
 
@@ -593,7 +592,7 @@ const posModule = {
             cartList.innerHTML = `
                 <div class="text-center py-5 text-muted">
                     <i class="bi bi-basket display-1 mb-3 opacity-25"></i>
-                    <p>Cart is empty</p>
+                    <p>${App.t('pos.cart_empty') || 'Cart is empty'}</p>
                 </div>
             `;
             return;
@@ -689,20 +688,20 @@ const posModule = {
 
         if (isNaN(paidVal)) {
             changeDebtDisplay.textContent = App.formatCurrency(0);
-            changeDebtLabel.textContent = 'Change';
+            changeDebtLabel.textContent = App.t('pos.change_due') || 'Change';
             changeDebtDisplay.className = 'fw-bold mb-0 text-navy';
             paidInput.placeholder = total.toFixed(2);
         } else {
             const diff = paidVal - total;
             changeDebtDisplay.textContent = App.formatCurrency(Math.abs(diff));
             if (diff >= 0) {
-                changeDebtLabel.textContent = 'Change';
+                changeDebtLabel.textContent = App.t('pos.change_due') || 'Change';
                 changeDebtDisplay.className = 'fw-bold mb-0 text-success';
             } else {
-                changeDebtLabel.textContent = 'Debt';
+                changeDebtLabel.textContent = App.t('pos.debt') || 'Debt';
                 changeDebtDisplay.className = 'fw-bold mb-0 text-danger';
                 if (!this.selectedCustomer) {
-                    App.toast('warning', 'Debt is only allowed for registered customers.');
+                    App.toast('warning', App.t('pos.msg.debt_not_allowed') || 'Debt is only allowed for registered customers.');
                 }
             }
         }
@@ -712,7 +711,7 @@ const posModule = {
 
     async processCheckout() {
         if (this.cart.length === 0) {
-            App.toast('error', 'Cart is empty');
+            App.toast('error', App.t('pos.cart_empty') || 'Cart is empty');
             return;
         }
 
@@ -720,7 +719,7 @@ const posModule = {
         const btn = document.getElementById('btn-checkout');
         if (btn.disabled) return;
         btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+        btn.innerHTML = `<i class="fas fa-spinner fa-spin me-2"></i>${App.t('pos.msg.processing') || 'Processing...'}`;
 
         try {
             const totals = this.calculateTotals();

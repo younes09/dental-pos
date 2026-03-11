@@ -130,7 +130,8 @@ const purchase_ordersModule = {
                             'Partial': 'bg-info-subtle text-info',
                             'Cancelled': 'bg-danger-subtle text-danger'
                         };
-                        return `<span class="badge ${badges[data] || 'bg-secondary'} px-3 rounded-pill">${data}</span>`;
+                        const displayStatus = data ? App.t(`po.js.${data.toLowerCase()}`) : data;
+                        return `<span class="badge ${badges[data] || 'bg-secondary'} px-3 rounded-pill">${displayStatus}</span>`;
                     }
                 },
                 {
@@ -141,7 +142,9 @@ const purchase_ordersModule = {
                             'Paid': 'bg-success-subtle text-success',
                             'Partial': 'bg-info-subtle text-info'
                         };
-                        return `<span class="badge ${badges[data] || 'bg-secondary'} px-3 rounded-pill">${data || 'Unpaid'}</span>`;
+                        const ds = data || 'Unpaid';
+                        const displayStatus = App.t(`po.js.${ds.toLowerCase()}`);
+                        return `<span class="badge ${badges[data] || 'bg-secondary'} px-3 rounded-pill">${displayStatus}</span>`;
                     }
                 },
                 {
@@ -150,32 +153,28 @@ const purchase_ordersModule = {
                     render: (data) => {
                         let receiveBtn = '';
                         if (data.status !== 'Received' && data.status !== 'Cancelled') {
-                            receiveBtn = `<li><a class="dropdown-item text-success" href="javascript:void(0)" onclick="purchase_ordersModule.openReceiveModal(${data.id})"><i class="fas fa-check-circle me-2"></i>Receive Order</a></li>`;
+                            receiveBtn = `<li><a class="dropdown-item text-success" href="javascript:void(0)" onclick="purchase_ordersModule.openReceiveModal(${data.id})"><i class="fas fa-check-circle me-2"></i>${App.t('po.js.status_receive')}</a></li>`;
                         }
 
                         return `
                         <div class="dropdown">
                             <button class="btn btn-sm btn-light" data-bs-toggle="dropdown"><i class="fas fa-ellipsis-v"></i></button>
                             <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
-                                <li><a class="dropdown-item" href="javascript:void(0)" onclick="purchase_ordersModule.viewDetails(${data.id})"><i class="fas fa-eye me-2 text-info"></i>View Details</a></li>
-                                <li><a class="dropdown-item" href="javascript:void(0)" onclick="purchase_ordersModule.printBC(${data.id})"><i class="fas fa-print me-2 text-primary"></i>Print BC</a></li>
+                                <li><a class="dropdown-item" href="javascript:void(0)" onclick="purchase_ordersModule.viewDetails(${data.id})"><i class="fas fa-eye me-2 text-info"></i>${App.t('po.js.status_view')}</a></li>
+                                <li><a class="dropdown-item" href="javascript:void(0)" onclick="purchase_ordersModule.printBC(${data.id})"><i class="fas fa-print me-2 text-primary"></i>${App.t('po.js.btn_print_bc')}</a></li>
                                 ${receiveBtn}
                                 ${data.status === 'Received' || data.status === 'Partial' ? `
-                                    <li><a class="dropdown-item" href="javascript:void(0)" onclick="purchase_ordersModule.openReturnModal(${data.id})"><i class="fas fa-undo me-2 text-warning"></i>Return to Supplier</a></li>
+                                    <li><a class="dropdown-item" href="javascript:void(0)" onclick="purchase_ordersModule.openReturnModal(${data.id})"><i class="fas fa-undo me-2 text-warning"></i>${App.t('po.js.status_return')}</a></li>
                                 ` : ''}
                                 <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item text-danger" href="javascript:void(0)" onclick="purchase_ordersModule.deletePO(${data.id})"><i class="fas fa-trash me-2"></i>Delete</a></li>
+                                <li><a class="dropdown-item text-danger" href="javascript:void(0)" onclick="purchase_ordersModule.deletePO(${data.id})"><i class="fas fa-trash me-2"></i>${App.t('po.js.status_del')}</a></li>
                             </ul>
                         </div>
                         `;
                     }
                 }
             ],
-            language: {
-                search: "_INPUT_",
-                searchPlaceholder: "Search orders...",
-                lengthMenu: "_MENU_",
-            },
+            language: App.getDataTableLanguage(),
             dom: '<"d-flex justify-content-between align-items-center mb-3"lf>rt<"d-flex justify-content-between align-items-center mt-3"ip>',
             drawCallback: () => this.updateStats()
         });
@@ -187,7 +186,7 @@ const purchase_ordersModule = {
         if (supplierRes) {
             this.suppliers = supplierRes.data;
             const select = document.getElementById('po-supplier-select');
-            select.innerHTML = '<option value="">Select Supplier</option>' +
+            select.innerHTML = `<option value="">${App.t('po.modal.supplier_select')}</option>` +
                 this.suppliers.map(s => `<option value="${s.id}">${s.name} (${s.company})</option>`).join('');
         }
 
@@ -200,7 +199,7 @@ const purchase_ordersModule = {
         // Load accounts for vault integration
         const accountRes = await App.api('vault.php?action=list_accounts');
         if (accountRes && accountRes.data) {
-            const options = '<option value="">-- No Treasury Update --</option>' +
+            const options = `<option value="">${App.t('po.modal.account_no')}</option>` +
                 accountRes.data.map(acc => `<option value="${acc.id}">${acc.name} (${App.formatCurrency(acc.balance)})</option>`).join('');
 
             const createSelect = document.getElementById('po-account-id');
@@ -217,7 +216,7 @@ const purchase_ordersModule = {
         row.innerHTML = `
             <td>
                 <select class="form-select form-select-sm item-product" required>
-                    <option value="">Select Product</option>
+                    <option value="">${App.t('po.js.opt_select_product')}</option>
                     ${this.products.map(p => {
             let colorStyle = '';
             if (p.stock_qty <= 0) {
@@ -225,7 +224,7 @@ const purchase_ordersModule = {
             } else if (p.stock_qty <= p.min_stock) {
                 colorStyle = 'style="color: #ffc107; font-weight: bold;"'; // Yellow for Low Stock
             }
-            return `<option value="${p.id}" ${colorStyle} data-price="${p.purchase_price}">${p.name} (Stock: ${p.stock_qty})</option>`;
+            return `<option value="${p.id}" ${colorStyle} data-price="${p.purchase_price}">${p.name} (${App.t('po.js.stock')}: ${p.stock_qty})</option>`;
         }).join('')}
                 </select>
             </td>
@@ -291,7 +290,7 @@ const purchase_ordersModule = {
         });
 
         if (items.length === 0) {
-            App.toast('error', 'Please add at least one product');
+            App.toast('error', App.t('po.js.error_no_items'));
             return;
         }
 
@@ -332,13 +331,14 @@ const purchase_ordersModule = {
 
     async deletePO(id) {
         const confirm = await Swal.fire({
-            title: 'Delete Purchase Order?',
-            text: "This action cannot be undone!",
+            title: App.t('po.js.del_title'),
+            text: App.t('po.js.del_text'),
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#d33',
             cancelButtonColor: '#6c757d',
-            confirmButtonText: 'Yes, delete it!'
+            confirmButtonText: App.t('po.js.btn_del'),
+            cancelButtonText: App.t('po.modal.btn_cancel')
         });
 
         if (confirm.isConfirmed) {
@@ -359,7 +359,7 @@ const purchase_ordersModule = {
         const tbody = document.querySelector('#receive-po-items-table tbody');
 
         if (!result || !result.items) {
-            tbody.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Error loading items</td></tr>';
+            tbody.innerHTML = `<tr><td colspan="4" class="text-center text-danger">${App.t('po.js.load_err')}</td></tr>`;
             return;
         }
 
@@ -369,17 +369,17 @@ const purchase_ordersModule = {
             if (remaining <= 0) {
                 return `
                     <tr class="bg-light opacity-75">
-                        <td>${item.product_name} <br><small class="text-muted">Barcode: ${item.barcode || 'N/A'}</small></td>
+                        <td>${item.product_name} <br><small class="text-muted">${App.t('po.js.barcode')}: ${item.barcode || 'N/A'}</small></td>
                         <td class="text-center">${item.qty}</td>
                         <td class="text-center text-success"><i class="fas fa-check-circle me-1"></i>${item.received_qty}</td>
-                        <td class="text-center"><span class="badge bg-success">Fully Received</span></td>
+                        <td class="text-center"><span class="badge bg-success">${App.t('po.js.fully_received')}</span></td>
                     </tr>
                 `;
             }
 
             return `
                 <tr>
-                    <td>${item.product_name} <br><small class="text-muted">Barcode: ${item.barcode || 'N/A'}</small></td>
+                    <td>${item.product_name} <br><small class="text-muted">${App.t('po.js.barcode')}: ${item.barcode || 'N/A'}</small></td>
                     <td class="text-center">${item.qty}</td>
                     <td class="text-center">${item.received_qty || 0}</td>
                     <td>
@@ -390,7 +390,7 @@ const purchase_ordersModule = {
                             max="${remaining}" 
                             min="0" 
                             value="${remaining}">
-                        <div class="invalid-feedback" style="font-size: 0.7rem;">Max: ${remaining}</div>
+                        <div class="invalid-feedback" style="font-size: 0.7rem;">${App.t('po.js.max')}: ${remaining}</div>
                     </td>
                 </tr>
             `;
@@ -441,12 +441,12 @@ const purchase_ordersModule = {
         });
 
         if (hasErrors) {
-            App.toast('error', 'Please fix the quantity errors before submitting.');
+            App.toast('error', App.t('po.js.err_qty'));
             return;
         }
 
         if (totalReceivingNow === 0) {
-            App.toast('warning', 'You must receive at least 1 unit to submit this form.');
+            App.toast('warning', App.t('po.js.err_min_one'));
             return;
         }
 
@@ -464,7 +464,7 @@ const purchase_ordersModule = {
         const result = await App.api('purchase_orders.php?action=receive_order', 'POST', data);
 
         if (result && result.success) {
-            App.toast('success', 'Purchase order status updated successfully!');
+            App.toast('success', App.t('po.js.receive_success'));
             bootstrap.Modal.getInstance(document.getElementById('receivePoModal')).hide();
             this.table.ajax.reload();
         } else if (result && result.error) {
@@ -493,8 +493,8 @@ const purchase_ordersModule = {
         const { order, items } = result;
 
         // Populate Modal Header
-        document.getElementById('po-details-title').textContent = `Purchase Order #PO-${order.id}`;
-        document.getElementById('po-details-subtitle').textContent = `Status: ${order.status}`;
+        document.getElementById('po-details-title').textContent = `${App.t('po.details.title')} #PO-${order.id}`;
+        document.getElementById('po-details-subtitle').textContent = `${App.t('po.modal.status_label')}: ${App.t(`po.js.${order.status.toLowerCase()}`)}`;
 
         // Populate Supplier Info
         document.getElementById('po-details-supplier-info').innerHTML = `
@@ -507,16 +507,16 @@ const purchase_ordersModule = {
         // Populate Order Metadata
         document.getElementById('po-details-meta-info').innerHTML = `
             <div class="d-flex justify-content-between mb-2">
-                <span>Order Date:</span>
+                <span>${App.t('po.js.order_date')}</span>
                 <span class="fw-bold">${order.date}</span>
             </div>
             <div class="d-flex justify-content-between mb-2">
-                <span>Created At:</span>
+                <span>${App.t('po.js.created_at')}</span>
                 <span class="fw-bold">${new Date(order.created_at).toLocaleString()}</span>
             </div>
             <div class="d-flex justify-content-between">
-                <span>Current Status:</span>
-                <span class="badge ${order.status === 'Received' ? 'bg-success' : 'bg-warning'} px-2">${order.status}</span>
+                <span>${App.t('po.js.current_status')}</span>
+                <span class="badge ${order.status === 'Received' ? 'bg-success' : 'bg-warning'} px-2">${App.t(`po.js.${order.status.toLowerCase()}`)}</span>
             </div>
         `;
 
@@ -531,7 +531,7 @@ const purchase_ordersModule = {
                 <td class="text-center">${item.qty}</td>
                 <td class="text-end">
                     ${App.formatCurrency(item.old_unit_cost)}
-                    ${(parseFloat(item.unit_cost) !== parseFloat(item.old_unit_cost)) ? `<br><small class="text-danger">Changed</small>` : ''}
+                    ${(parseFloat(item.unit_cost) !== parseFloat(item.old_unit_cost)) ? `<br><small class="text-danger">${App.t('po.js.changed')}</small>` : ''}
                 </td>
                 <td class="text-end">${App.formatCurrency(item.unit_cost)}</td>
                 <td class="text-end fw-bold text-navy">${App.formatCurrency(item.qty * item.unit_cost)}</td>
@@ -543,8 +543,8 @@ const purchase_ordersModule = {
         // Update footer buttons
         const footer = document.querySelector('#poDetailsModal .modal-footer');
         footer.innerHTML = `
-            <button type="button" class="btn btn-primary px-4" onclick="purchase_ordersModule.printBC(${order.id})"><i class="fas fa-print me-2"></i>Print BC</button>
-            <button type="button" class="btn btn-navy px-4" data-bs-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary px-4" onclick="purchase_ordersModule.printBC(${order.id})"><i class="fas fa-print me-2"></i>${App.t('po.js.btn_print_bc')}</button>
+            <button type="button" class="btn btn-navy px-4" data-bs-dismiss="modal">${App.t('po.details.btn_close')}</button>
         `;
 
         // Show Modal
@@ -581,7 +581,7 @@ const purchase_ordersModule = {
 
         const { order, items } = result;
         document.getElementById('return-po-id').value = order.id;
-        document.getElementById('purchase-return-subtitle').textContent = `Order #PO-${order.id} | ${order.supplier_name}`;
+        document.getElementById('purchase-return-subtitle').textContent = `${App.t('po.details.title')} #PO-${order.id} | ${order.supplier_name}`;
         document.getElementById('purchase-return-reason').value = '';
 
         const tbody = document.querySelector('#purchase-return-items-table tbody');
@@ -640,13 +640,13 @@ const purchase_ordersModule = {
         });
 
         if (items.length === 0) {
-            App.toast('warning', 'Please select at least one item to return');
+            App.toast('warning', App.t('po.js.return_err_one'));
             return;
         }
 
         const confirmed = await App.confirm(
-            'Confirm Purchase Return?',
-            'Are you sure you want to process this return to supplier? Supplier balance will be adjusted and stock decreased.'
+            App.t('po.js.return_confirm_title'),
+            App.t('po.js.return_confirm_text')
         );
         if (!confirmed) return;
 

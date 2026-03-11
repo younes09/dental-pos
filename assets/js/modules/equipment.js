@@ -28,10 +28,12 @@ const equipmentModule = {
                     data: 'condition_status',
                     render: (data) => {
                         let badgeClass = 'bg-success';
-                        if (data === 'Needs Repair') badgeClass = 'bg-danger';
-                        if (data === 'Poor') badgeClass = 'bg-warning text-dark';
-                        if (data === 'Fair') badgeClass = 'bg-info';
-                        return `<span class="badge ${badgeClass}">${data}</span>`;
+                        let label = App.t('equipment.condition.new') || 'New';
+                        if (data === 'Needs Repair') { badgeClass = 'bg-danger'; label = App.t('equipment.condition.repair') || 'Needs Repair'; }
+                        else if (data === 'Poor') { badgeClass = 'bg-warning text-dark'; label = App.t('equipment.condition.poor') || 'Poor'; }
+                        else if (data === 'Fair') { badgeClass = 'bg-info'; label = App.t('equipment.condition.fair') || 'Fair'; }
+                        else if (data === 'Good') { label = App.t('equipment.condition.good') || 'Good'; }
+                        return `<span class="badge ${badgeClass}">${label}</span>`;
                     }
                 },
                 { data: 'quantity' },
@@ -54,6 +56,7 @@ const equipmentModule = {
                     }
                 }
             ],
+            language: App.getDataTableLanguage(),
             order: [[0, 'desc']],
             drawCallback: function (settings) {
                 const api = this.api();
@@ -73,7 +76,7 @@ const equipmentModule = {
     resetForm() {
         $('#equipmentForm')[0].reset();
         $('#equipmentId').val('');
-        $('#equipmentModalLabel').text('Add Equipment');
+        $('#equipmentModalLabel').text(App.t('equipment.modal.add_title') || 'Add Equipment');
     },
 
     edit(data) {
@@ -83,7 +86,7 @@ const equipmentModule = {
         $('#equipmentPrice').val(data.purchase_price);
         $('#equipmentQuantity').val(data.quantity);
         $('#equipmentCondition').val(data.condition_status);
-        $('#equipmentModalLabel').text('Edit Equipment');
+        $('#equipmentModalLabel').text(App.t('equipment.js.edit_title') || 'Edit Equipment');
         $('#equipmentModal').modal('show');
     },
 
@@ -108,23 +111,24 @@ const equipmentModule = {
                 $('#equipmentModal').modal('hide');
                 this.table.ajax.reload();
             } else {
-                App.toast('error', result.error || 'Failed to save equipment');
+                App.toast('error', result.error || App.t('equipment.js.save_fail') || 'Failed to save equipment');
             }
         } catch (error) {
             console.error('Save Error:', error);
-            App.toast('error', 'Network error');
+            App.toast('error', App.t('equipment.js.network_error') || 'Network error');
         }
     },
 
     async delete(id) {
         const confirmed = await Swal.fire({
-            title: 'Are you sure?',
-            text: "This action cannot be undone!",
+            title: App.t('equipment.js.delete_title') || 'Are you sure?',
+            text: App.t('equipment.js.delete_text') || "This action cannot be undone!",
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#00BFA6',
             cancelButtonColor: '#d33',
-            confirmButtonText: 'Yes, delete it!'
+            confirmButtonText: App.t('equipment.js.btn_yes') || 'Yes, delete it!',
+            cancelButtonText: App.t('btn_cancel') || 'Cancel'
         });
 
         if (confirmed.isConfirmed) {
@@ -136,11 +140,11 @@ const equipmentModule = {
                     App.toast('success', result.success);
                     this.table.ajax.reload();
                 } else {
-                    App.toast('error', result.error || 'Failed to delete');
+                    App.toast('error', result.error || App.t('equipment.js.delete_fail') || 'Failed to delete');
                 }
             } catch (error) {
                 console.error('Delete Error:', error);
-                App.toast('error', 'Network error');
+                App.toast('error', App.t('equipment.js.network_error') || 'Network error');
             }
         }
     }

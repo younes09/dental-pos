@@ -9,12 +9,12 @@
                         <div class="search-box w-100">
                             <i class="fas fa-search"></i>
                             <input type="text" id="pos-search" class="form-control"
-                                placeholder="Search by name, barcode or category...">
+                                placeholder="Search by name, barcode or category..." data-i18n="pos.search_placeholder" data-i18n-target="placeholder">
                         </div>
                     </div>
                     <div class="col-md-6">
                         <select id="pos-category-filter" class="form-select rounded-pill bg-light border-0">
-                            <option value="">All Categories</option>
+                            <option value="" data-i18n="pos.all_categories">All Categories</option>
                         </select>
                     </div>
                 </div>
@@ -47,8 +47,8 @@
                 <!-- Customer Selection Section -->
                 <div class="customer-selection d-flex align-items-center mb-3 p-3 bg-light rounded-4">
                     <div class="flex-grow-1">
-                        <label class="form-label small fw-bold text-muted text-uppercase mb-1">Customer</label>
-                        <h6 class="mb-0 fw-bold" id="pos-selected-customer-name">Walking Customer</h6>
+                        <label class="form-label small fw-bold text-muted text-uppercase mb-1" data-i18n="pos.customer">Customer</label>
+                        <h6 class="mb-0 fw-bold" id="pos-selected-customer-name" data-i18n="pos.walking_customer">Walking Customer</h6>
                         <small class="text-muted" id="pos-selected-customer-phone"></small>
                         <div class="mt-1 d-none" id="pos-selected-customer-points-container">
                             <span class="badge bg-info-subtle text-info fw-bold border border-info-subtle"><i
@@ -58,14 +58,14 @@
                     </div>
                     <button class="btn btn-sm btn-outline-teal rounded-pill" data-bs-toggle="modal"
                         data-bs-target="#posCustomerModal">
-                        <i class="fas fa-user-plus me-1"></i>Change
+                        <i class="fas fa-user-plus me-1"></i><span data-i18n="pos.btn.change">Change</span>
                     </button>
                 </div>
 
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="fw-bold mb-0">Current Order</h5>
+                    <h5 class="fw-bold mb-0" data-i18n="pos.current_order">Current Order</h5>
                     <button class="btn btn-sm btn-light text-danger" id="btn-clear-cart">
-                        <i class="fas fa-trash-alt me-2"></i>Clear
+                        <i class="fas fa-trash-alt me-2"></i><span data-i18n="pos.btn.clear">Clear</span>
                     </button>
                 </div>
 
@@ -73,19 +73,19 @@
                 <div id="pos-cart-items" class="flex-grow-1 overflow-auto mb-4" style="max-height: 40vh;">
                     <div class="text-center py-5 text-muted">
                         <i class="bi bi-basket display-1 mb-3 opacity-25"></i>
-                        <p>Cart is empty</p>
+                        <p data-i18n="pos.cart_empty">Cart is empty</p>
                     </div>
                 </div>
 
                 <!-- Totals & Payment -->
                 <div class="border-top pt-4">
                     <div class="d-flex justify-content-between mb-2">
-                        <span class="text-muted">Subtotal</span>
+                        <span class="text-muted" data-i18n="pos.subtotal">Subtotal</span>
                         <span class="fw-bold" id="cart-subtotal">0.00 <span class="currency-symbol">$</span></span>
                     </div>
                     <div class="row g-2 mb-2 align-items-center">
                         <div class="col-6">
-                            <span class="text-muted">Discount</span>
+                            <span class="text-muted" data-i18n="pos.discount">Discount</span>
                         </div>
                         <div class="col-6">
                             <div class="input-group input-group-sm">
@@ -96,7 +96,7 @@
                     </div>
                     <div class="row g-2 mb-2 align-items-center d-none" id="cart-points-row">
                         <div class="col-6">
-                            <span class="text-muted">Redeem Points</span>
+                            <span class="text-muted" data-i18n="pos.redeem_points">Redeem Points</span>
                             <small class="d-block text-teal" style="font-size: 0.7rem;" id="points-value-hint"></small>
                         </div>
                         <div class="col-6">
@@ -108,12 +108,12 @@
                         </div>
                     </div>
                     <div class="d-flex justify-content-between mb-3">
-                        <span class="text-muted">Tax (VAT <span id="vat-rate-display">15</span>%)</span>
+                        <span class="text-muted"><span data-i18n="pos.tax">Tax (VAT </span><span id="vat-rate-display">15</span>%)</span>
                         <span class="fw-bold" id="cart-tax">0.00 <span class="currency-symbol">$</span></span>
                     </div>
                     <div class="row g-2 mb-2 align-items-center">
                         <div class="col-6">
-                            <span class="text-muted fw-bold">Amount Paid</span>
+                            <span class="text-muted fw-bold" data-i18n="pos.amount_paid">Amount Paid</span>
                         </div>
                         <div class="col-6">
                             <div class="input-group input-group-sm">
@@ -124,30 +124,30 @@
                         </div>
                     </div>
                     <div class="d-flex justify-content-between mb-4 mt-2" id="change-debt-row">
-                        <h6 class="fw-bold mb-0 text-muted" id="change-debt-label">Change</h6>
+                        <h6 class="fw-bold mb-0 text-muted" id="change-debt-label" data-i18n="pos.change_due">Change</h6>
                         <h6 class="fw-bold mb-0 text-navy" id="cart-change-debt">0.00 <span
                                 class="currency-symbol">$</span></h6>
                     </div>
                     <div class="d-flex justify-content-between mb-4 mt-2">
-                        <h4 class="fw-bold mb-0 text-navy">Total</h4>
+                        <h4 class="fw-bold mb-0 text-navy" data-i18n="pos.total">Total</h4>
                         <h4 class="fw-bold mb-0 text-teal" id="cart-total">0.00 <span class="currency-symbol">$</span>
                         </h4>
                     </div>
 
                     <div class="mb-4">
-                        <label class="form-label small fw-bold text-muted text-uppercase">Document Type</label>
+                        <label class="form-label small fw-bold text-muted text-uppercase" data-i18n="pos.document_type">Document Type</label>
                         <div class="row g-2">
                             <div class="col-6">
                                 <input type="radio" class="btn-check" name="invoice-type" id="type-bv" value="BV"
                                     checked>
                                 <label class="btn btn-outline-secondary w-100 py-3" for="type-bv">
-                                    <i class="fas fa-file-invoice d-block mb-1"></i> Sales Receipt (BV)
+                                    <i class="fas fa-file-invoice d-block mb-1"></i> <span data-i18n="pos.doc.receipt">Sales Receipt (BV)</span>
                                 </label>
                             </div>
                             <div class="col-6">
                                 <input type="radio" class="btn-check" name="invoice-type" id="type-bl" value="BL">
                                 <label class="btn btn-outline-secondary w-100 py-3" for="type-bl">
-                                    <i class="fas fa-truck-loading d-block mb-1"></i> Delivery Note (BL)
+                                    <i class="fas fa-truck-loading d-block mb-1"></i> <span data-i18n="pos.doc.delivery">Delivery Note (BL)</span>
                                 </label>
                             </div>
                         </div>
@@ -155,45 +155,45 @@
 
                     <!-- Payment Section -->
                     <div class="mb-4">
-                        <label class="form-label small fw-bold text-muted text-uppercase">Payment Method</label>
+                        <label class="form-label small fw-bold text-muted text-uppercase" data-i18n="pos.payment_method">Payment Method</label>
                         <div class="row g-2">
                             <div class="col-4">
                                 <input type="radio" class="btn-check" name="payment-method" id="pay-cash" value="Cash"
                                     checked>
                                 <label class="btn btn-outline-secondary w-100 py-3" for="pay-cash">
-                                    <i class="fas fa-money-bill-wave d-block mb-1"></i> Cash
+                                    <i class="fas fa-money-bill-wave d-block mb-1"></i> <span data-i18n="pos.pay.cash">Cash</span>
                                 </label>
                             </div>
                             <div class="col-4">
                                 <input type="radio" class="btn-check" name="payment-method" id="pay-card" value="Card">
                                 <label class="btn btn-outline-secondary w-100 py-3" for="pay-card">
-                                    <i class="fas fa-credit-card d-block mb-1"></i> Card
+                                    <i class="fas fa-credit-card d-block mb-1"></i> <span data-i18n="pos.pay.card">Card</span>
                                 </label>
                             </div>
                             <div class="col-4">
                                 <input type="radio" class="btn-check" name="payment-method" id="pay-ins"
                                     value="Insurance">
                                 <label class="btn btn-outline-secondary w-100 py-3" for="pay-ins">
-                                    <i class="fas fa-file-medical d-block mb-1"></i> Insure
+                                    <i class="fas fa-file-medical d-block mb-1"></i> <span data-i18n="pos.pay.insure">Insure</span>
                                 </label>
                             </div>
                         </div>
                     </div>
 
                     <button class="btn btn-teal w-100 py-3 fw-bold shadow-sm" id="btn-checkout">
-                        <i class="fas fa-check-circle me-2"></i>COMPLETE SALE
+                        <i class="fas fa-check-circle me-2"></i><span data-i18n="pos.btn.complete">COMPLETE SALE</span>
                     </button>
 
                     <div class="row g-2 mt-2">
                         <div class="col-6">
                             <button class="btn btn-light w-100 py-2 small" id="btn-hold-sale">
-                                <i class="fas fa-pause me-2"></i>Hold Sale
+                                <i class="fas fa-pause me-2"></i><span data-i18n="pos.btn.hold">Hold Sale</span>
                             </button>
                         </div>
                         <div class="col-6">
                             <button class="btn btn-light w-100 py-2 small" id="btn-recent-sales" data-bs-toggle="modal"
                                 data-bs-target="#posHeldSalesModal">
-                                <i class="fas fa-receipt me-2"></i>Recent
+                                <i class="fas fa-receipt me-2"></i><span data-i18n="pos.btn.recent">Recent</span>
                             </button>
                         </div>
                     </div>
@@ -208,31 +208,31 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 rounded-4">
             <div class="modal-header border-0 p-4">
-                <h5 class="modal-title fw-bold">Select Customer</h5>
+                <h5 class="modal-title fw-bold" data-i18n="pos.modal.customer.title">Select Customer</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4 pt-0">
-                <p class="text-muted small">Search registered customers or leave empty for walking customer.</p>
+                <p class="text-muted small" data-i18n="pos.modal.customer.desc">Search registered customers or leave empty for walking customer.</p>
                 <div class="search-box mb-4 w-100">
                     <i class="fas fa-search"></i>
                     <input type="text" id="pos-customer-search" class="form-control"
-                        placeholder="Search by name or phone...">
+                        placeholder="Search by name or phone..." data-i18n="pos.modal.customer.search" data-i18n-target="placeholder">
                 </div>
 
                 <div id="pos-customer-results" class="overflow-auto" style="max-height: 300px;">
                     <!-- Customer list items will be injected here -->
-                    <div class="text-center py-4 text-muted small">
+                    <div class="text-center py-4 text-muted small" data-i18n="pos.modal.customer.empty">
                         Type to search customers...
                     </div>
                 </div>
 
                 <div class="border-top pt-3 mt-3 d-flex justify-content-between align-items-center">
-                    <button class="btn btn-light rounded-pill px-4" onclick="posModule.selectCustomer(null)">
+                    <button class="btn btn-light rounded-pill px-4" onclick="posModule.selectCustomer(null)" data-i18n="pos.walking_customer">
                         Walking Customer
                     </button>
                     <button class="btn btn-teal rounded-pill px-4" data-bs-toggle="modal"
                         data-bs-target="#posQuickCustomerModal">
-                        <i class="fas fa-plus me-1"></i>New
+                        <i class="fas fa-plus me-1"></i><span data-i18n="pos.modal.customer.btn.new">New</span>
                     </button>
                 </div>
             </div>
@@ -245,14 +245,14 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 rounded-4">
             <div class="modal-header border-0 p-4">
-                <h5 class="modal-title fw-bold">Held Sales</h5>
+                <h5 class="modal-title fw-bold" data-i18n="pos.modal.held.title">Held Sales</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4 pt-0">
-                <p class="text-muted small">Resume or delete previously held sales.</p>
+                <p class="text-muted small" data-i18n="pos.modal.held.desc">Resume or delete previously held sales.</p>
                 <div id="pos-held-sales-list" class="overflow-auto" style="max-height: 400px;">
                     <!-- Held sales list items will be injected here -->
-                    <div class="text-center py-4 text-muted small">
+                    <div class="text-center py-4 text-muted small" data-i18n="pos.modal.held.empty">
                         No held sales found.
                     </div>
                 </div>
@@ -266,25 +266,25 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 rounded-4">
             <div class="modal-header border-0 p-4 pb-0">
-                <h5 class="modal-title fw-bold text-teal">Quick Add Customer</h5>
+                <h5 class="modal-title fw-bold text-teal" data-i18n="pos.modal.quick.title">Quick Add Customer</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4">
                 <form id="pos-quick-customer-form">
                     <div class="mb-3">
-                        <label class="form-label small fw-bold text-muted">FULL NAME</label>
+                        <label class="form-label small fw-bold text-muted" data-i18n="pos.modal.quick.name">FULL NAME</label>
                         <input type="text" name="name" class="form-control rounded-pill px-3"
-                            placeholder="Enter customer name" required>
+                            placeholder="Enter customer name" data-i18n="pos.modal.quick.name_placeholder" data-i18n-target="placeholder" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label small fw-bold text-muted">PHONE NUMBER</label>
+                        <label class="form-label small fw-bold text-muted" data-i18n="pos.modal.quick.phone">PHONE NUMBER</label>
                         <input type="text" name="phone" class="form-control rounded-pill px-3"
-                            placeholder="Enter phone number">
+                            placeholder="Enter phone number" data-i18n="pos.modal.quick.phone_placeholder" data-i18n-target="placeholder">
                     </div>
                     <div class="mb-4">
-                        <label class="form-label small fw-bold text-muted">EMAIL ADDRESS (OPTIONAL)</label>
+                        <label class="form-label small fw-bold text-muted" data-i18n="pos.modal.quick.email">EMAIL ADDRESS (OPTIONAL)</label>
                         <input type="email" name="email" class="form-control rounded-pill px-3"
-                            placeholder="Enter email">
+                            placeholder="Enter email" data-i18n="pos.modal.quick.email_placeholder" data-i18n-target="placeholder">
                     </div>
 
                     <!-- Hidden fields to match api expectations -->
@@ -293,10 +293,10 @@
 
                     <div class="d-grid gap-2">
                         <button type="submit" class="btn btn-teal py-2 rounded-pill fw-bold">
-                            <i class="fas fa-save me-2"></i>SAVE & SELECT
+                            <i class="fas fa-save me-2"></i><span data-i18n="pos.modal.quick.btn.save">SAVE & SELECT</span>
                         </button>
                         <button type="button" class="btn btn-light py-2 rounded-pill text-muted small"
-                            data-bs-dismiss="modal">Cancel</button>
+                            data-bs-dismiss="modal" data-i18n="btn.cancel">Cancel</button>
                     </div>
                 </form>
             </div>

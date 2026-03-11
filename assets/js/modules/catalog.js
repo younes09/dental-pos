@@ -33,10 +33,7 @@ const catalogModule = {
                     `
                 }
             ],
-            language: {
-                search: "_INPUT_",
-                searchPlaceholder: "Search categories...",
-            },
+            language: App.getDataTableLanguage(),
             dom: 'frtp'
         });
 
@@ -60,10 +57,7 @@ const catalogModule = {
                     `
                 }
             ],
-            language: {
-                search: "_INPUT_",
-                searchPlaceholder: "Search brands...",
-            },
+            language: App.getDataTableLanguage(),
             dom: 'frtp'
         });
     },
@@ -83,9 +77,9 @@ const catalogModule = {
 
     openModal(type) {
         document.getElementById('catalog-type').value = type;
-        const singularType = type === 'categories' ? 'Category' : 'Brand';
-        document.getElementById('catalogModalLabel').textContent = `Add New ${singularType}`;
-        document.getElementById('catalog-name-label').textContent = `${singularType} Name`;
+        const singularType = type === 'categories' ? App.t('catalog.category_singular') || 'Category' : App.t('catalog.brand_singular') || 'Brand';
+        document.getElementById('catalogModalLabel').textContent = type === 'categories' ? (App.t('catalog.modal.title.add_category') || 'Add Category') : (App.t('catalog.modal.title.add_brand') || 'Add Brand');
+        document.getElementById('catalog-name-label').textContent = type === 'categories' ? (App.t('catalog.table.category_name') || 'Category Name') : (App.t('catalog.table.brand_name') || 'Brand Name');
         document.getElementById('catalog-name').placeholder = `e.g. ${type === 'categories' ? 'Diagnostic Tools' : 'Oral-B'}`;
 
         new bootstrap.Modal(document.getElementById('catalogModal')).show();
@@ -96,9 +90,9 @@ const catalogModule = {
         document.getElementById('catalog-type').value = type;
         document.getElementById('catalog-name').value = name;
 
-        const singularType = type === 'categories' ? 'Category' : 'Brand';
-        document.getElementById('catalogModalLabel').textContent = `Edit ${singularType}`;
-        document.getElementById('catalog-name-label').textContent = `${singularType} Name`;
+        const singularType = type === 'categories' ? App.t('catalog.category_singular') || 'Category' : App.t('catalog.brand_singular') || 'Brand';
+        document.getElementById('catalogModalLabel').textContent = type === 'categories' ? (App.t('catalog.modal.title.edit_category') || 'Edit Category') : (App.t('catalog.modal.title.edit_brand') || 'Edit Brand');
+        document.getElementById('catalog-name-label').textContent = type === 'categories' ? (App.t('catalog.table.category_name') || 'Category Name') : (App.t('catalog.table.brand_name') || 'Brand Name');
 
         new bootstrap.Modal(document.getElementById('catalogModal')).show();
     },
@@ -116,27 +110,29 @@ const catalogModule = {
             const result = await response.json();
 
             if (result.success) {
-                App.toast('success', result.success);
+                App.toast('success', result.success); // Keep server message if any, though could be translated locally if standardized
                 bootstrap.Modal.getInstance(document.getElementById('catalogModal')).hide();
                 this[`${type}Table`].ajax.reload();
             } else {
                 App.toast('error', result.error);
             }
         } catch (error) {
-            App.toast('error', 'Failed to save item');
+            App.toast('error', App.t('error.save_failed') || 'Failed to save item');
         }
     },
 
     async deleteItem(type, id) {
-        const singularType = type === 'categories' ? 'category' : 'brand';
+        const singularType = type === 'categories' ? App.t('catalog.category_singular') || 'Category' : App.t('catalog.brand_singular') || 'Brand';
+        const confirmTitle = App.t('catalog.modal.delete_title', { type: singularType }) || `Delete ${singularType}?`;
         const confirm = await Swal.fire({
-            title: `Delete ${singularType}?`,
-            text: "This action cannot be undone if not used in products.",
+            title: confirmTitle,
+            text: App.t('catalog.modal.delete_desc') || "This action cannot be undone if not used in products.",
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#00BFA6',
             cancelButtonColor: '#d33',
-            confirmButtonText: 'Yes, delete!'
+            confirmButtonText: App.t('catalog.modal.btn.delete') || 'Yes, delete!',
+            cancelButtonText: App.t('btn.cancel') || 'Cancel'
         });
 
         if (confirm.isConfirmed) {

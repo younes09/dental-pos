@@ -20,7 +20,7 @@ const customersModule = {
         document.getElementById('btn-add-customer').onclick = () => {
             document.getElementById('customerForm').reset();
             document.getElementById('customer-id').value = '';
-            document.getElementById('customerModalLabel').textContent = 'Add New Customer';
+            document.getElementById('customerModalLabel').textContent = App.t('customers.js.add_title') || 'Add New Customer';
         };
 
         const settleDebtForm = document.getElementById('settleDebtForm');
@@ -38,8 +38,8 @@ const customersModule = {
             ajax: 'api/customers.php?action=list',
             columns: [
                 { data: 'name', className: 'fw-semibold' },
-                { data: 'phone', render: (data) => data || '<span class="text-muted">N/A</span>' },
-                { data: 'email', render: (data) => data || '<span class="text-muted">N/A</span>' },
+                { data: 'phone', render: (data) => data || `<span class="text-muted">${App.t('customers.js.na') || 'N/A'}</span>` },
+                { data: 'email', render: (data) => data || `<span class="text-muted">${App.t('customers.js.na') || 'N/A'}</span>` },
                 {
                     data: 'balance',
                     type: 'num',
@@ -65,7 +65,7 @@ const customersModule = {
                     data: 'last_visit',
                     render: (data, type) => {
                         if (type === 'display') {
-                            return data ? new Date(data).toLocaleDateString() : '<span class="text-muted">Never</span>';
+                            return data ? new Date(data).toLocaleDateString() : `<span class="text-muted">${App.t('customers.js.never') || 'Never'}</span>`;
                         }
                         return data;
                     }
@@ -77,21 +77,17 @@ const customersModule = {
                         <div class="dropdown">
                             <button class="btn btn-sm btn-light" data-bs-toggle="dropdown"><i class="fas fa-ellipsis-v"></i></button>
                             <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
-                                <li><a class="dropdown-item" href="javascript:void(0)" onclick="customersModule.editCustomer(${data.id})"><i class="fas fa-edit me-2 text-primary"></i>Edit Profile</a></li>
-                                <li><a class="dropdown-item" href="javascript:void(0)" onclick="customersModule.viewHistory(${data.id})"><i class="fas fa-history me-2 text-teal"></i>Purchase History</a></li>
-                                <li><a class="dropdown-item" href="javascript:void(0)" onclick="customersModule.openSettleDebt(${data.id})"><i class="fas fa-money-bill-wave me-2 text-success"></i>Settle Debt</a></li>
+                                <li><a class="dropdown-item" href="javascript:void(0)" onclick="customersModule.editCustomer(${data.id})"><i class="fas fa-edit me-2 text-primary"></i>${App.t('customers.js.action.edit') || 'Edit Profile'}</a></li>
+                                <li><a class="dropdown-item" href="javascript:void(0)" onclick="customersModule.viewHistory(${data.id})"><i class="fas fa-history me-2 text-teal"></i>${App.t('customers.js.action.history') || 'Purchase History'}</a></li>
+                                <li><a class="dropdown-item" href="javascript:void(0)" onclick="customersModule.openSettleDebt(${data.id})"><i class="fas fa-money-bill-wave me-2 text-success"></i>${App.t('customers.js.action.settle') || 'Settle Debt'}</a></li>
                                 <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item text-danger" href="javascript:void(0)" onclick="customersModule.deleteCustomer(${data.id})"><i class="fas fa-trash me-2"></i>Delete</a></li>
+                                <li><a class="dropdown-item text-danger" href="javascript:void(0)" onclick="customersModule.deleteCustomer(${data.id})"><i class="fas fa-trash me-2"></i>${App.t('customers.js.action.delete') || 'Delete'}</a></li>
                             </ul>
                         </div>
                     `
                 }
             ],
-            language: {
-                search: "_INPUT_",
-                searchPlaceholder: "Search customers...",
-                lengthMenu: "_MENU_",
-            },
+            language: App.getDataTableLanguage(),
             dom: '<"d-flex justify-content-between align-items-center mb-3"lf>rt<"d-flex justify-content-between align-items-center mt-3"ip>'
         });
     },
@@ -115,7 +111,7 @@ const customersModule = {
                 App.toast('error', result.error);
             }
         } catch (error) {
-            App.toast('error', 'Failed to save customer');
+            App.toast('error', App.t('customers.js.save_fail') || 'Failed to save customer');
         }
     },
 
@@ -130,19 +126,20 @@ const customersModule = {
         document.querySelector('[name="balance"]').value = customer.balance;
         document.querySelector('[name="loyalty_points"]').value = customer.loyalty_points;
 
-        document.getElementById('customerModalLabel').textContent = 'Edit Customer Profile';
+        document.getElementById('customerModalLabel').textContent = App.t('customers.js.edit_title') || 'Edit Customer Profile';
         new bootstrap.Modal(document.getElementById('customerModal')).show();
     },
 
     async deleteCustomer(id) {
         const confirm = await Swal.fire({
-            title: 'Delete Customer?',
-            text: "This will remove the customer and their history!",
+            title: App.t('customers.js.delete_title') || 'Delete Customer?',
+            text: App.t('customers.js.delete_text') || "This will remove the customer and their history!",
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#00BFA6',
             cancelButtonColor: '#d33',
-            confirmButtonText: 'Yes, delete!'
+            confirmButtonText: App.t('customers.js.btn_yes') || 'Yes, delete!',
+            cancelButtonText: App.t('btn_cancel') || 'Cancel'
         });
 
         if (confirm.isConfirmed) {
@@ -160,7 +157,7 @@ const customersModule = {
 
         document.getElementById('historyCustomerName').textContent = customer.name;
         const historyBody = document.getElementById('historyBody');
-        historyBody.innerHTML = '<tr><td colspan="5" class="text-center"><div class="spinner-border spinner-border-sm text-teal"></div> Loading...</td></tr>';
+        historyBody.innerHTML = `<tr><td colspan="5" class="text-center"><div class="spinner-border spinner-border-sm text-teal"></div> ${App.t('customers.js.loading') || 'Loading...'}</td></tr>`;
 
         const modal = new bootstrap.Modal(document.getElementById('historyModal'));
         modal.show();
@@ -169,21 +166,21 @@ const customersModule = {
             const result = await App.api(`sales.php?action=history&customer_id=${id}`);
             if (result && result.data) {
                 if (result.data.length === 0) {
-                    historyBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No purchase history found</td></tr>';
+                    historyBody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">${App.t('customers.js.no_history') || 'No purchase history found'}</td></tr>`;
                 } else {
                     historyBody.innerHTML = result.data.map(sale => `
                         <tr>
                             <td>${new Date(sale.date).toLocaleDateString()}</td>
                             <td class="fw-medium">#${sale.id}</td>
                             <td class="fw-bold">${App.formatCurrency(sale.total)}</td>
-                            <td><span class="badge bg-light text-dark border">${sale.payment_method}</span></td>
-                            <td><span class="badge bg-success-subtle text-success">Completed</span></td>
+                            <td><span class="badge bg-light text-dark border">${App.t(`customers.method.${sale.payment_method.toLowerCase().split(' ')[0]}`) || sale.payment_method}</span></td>
+                            <td><span class="badge bg-success-subtle text-success">${App.t('customers.js.completed') || 'Completed'}</span></td>
                         </tr>
                     `).join('');
                 }
             }
         } catch (error) {
-            historyBody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Failed to load history</td></tr>';
+            historyBody.innerHTML = `<tr><td colspan="5" class="text-center text-danger">${App.t('customers.js.history_fail') || 'Failed to load history'}</td></tr>`;
         }
     },
 
@@ -205,7 +202,7 @@ const customersModule = {
         if (accountSelect) {
             const result = await App.api('vault.php?action=list_accounts');
             if (result && result.data) {
-                accountSelect.innerHTML = '<option value="">-- No Treasury Update --</option>' +
+                accountSelect.innerHTML = `<option value="">${App.t('customers.js.no_treasury') || '-- No Treasury Update --'}</option>` +
                     result.data.map(acc => `<option value="${acc.id}">${acc.name} (${App.formatCurrency(acc.balance)})</option>`).join('');
             }
         }
@@ -219,7 +216,7 @@ const customersModule = {
         const maxAmount = parseFloat(amountInput.dataset.max) || 0;
 
         if (amount > maxAmount) {
-            App.toast('error', `Payment cannot exceed the current debt of ${App.formatCurrency(maxAmount)}`);
+            App.toast('error', (App.t('customers.js.error_exceed') || `Payment cannot exceed the current debt of `) + App.formatCurrency(maxAmount));
             amountInput.classList.add('is-invalid');
             return;
         }
@@ -244,7 +241,7 @@ const customersModule = {
                 App.toast('error', result.error);
             }
         } catch (error) {
-            App.toast('error', 'Failed to settle debt: ' + error.message);
+            App.toast('error', (App.t('customers.js.error_settle_fail') || 'Failed to settle debt: ') + error.message);
         }
     }
 };

@@ -37,7 +37,7 @@ const vaultModule = {
         if (!container) return;
 
         if (this.accounts.length === 0) {
-            container.innerHTML = '<div class="col-12 text-center py-5">No accounts configured.</div>';
+            container.innerHTML = `<div class="col-12 text-center py-5">${App.t('vault.msg.no_accounts') || 'No accounts configured.'}</div>`;
             return;
         }
 
@@ -85,7 +85,7 @@ const vaultModule = {
         selectors.forEach(s => {
             if (!s) return;
             const isFilter = s.id === 'filter-account';
-            s.innerHTML = (isFilter ? '<option value="">All accounts</option>' : '') + options;
+            s.innerHTML = (isFilter ? `<option value="">${App.t('vault.filter.all_accounts') || 'All accounts'}</option>` : '') + options;
         });
     },
 
@@ -101,17 +101,17 @@ const vaultModule = {
         if (!tbody) return;
 
         if (!result || !result.data || result.data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-5 text-muted">No transactions recorded.</td></tr>';
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center py-5 text-muted">${App.t('vault.js.no_transactions') || 'No transactions recorded.'}</td></tr>`;
             return;
         }
 
         tbody.innerHTML = result.data.map(tx => {
             let typeBadge = '';
             switch (tx.type) {
-                case 'Income': typeBadge = '<span class="badge bg-success-subtle text-success rounded-pill px-3">Income</span>'; break;
-                case 'Expense': typeBadge = '<span class="badge bg-danger-subtle text-danger rounded-pill px-3">Expense</span>'; break;
-                case 'Transfer_In': typeBadge = '<span class="badge bg-info-subtle text-info rounded-pill px-3">Transfer In</span>'; break;
-                case 'Transfer_Out': typeBadge = '<span class="badge bg-warning-subtle text-warning rounded-pill px-3">Transfer Out</span>'; break;
+                case 'Income': typeBadge = `<span class="badge bg-success-subtle text-success rounded-pill px-3">${App.t('vault.js.type_income') || 'Income'}</span>`; break;
+                case 'Expense': typeBadge = `<span class="badge bg-danger-subtle text-danger rounded-pill px-3">${App.t('vault.js.type_expense') || 'Expense'}</span>`; break;
+                case 'Transfer_In': typeBadge = `<span class="badge bg-info-subtle text-info rounded-pill px-3">${App.t('vault.js.type_transfer_in') || 'Transfer In'}</span>`; break;
+                case 'Transfer_Out': typeBadge = `<span class="badge bg-warning-subtle text-warning rounded-pill px-3">${App.t('vault.js.type_transfer_out') || 'Transfer Out'}</span>`; break;
             }
 
             const amountClass = (tx.type === 'Income' || tx.type === 'Transfer_In') ? 'text-success' : 'text-danger';
@@ -127,7 +127,7 @@ const vaultModule = {
                     <td>${typeBadge}</td>
                     <td>
                         <div class="small fw-medium">${tx.description}</div>
-                        ${tx.related_type ? `<small class="text-muted">Réf: ${tx.related_type} #${tx.related_id}</small>` : ''}
+                        ${tx.related_type ? `<small class="text-muted">${App.t('vault.js.ref') || 'Ref'}: ${tx.related_type} #${tx.related_id}</small>` : ''}
                     </td>
                     <td class="text-end fw-bold ${amountClass}" data-order="${tx.amount}">${amountPrefix}${App.formatCurrency(tx.amount)}</td>
                     <td><small class="text-muted">${tx.user_name}</small></td>
@@ -138,10 +138,7 @@ const vaultModule = {
         this.table = $('#vaultTransactionsTable').DataTable({
             order: [[0, 'desc']],
             pageLength: 10,
-            language: {
-                search: "_INPUT_",
-                searchPlaceholder: "Search transactions..."
-            }
+            language: App.getDataTableLanguage(),
         });
     },
 
