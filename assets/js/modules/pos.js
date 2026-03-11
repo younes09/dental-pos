@@ -53,6 +53,7 @@ const posModule = {
 
         // Cart controls
         document.getElementById('btn-clear-cart').onclick = () => this.clearCart();
+        document.getElementById('cart-discount').oninput = () => this.calculateTotals();
         document.getElementById('cart-points-redeem').oninput = () => this.calculateTotals();
         document.getElementById('cart-paid-amount').oninput = () => this.calculateTotals();
 

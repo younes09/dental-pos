@@ -230,6 +230,7 @@ const purchase_ordersModule = {
             </td>
             <td><input type="number" class="form-control form-control-sm item-qty" value="1" min="1" required></td>
             <td><input type="number" step="0.01" class="form-control form-control-sm item-cost" value="0.00" required></td>
+            <td><input type="date" class="form-control form-control-sm item-expiry"></td>
             <td class="item-total fw-bold text-navy">${App.formatCurrency(0)}</td>
             <td class="text-end">
                 <button type="button" class="btn btn-sm text-danger btn-remove-item">
@@ -283,7 +284,8 @@ const purchase_ordersModule = {
                 items.push({
                     product_id: productId,
                     qty: qty,
-                    unit_cost: cost
+                    unit_cost: cost,
+                    expiry_date: row.querySelector('.item-expiry').value || null
                 });
                 total += qty * cost;
             }
@@ -383,14 +385,12 @@ const purchase_ordersModule = {
                     <td class="text-center">${item.qty}</td>
                     <td class="text-center">${item.received_qty || 0}</td>
                     <td>
-                        <input type="number" class="form-control form-control-sm text-center receive-item-input" 
-                            data-item-id="${item.id}" 
-                            data-product-id="${item.product_id}"
-                            data-max="${remaining}" 
-                            max="${remaining}" 
-                            min="0" 
-                            value="${remaining}">
+                             value="${remaining}">
                         <div class="invalid-feedback" style="font-size: 0.7rem;">${App.t('po.js.max')}: ${remaining}</div>
+                    </td>
+                    <td>
+                        <input type="date" class="form-control form-control-sm receive-item-expiry" 
+                            data-item-id="${item.id}">
                     </td>
                 </tr>
             `;
@@ -431,10 +431,12 @@ const purchase_ordersModule = {
                 input.classList.add('is-invalid');
                 hasErrors = true;
             } else if (val > 0) {
+                const expiryInput = document.querySelector(`.receive-item-expiry[data-item-id="${input.dataset.itemId}"]`);
                 receivedItems.push({
                     item_id: input.dataset.itemId,
                     product_id: input.dataset.productId,
-                    receiving_qty: val
+                    receiving_qty: val,
+                    expiry_date: expiryInput ? expiryInput.value : null
                 });
                 totalReceivingNow += val;
             }

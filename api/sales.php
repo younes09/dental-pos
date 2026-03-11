@@ -9,10 +9,11 @@ try {
     switch ($action) {
         case 'list_products':
             $stmt = $pdo->prepare("
-                SELECT id, name, selling_price, stock_qty, expiry_date, image, category_id
-                FROM products 
-                WHERE status = 'Active' 
-                ORDER BY name ASC
+                SELECT p.id, p.name, p.selling_price, p.stock_qty, p.image, p.category_id,
+                       (SELECT MIN(expiry_date) FROM stock_batches WHERE product_id = p.id AND remaining_qty > 0) as expiry_date
+                FROM products p
+                WHERE p.status = 'Active' 
+                ORDER BY p.name ASC
             ");
             $stmt->execute();
             $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -103,11 +104,14 @@ try {
                 ];
             }
 
-            // Trust but verify discount logic
-            $discount_amount = max(0, min($subtotal, (float)($data['discount_amount'] ?? 0)));
+            // Recalculate and validate discount logic
+            // The frontend sends discount_amount which is the TOTAL (manual + points)
+            // But we must ensure it doesn't exceed subtotal and is correctly composed.
+            $received_total_discount = (float)($data['discount_amount'] ?? 0);
             $points_redeemed = max(0, (int)($data['points_redeemed'] ?? 0));
             
-            // Points validation
+            // Points validation and calculation
+            $points_discount = 0;
             if ($customer_id && $points_redeemed > 0) {
                 $cust_stmt = $pdo->prepare("SELECT loyalty_points FROM customers WHERE id = ? FOR UPDATE");
                 $cust_stmt->execute([$customer_id]);
@@ -118,13 +122,15 @@ try {
                 }
                 
                 $points_discount = $points_redeemed * $point_value;
-                $discount_amount += $points_discount;
-                if ($discount_amount > $subtotal) {
-                    $discount_amount = $subtotal; // Cap it
-                }
             } else {
                 $points_redeemed = 0;
             }
+
+            // Extract manual discount from the received total and cap it
+            $manual_discount = max(0, $received_total_discount - $points_discount);
+            
+            // Final verified discount amount
+            $discount_amount = min($subtotal, $manual_discount + $points_discount);
 
             $taxable = max(0, $subtotal - $discount_amount);
             

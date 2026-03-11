@@ -9,7 +9,8 @@ try {
     switch ($action) {
         case 'list':
             $stmt = $pdo->prepare("
-                SELECT p.*, c.name as category_name, b.name as brand_name 
+                SELECT p.*, c.name as category_name, b.name as brand_name,
+                       (SELECT MIN(expiry_date) FROM stock_batches WHERE product_id = p.id AND remaining_qty > 0) as batch_expiry_date
                 FROM products p
                 LEFT JOIN categories c ON p.category_id = c.id
                 LEFT JOIN brands b ON p.brand_id = b.id
@@ -27,7 +28,7 @@ try {
             $stmt = $pdo->query("SELECT COUNT(*) as low FROM products WHERE stock_qty <= min_stock");
             $low = $stmt->fetch()['low'];
             
-            $stmt = $pdo->query("SELECT COUNT(*) as expired FROM products WHERE expiry_date <= DATE_ADD(CURDATE(), INTERVAL 1 MONTH) AND expiry_date IS NOT NULL");
+            $stmt = $pdo->query("SELECT COUNT(DISTINCT product_id) as expired FROM stock_batches WHERE expiry_date <= DATE_ADD(CURDATE(), INTERVAL 1 MONTH) AND expiry_date IS NOT NULL AND remaining_qty > 0");
             $expired = $stmt->fetch()['expired'];
             
             $stmt = $pdo->query("SELECT SUM(stock_qty * purchase_price) as value FROM products");

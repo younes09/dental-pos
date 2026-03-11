@@ -52,6 +52,7 @@ CREATE TABLE stock_batches (
     purchase_type ENUM('BA', 'BL') DEFAULT 'BA',
     initial_qty INT NOT NULL,
     remaining_qty INT NOT NULL,
+    expiry_date DATE NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
 );
@@ -328,4 +329,18 @@ CREATE TABLE IF NOT EXISTS customer_payments (
     user_id INT,
     FOREIGN KEY (customer_id) REFERENCES customers(id),
     FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+-- Notifications table
+CREATE TABLE notifications (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NULL,
+    role VARCHAR(50) NULL,
+    title VARCHAR(255) NOT NULL,
+    message TEXT,
+    type ENUM('success', 'info', 'warning', 'danger') DEFAULT 'info',
+    link VARCHAR(255) NULL,
+    is_read TINYINT(1) DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );

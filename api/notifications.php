@@ -13,12 +13,14 @@ try {
             // Generate expiry warnings proactively
             if (in_array($user_role, ['Admin', 'Stock Manager'])) {
                 $expiry_stmt = $pdo->prepare("
-                    SELECT id, name, expiry_date 
-                    FROM products 
-                    WHERE status = 'Active' 
-                    AND expiry_date IS NOT NULL 
-                    AND expiry_date <= DATE_ADD(CURRENT_DATE, INTERVAL 30 DAY)
-                    AND expiry_date >= CURRENT_DATE
+                    SELECT b.id as batch_id, p.name, b.expiry_date, p.id as product_id
+                    FROM stock_batches b
+                    JOIN products p ON b.product_id = p.id
+                    WHERE p.status = 'Active'
+                    AND b.remaining_qty > 0
+                    AND b.expiry_date IS NOT NULL 
+                    AND b.expiry_date <= DATE_ADD(CURRENT_DATE, INTERVAL 30 DAY)
+                    AND b.expiry_date >= CURRENT_DATE
                 ");
                 $expiry_stmt->execute();
                 $expiring_products = $expiry_stmt->fetchAll();

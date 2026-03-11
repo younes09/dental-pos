@@ -117,17 +117,17 @@ INSERT INTO cash_sessions (user_id, opening_balance, expected_balance, status) V
 (1, 5000.00, 5000.00, 'Open');
 
 -- 11. Stock Batches
-INSERT INTO stock_batches (product_id, purchase_type, initial_qty, remaining_qty) VALUES
-(1, 'BA', 50, 50),
-(2, 'BA', 30, 30),
-(3, 'BA', 100, 100),
-(4, 'BA', 24, 24),
-(5, 'BA', 15, 15),
-(6, 'BA', 200, 200),
-(7, 'BA', 40, 40),
-(8, 'BA', 12, 12),
-(9, 'BA', 500, 500),
-(10, 'BA', 25, 25);
+INSERT INTO stock_batches (product_id, purchase_type, initial_qty, remaining_qty, expiry_date) VALUES
+(1, 'BA', 50, 50, '2027-12-31'),
+(2, 'BA', 30, 30, '2026-06-30'),
+(3, 'BA', 100, 100, '2028-01-01'),
+(4, 'BA', 24, 24, '2025-08-15'),
+(5, 'BA', 15, 15, '2026-11-20'),
+(6, 'BA', 200, 200, '2029-01-01'),
+(7, 'BA', 40, 40, '2027-05-10'),
+(8, 'BA', 12, 12, '2026-03-30'),
+(9, 'BA', 500, 500, '2030-01-01'),
+(10, 'BA', 25, 25, NULL);
 
 -- 12. Purchase Orders
 INSERT INTO purchase_orders (supplier_id, date, status, total, paid_amount, payment_status) VALUES
@@ -136,15 +136,15 @@ INSERT INTO purchase_orders (supplier_id, date, status, total, paid_amount, paym
 (3, '2026-03-05', 'Pending', 2100.50, 0.00, 'Unpaid');
 
 -- 13. Purchase Order Items
-INSERT INTO purchase_order_items (po_id, product_id, qty, received_qty, unit_cost) VALUES
-(1, 1, 20, 20, 35.50),
-(1, 2, 10, 10, 12.00),
-(2, 4, 12, 12, 45.00);
+INSERT INTO purchase_order_items (po_id, product_id, qty, received_qty, unit_cost, old_unit_cost) VALUES
+(1, 1, 20, 20, 35.50, 35.50),
+(1, 2, 10, 10, 12.00, 12.00),
+(2, 4, 12, 12, 45.00, 45.00);
 
 -- 14. Sales
-INSERT INTO sales (customer_id, user_id, cash_session_id, subtotal, discount, tax, total, paid_amount, payment_status, payment_method) VALUES
-(1, 1, 1, 130.00, 0, 0, 130.00, 130.00, 'Paid', 'Cash'),
-(2, 1, 1, 65.00, 5.00, 0, 60.00, 60.00, 'Paid', 'Cash');
+INSERT INTO sales (customer_id, user_id, cash_session_id, subtotal, discount, tax, total, paid_amount, payment_status, payment_method, points_earned) VALUES
+(1, 1, 1, 130.00, 0, 0, 130.00, 130.00, 'Paid', 'Cash', 13),
+(2, 1, 1, 65.00, 5.00, 0, 60.00, 60.00, 'Paid', 'Cash', 6);
 
 -- 15. Sale Items (including cost_price)
 INSERT INTO sale_items (sale_id, product_id, qty, unit_price, cost_price, total) VALUES
