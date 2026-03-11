@@ -58,10 +58,17 @@ const App = {
     },
 
     // Translation Helpers
-    t(key) {
+    t(key, params = null) {
         const lang = localStorage.getItem('app_language') || 'fr';
         // Fallback to English if translation is missing
-        return (locales[lang] && locales[lang][key]) || (locales['en'] && locales['en'][key]) || key;
+        let translation = (locales[lang] && locales[lang][key]) || (locales['en'] && locales['en'][key]) || key;
+
+        if (params) {
+            Object.keys(params).forEach(p => {
+                translation = translation.replace(`{${p}}`, params[p]);
+            });
+        }
+        return translation;
     },
 
     getDataTableLanguage() {

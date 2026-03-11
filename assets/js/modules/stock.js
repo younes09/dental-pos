@@ -126,6 +126,7 @@ const stockModule = {
                     id: formData.get('id'),
                     type: formData.get('adjustment_type'),
                     qty: formData.get('quantity'),
+                    expiry_date: formData.get('expiry_date'),
                     purchase_type: formData.get('purchase_type') || 'BA'
                 });
                 const result = await App.api(`products.php?${queryParams.toString()}`);
@@ -178,27 +179,29 @@ const stockModule = {
                 {
                     data: 'stock_qty',
                     render: (data, type, row) => {
-                        if (type === 'display') {
-                            if (data <= 0) {
-                                return `<span class="badge bg-danger-subtle text-danger border border-danger p-1 small" style="font-size: 0.75rem;"><i class="fas fa-exclamation-circle me-1"></i>${App.t('stock.badge.out_of_stock', { qty: data }) || `Out of Stock (${data})`}</span>`;
-                            } else if (data <= row.min_stock) {
-                                return `<span class="badge bg-warning-subtle text-warning-emphasis border border-warning p-1 small" style="font-size: 0.75rem;"><i class="fas fa-clock me-1"></i>${App.t('stock.badge.low_stock', { qty: data }) || `Low Stock (${data})`}</span>`;
-                            }
+                        const qty = parseInt(data || 0);
+                        if (type !== 'display') return qty;
+
+                        if (qty <= 0) {
+                            return `<span class="badge bg-danger-subtle text-danger border border-danger p-1 small" style="font-size: 0.75rem;"><i class="fas fa-exclamation-circle me-1"></i>${App.t('stock.badge.out_of_stock', { qty: qty }) || `Out of Stock (${qty})`}</span>`;
+                        } else if (qty <= parseInt(row.min_stock || 5)) {
+                            return `<span class="badge bg-warning-subtle text-warning-emphasis border border-warning p-1 small" style="font-size: 0.75rem;"><i class="fas fa-clock me-1"></i>${App.t('stock.badge.low_stock', { qty: qty }) || `Low Stock (${qty})`}</span>`;
                         }
-                        return `<span class="badge bg-success-subtle text-success border border-success p-1 small" style="font-size: 0.75rem;"><i class="fas fa-check-circle me-1"></i>${App.t('stock.badge.in_stock', { qty: data }) || `In Stock (${data})`}</span>`;
+                        return `<span class="badge bg-success-subtle text-success border border-success p-1 small" style="font-size: 0.75rem;"><i class="fas fa-check-circle me-1"></i>${App.t('stock.badge.in_stock', { qty: qty }) || `In Stock (${qty})`}</span>`;
                     }
                 },
                 {
-                    data: 'expiry_date',
+                    data: 'batch_expiry_date',
                     render: (data, type, row) => {
                         if (type === 'display') {
-                            if (!data) return '<small class="text-muted">N/A</small>';
+                            const dateToUse = data || row.expiry_date;
+                            if (!dateToUse) return '<small class="text-muted">N/A</small>';
                             const today = new Date();
-                            const expiry = new Date(data);
+                            const expiry = new Date(dateToUse);
 
                             // Expired
                             if (expiry <= today) {
-                                return `<span class="badge bg-danger-subtle text-danger border border-danger p-1 small" style="font-size: 0.75rem;"><i class="fas fa-exclamation-circle me-1"></i>${App.t('stock.badge.expired', { date: data }) || `Expired (${data})`}</span>`;
+                                return `<span class="badge bg-danger-subtle text-danger border border-danger p-1 small" style="font-size: 0.75rem;"><i class="fas fa-exclamation-circle me-1"></i>${App.t('stock.badge.expired', { date: dateToUse }) || `Expired (${dateToUse})`}</span>`;
                             }
 
                             // Near Expiry (within 30 days)
@@ -206,10 +209,10 @@ const stockModule = {
                             oneMonthFromNow.setMonth(today.getMonth() + 1);
 
                             if (expiry <= oneMonthFromNow) {
-                                return `<span class="badge bg-warning-subtle text-warning-emphasis border border-warning p-1 small" style="font-size: 0.75rem;"><i class="fas fa-clock me-1"></i>${App.t('stock.badge.near_expiry', { date: data }) || `Near (${data})`}</span>`;
+                                return `<span class="badge bg-warning-subtle text-warning-emphasis border border-warning p-1 small" style="font-size: 0.75rem;"><i class="fas fa-clock me-1"></i>${App.t('stock.badge.near_expiry', { date: dateToUse }) || `Near (${dateToUse})`}</span>`;
                             }
 
-                            return `<span class="small">${data}</span>`;
+                            return `<span class="small">${dateToUse}</span>`;
                         }
                         return data;
                     }
@@ -373,12 +376,15 @@ const stockModule = {
         // Bind adj-type toggle
         const adjType = document.getElementById('adj-type');
         const adjPurchaseTypeContainer = document.getElementById('adj-purchase-type-container');
+        const adjExpiryContainer = document.getElementById('adj-expiry-container');
 
         adjType.onchange = (e) => {
             if (e.target.value === 'add') {
                 adjPurchaseTypeContainer.classList.remove('d-none');
+                adjExpiryContainer.classList.remove('d-none');
             } else {
                 adjPurchaseTypeContainer.classList.add('d-none');
+                adjExpiryContainer.classList.add('d-none');
             }
         };
         adjType.dispatchEvent(new Event('change'));
