@@ -233,6 +233,7 @@ const stockModule = {
                         <div class="dropdown">
                             <button class="btn btn-sm btn-light" data-bs-toggle="dropdown"><i class="fas fa-ellipsis-v"></i></button>
                             <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+                                <li><a class="dropdown-item" href="javascript:void(0)" onclick="stockModule.viewDetails(${data.id})"><i class="fas fa-eye me-2 text-info"></i>${App.t('stock.action.details') || 'View Details'}</a></li>
                                 <li><a class="dropdown-item" href="javascript:void(0)" onclick="stockModule.editProduct(${data.id})"><i class="fas fa-edit me-2 text-primary"></i>${App.t('stock.action.edit') || 'Edit'}</a></li>
                                 <li><a class="dropdown-item" href="javascript:void(0)" onclick="stockModule.adjustStock(${data.id})"><i class="fas fa-arrows-rotate me-2 text-warning"></i>${App.t('stock.action.adjust') || 'Adjust Stock'}</a></li>
                                 <li><hr class="dropdown-divider"></li>
@@ -390,6 +391,131 @@ const stockModule = {
         adjType.dispatchEvent(new Event('change'));
 
         new bootstrap.Modal(document.getElementById('adjustmentModal')).show();
+    },
+
+    async viewDetails(id) {
+        try {
+            const response = await App.api(`products.php?action=get_details&id=${id}`);
+            if (response && response.error) {
+                App.toast('error', response.error);
+                return;
+            }
+            
+            const product = response.product || {};
+            const batches = response.batches || [];
+            const history = response.history || [];
+            
+            // Populate Overview
+            document.getElementById('detail-product-name').textContent = product.name;
+            document.getElementById('detail-product-barcode').innerHTML = `<i class="fas fa-barcode me-1"></i>${product.barcode || 'N/A'}`;
+            document.getElementById('detail-product-image').src = product.image ? `assets/img/products/${product.image}` : `assets/img/img_holder.png`;
+            
+            document.getElementById('detail-category').textContent = product.category_name || '-';
+            document.getElementById('detail-brand').textContent = product.brand_name || '-';
+            document.getElementById('detail-stock-qty').textContent = product.stock_qty;
+            
+            const statusColor = product.status === 'Active' ? 'success' : 'secondary';
+            document.getElementById('detail-status').innerHTML = `<span class="badge bg-${statusColor}-subtle text-${statusColor} px-3">${product.status || 'Active'}</span>`;
+            
+            document.getElementById('detail-purchase-price').textContent = App.formatCurrency(product.purchase_price);
+            document.getElementById('detail-selling-price').textContent = App.formatCurrency(product.selling_price);
+            document.getElementById('detail-min-stock').textContent = product.min_stock;
+            document.getElementById('detail-stock-value').textContent = App.formatCurrency(parseFloat(product.stock_qty) * parseFloat(product.purchase_price));
+            
+            const pp = parseFloat(product.purchase_price) || 0;
+            const sp = parseFloat(product.selling_price) || 0;
+            const margin = pp > 0 ? ((sp - pp) / pp * 100).toFixed(1) : 100;
+            document.getElementById('detail-margin').textContent = `${margin}%`;
+
+            // Destory existing DataTables if present
+            if ($.fn.DataTable.isDataTable('#detailBatchesTable')) {
+                $('#detailBatchesTable').DataTable().destroy();
+            }
+            if ($.fn.DataTable.isDataTable('#detailHistoryTable')) {
+                $('#detailHistoryTable').DataTable().destroy();
+            }
+
+            // Populate Batches
+            const batchesBody = document.getElementById('detail-batches-body');
+            batchesBody.innerHTML = '';
+            batches.forEach(b => {
+                const today = new Date();
+                const expiry = b.expiry_date ? new Date(b.expiry_date) : null;
+                let expClass = '';
+                if (expiry) {
+                    if (expiry <= today) expClass = 'text-danger fw-bold';
+                    else {
+                        const oneMonth = new Date();
+                        oneMonth.setMonth(today.getMonth() + 1);
+                        if (expiry <= oneMonth) expClass = 'text-warning fw-bold';
+                    }
+                }
+                
+                const addedDate = new Date(b.created_at).toLocaleDateString() || '-';
+                
+                batchesBody.innerHTML += `
+                    <tr>
+                        <td>${addedDate}</td>
+                        <td><span class="badge bg-secondary-subtle text-body border border-secondary-subtle">${b.purchase_type || 'BA'}</span></td>
+                        <td>${b.initial_qty}</td>
+                        <td class="fw-bold text-primary">${b.remaining_qty}</td>
+                        <td class="${expClass}">${b.expiry_date || '<span class="text-muted">N/A</span>'}</td>
+                    </tr>
+                `;
+            });
+
+            // Populate History
+            const historyBody = document.getElementById('detail-history-body');
+            historyBody.innerHTML = '';
+            history.forEach(h => {
+                historyBody.innerHTML += `
+                    <tr>
+                        <td>${new Date(h.po_date).toLocaleDateString()}</td>
+                        <td class="fw-bold">#${h.po_id}</td>
+                        <td>${h.supplier_name}</td>
+                        <td class="text-center">${h.qty}</td>
+                        <td class="text-center text-success">${h.received_qty}</td>
+                        <td class="text-end">${App.formatCurrency(h.unit_cost)}</td>
+                    </tr>
+                `;
+            });
+
+            // Re-initialize translations for potentially dynamic content
+            if(typeof App.initI18n === 'function') {
+                App.initI18n(document.getElementById('productDetailsModal'));
+            }
+
+            // Initialize DataTables
+            $('#detailBatchesTable').DataTable({
+                language: App.getDataTableLanguage(),
+                order: [[4, 'asc']], // Expiry sort
+                pageLength: 5,
+                lengthMenu: [5, 10, 25],
+                info: false,
+                autoWidth: false
+            });
+
+            $('#detailHistoryTable').DataTable({
+                language: App.getDataTableLanguage(),
+                order: [[0, 'desc']], // Date sort
+                pageLength: 5,
+                lengthMenu: [5, 10, 25],
+                info: false,
+                autoWidth: false
+            });
+
+            // Reset tabs to first tab
+            const firstTabEl = document.querySelector('#productDetailsModal .nav-link');
+            if(firstTabEl) {
+                const firstTab = new bootstrap.Tab(firstTabEl);
+                firstTab.show();
+            }
+
+            new bootstrap.Modal(document.getElementById('productDetailsModal')).show();
+        } catch (error) {
+            console.error(error);
+            App.toast('error', App.t('error.generic') || 'An error occurred fetching details');
+        }
     },
 
     handleImportFileSelect(file) {

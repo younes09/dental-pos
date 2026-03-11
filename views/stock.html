@@ -345,3 +345,149 @@
         </div>
     </div>
 </div>
+
+<!-- Product Details Modal -->
+<div class="modal fade" id="productDetailsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-bottom-0 p-4 pb-0">
+                <div class="d-flex align-items-center gap-3">
+                    <img id="detail-product-image" src="assets/img/img_holder.png" class="rounded shadow-sm" style="width: 60px; height: 60px; object-fit: cover;">
+                    <div>
+                        <h4 class="modal-title fw-bold mb-0" id="detail-product-name">Product Name</h4>
+                        <span class="badge bg-secondary-subtle border border-secondary-subtle mt-1" id="detail-product-barcode"><i class="fas fa-barcode me-1"></i>...</span>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <div class="modal-body p-4">
+                <!-- Tabs -->
+                <ul class="nav nav-pills nav-fill bg-secondary-subtle rounded-3 p-1 mb-4" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active rounded-3 fw-semibold" data-bs-toggle="pill" data-bs-target="#tab-overview" type="button" role="tab">
+                            <i class="fas fa-info-circle me-2"></i><span data-i18n="stock.details.tab_overview">Overview</span>
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link rounded-3 fw-semibold" data-bs-toggle="pill" data-bs-target="#tab-batches" type="button" role="tab">
+                            <i class="fas fa-cubes me-2"></i><span data-i18n="stock.details.tab_batches">Stock Batches</span>
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link rounded-3 fw-semibold" data-bs-toggle="pill" data-bs-target="#tab-history" type="button" role="tab">
+                            <i class="fas fa-history me-2"></i><span data-i18n="stock.details.tab_history">Purchase History</span>
+                        </button>
+                    </li>
+                </ul>
+
+                <div class="tab-content">
+                    <!-- Overview Tab -->
+                    <div class="tab-pane fade show active" id="tab-overview" role="tabpanel">
+                        <div class="row g-4">
+                            <div class="col-md-3">
+                                <div class="p-3 bg-secondary-subtle rounded-4">
+                                    <small class="text-muted d-block mb-1" data-i18n="stock.details.category">Category</small>
+                                    <h6 class="fw-bold mb-0" id="detail-category">-</h6>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="p-3 bg-secondary-subtle rounded-4">
+                                    <small class="text-muted d-block mb-1" data-i18n="stock.details.brand">Brand</small>
+                                    <h6 class="fw-bold mb-0" id="detail-brand">-</h6>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="p-3 bg-secondary-subtle rounded-4">
+                                    <small class="text-muted d-block mb-1" data-i18n="stock.details.stock_qty">Current Stock Qty</small>
+                                    <h4 class="fw-bold mb-0" id="detail-stock-qty">0</h4>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="p-3 bg-secondary-subtle rounded-4">
+                                    <small class="text-muted d-block mb-1" data-i18n="stock.details.status">Status</small>
+                                    <div id="detail-status">-</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="p-4 bg-secondary-subtle rounded-4 h-100 ">
+                                    <h6 class="fw-bold mb-3 text-muted"><i class="fas fa-tags me-2"></i><span data-i18n="stock.details.pricing_margin">Pricing & Margin</span></h6>
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="" data-i18n="stock.details.purchase_price">Purchase Price:</span>
+                                        <span class="fw-bold text-danger" id="detail-purchase-price">0.00</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="" data-i18n="stock.details.selling_price">Selling Price:</span>
+                                        <span class="fw-bold text-teal fs-5" id="detail-selling-price">0.00</span>
+                                    </div>
+                                    <hr class="text-muted opacity-25">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="" data-i18n="stock.details.margin_est">Est. Margin:</span>
+                                        <span class="fw-bold text-success" id="detail-margin">0%</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="p-4 bg-secondary-subtle rounded-4 h-100 ">
+                                    <h6 class="fw-bold mb-3 text-muted"><i class="fas fa-boxes me-2"></i><span data-i18n="stock.details.inventory_stats">Inventory Stats</span></h6>
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="" data-i18n="stock.details.min_stock">Minimum Stock Level:</span>
+                                        <span class="fw-bold" id="detail-min-stock">0</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="" data-i18n="stock.details.inventory_value">Total Est. Value:</span>
+                                        <span class="fw-bold text-primary" id="detail-stock-value">0.00</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Batches Tab -->
+                    <div class="tab-pane fade" id="tab-batches" role="tabpanel">
+                        <div class="table-responsive  rounded-4 border border-secondary-subtle p-2">
+                            <table class="table table-hover align-middle mb-0 w-100" id="detailBatchesTable">
+                                <thead>
+                                    <tr>
+                                        <th data-i18n="stock.details.batch_added">Date Added</th>
+                                        <th data-i18n="stock.details.batch_type">Type</th>
+                                        <th data-i18n="stock.details.batch_initial">Initial Qty</th>
+                                        <th data-i18n="stock.details.batch_remain">Remaining Qty</th>
+                                        <th data-i18n="stock.details.batch_expiry">Expiry Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="detail-batches-body">
+                                    <!-- Batches rows generated via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- History Tab -->
+                    <div class="tab-pane fade" id="tab-history" role="tabpanel">
+                        <div class="table-responsive  rounded-4 border border-secondary-subtle p-2">
+                            <table class="table table-hover align-middle mb-0 w-100" id="detailHistoryTable">
+                                <thead>
+                                    <tr>
+                                        <th data-i18n="stock.details.hist_date">Date</th>
+                                        <th data-i18n="stock.details.hist_po">PO #</th>
+                                        <th data-i18n="stock.details.hist_supplier">Supplier</th>
+                                        <th class="text-center" data-i18n="stock.details.hist_ordered">Ordered Qty</th>
+                                        <th class="text-center" data-i18n="stock.details.hist_received">Received Qty</th>
+                                        <th class="text-end" data-i18n="stock.details.hist_cost">Unit Cost</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="detail-history-body">
+                                    <!-- History rows generated via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-top-0 p-4">
+                <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal" data-i18n="btn.close">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
