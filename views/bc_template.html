@@ -359,8 +359,39 @@
         </div>
     </div>
 
+    <script src="../assets/js/locales.js"></script>
     <script>
-        function populateBC(data, t) {
+        function t(key, params = null) {
+            // Priority 1: Use parent window's translation if available (reliable)
+            try {
+                if (window.opener && window.opener.App && typeof window.opener.App.t === 'function') {
+                    return window.opener.App.t(key, params);
+                }
+            } catch (e) {
+                // Ignore cross-origin or access errors
+            }
+
+            // Priority 2: Safe local translation fallback
+            let lang = 'fr'; // default
+            try {
+                lang = localStorage.getItem('app_language') || 'fr';
+            } catch (e) {
+                console.warn('localStorage not accessible, using default language.');
+            }
+
+            let translation = (typeof locales !== 'undefined' && locales[lang] && locales[lang][key]) || 
+                              (typeof locales !== 'undefined' && locales['en'] && locales['en'][key]) || 
+                              key;
+
+            if (params && typeof translation === 'string') {
+                Object.keys(params).forEach(p => {
+                    translation = translation.replace(`{${p}}`, params[p]);
+                });
+            }
+            return translation;
+        }
+
+        function populateBC(data) {
             const { order, items, settings } = data;
             const currency = settings?.currency || 'DZD';
 
@@ -418,15 +449,13 @@
 
         // Helper to handle population and translation
         function initTemplate(payload) {
-            const t = window.opener && window.opener.App && window.opener.App.t ? window.opener.App.t : (k) => k.split('.').pop();
-            
             // Translate static UI elements
             document.querySelectorAll('[data-i18n]').forEach(el => {
                 const key = el.getAttribute('data-i18n');
                 el.innerHTML = t(key);
             });
 
-            populateBC(payload, t);
+            populateBC(payload);
         }
 
         // Listen for data from parent window
