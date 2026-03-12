@@ -263,10 +263,9 @@ if (!isset($_SESSION['user_id'])) {
                                 <h6 class="mb-0 fw-bold" data-i18n="topbar.notifications">Notifications</h6>
                                 <small class="text-teal pointer" onclick="App.markAllNotificationsRead()" data-i18n="topbar.mark_all_read">Mark all as read</small>
                             </li>
-                            <div class="notification-list" style="max-height: 300px; overflow-y: auto;">
+                            <ul class="notification-list list-unstyled mb-0" style="max-height: 300px; overflow-y: auto;">
                                 <!-- Dynamic content -->
-                                <li class="p-3 text-center text-muted small" data-i18n="app.loading">Loading...</li>
-                            </div>
+                            </ul>
                             <li class="text-center p-2 border-top notification-footer">
                                 <a href="#notifications" class="small text-muted text-decoration-none" data-i18n="topbar.view_all">View All Notifications</a>
                             </li>

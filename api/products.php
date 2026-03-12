@@ -89,6 +89,19 @@ try {
                 if (!is_dir($target_dir)) mkdir($target_dir, 0777, true);
                 $file_name = time() . "_" . bin2hex(random_bytes(4)) . "." . $ext;
                 if (move_uploaded_file($_FILES["image"]["tmp_name"], $target_dir . $file_name)) {
+                    // If this is an update, delete the old image
+                    if ($id) {
+                        $old_img_stmt = $pdo->prepare("SELECT image FROM products WHERE id = ?");
+                        $old_img_stmt->execute([$id]);
+                        $old_image = $old_img_stmt->fetchColumn();
+                        
+                        if ($old_image && !empty($old_image) && !in_array($old_image, ['default.jpg', 'default.png'])) {
+                            $old_image_path = $target_dir . $old_image;
+                            if (file_exists($old_image_path)) {
+                                unlink($old_image_path);
+                            }
+                        }
+                    }
                     $image = $file_name;
                 }
             }
@@ -129,6 +142,19 @@ try {
                 throw new Exception('Only Admins can delete products.');
             }
             $id = $_GET['id'];
+            
+            // Get product image to delete it from disk
+            $stmt = $pdo->prepare("SELECT image FROM products WHERE id = ?");
+            $stmt->execute([$id]);
+            $product = $stmt->fetch();
+            
+            if ($product && !empty($product['image']) && !in_array($product['image'], ['default.jpg', 'default.png'])) {
+                $image_path = "../assets/img/products/" . $product['image'];
+                if (file_exists($image_path)) {
+                    unlink($image_path);
+                }
+            }
+            
             $stmt = $pdo->prepare("DELETE FROM products WHERE id = ?");
             $stmt->execute([$id]);
             echo json_encode(['success' => 'Product deleted successfully']);

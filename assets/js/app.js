@@ -564,7 +564,7 @@ const App = {
 
     renderNotifications(notifications) {
         const countEl = document.getElementById('notificationCount');
-        const listEl = document.querySelector('.dropdown-menu .notification-list'); // I will add this class to index.php
+        const listEl = document.querySelector('.notification-list');
 
         if (!countEl) return;
 
@@ -593,40 +593,40 @@ const App = {
 
         if (count === 0) {
             listEl.innerHTML = `
-                < li class="p-5 text-center text-muted" >
-                    <i class="fas fa-bell-slash fa-3x mb-3 opacity-25"></i>
-                    <p class="mb-0 small">No new notifications</p>
-                </li > `;
+                <li class="p-4 text-center text-muted">
+                    <i class="fas fa-bell-slash fa-2x mb-2 opacity-25"></i>
+                    <p class="mb-0 small" data-i18n="topbar.no_notifications">No new notifications</p>
+                </li>`;
             return;
         }
 
         listEl.innerHTML = notifications.map(n => `
-    < li class="notification-item p-3 border-bottom unread pointer" onclick = "App.handleNotificationClick(${n.id}, '${n.link || ''}')" >
-        <div class="d-flex align-items-center">
-            <div class="icon-circle bg-${n.type}-subtle text-${n.type} me-3">
-                <i class="fas ${this.getNotificationIcon(n.type)}"></i>
-            </div>
-            <div>
-                <p class="mb-1 small fw-medium">${n.title}</p>
-                <small class="text-muted">${n.message}</small>
-            </div>
-        </div>
-            </li >
-    `).join('');
+            <li class="notification-item p-3 border-bottom unread pointer" onclick="App.handleNotificationClick(${n.id}, '${n.link || ''}')">
+                <div class="d-flex align-items-start">
+                    <div class="icon-circle bg-${n.type}-subtle text-${n.type} me-3">
+                        <i class="fas ${this.getNotificationIcon(n.type)}"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <p class="mb-0 small fw-bold">${n.title}</p>
+                        <p class="mb-0 small text-muted text-wrap" style="line-height: 1.3;">${n.message}</p>
+                    </div>
+                </div>
+            </li>
+        `).join('');
     },
 
     getNotificationIcon(type) {
         const icons = {
-            'warning': 'fa-exclamation-triangle',
-            'info': 'fa-info-circle',
-            'success': 'fa-check-circle',
-            'danger': 'fa-exclamation-circle'
+            'warning': 'fa-triangle-exclamation',
+            'info': 'fa-circle-info',
+            'success': 'fa-circle-check',
+            'danger': 'fa-circle-xmark'
         };
         return icons[type] || 'fa-bell';
     },
 
     async handleNotificationClick(id, link) {
-        await this.api(`notifications.php ? action = mark_read & id=${id} `);
+        await this.api(`notifications.php?action=mark_read&id=${id}`);
         if (link) window.location.hash = link;
         this.loadNotifications();
     },
