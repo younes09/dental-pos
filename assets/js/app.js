@@ -597,22 +597,24 @@ const App = {
                     <i class="fas fa-bell-slash fa-2x mb-2 opacity-25"></i>
                     <p class="mb-0 small" data-i18n="topbar.no_notifications">No new notifications</p>
                 </li>`;
-            return;
+        } else {
+            listEl.innerHTML = notifications.map(n => `
+                <li class="notification-item p-3 border-bottom unread pointer" onclick="App.handleNotificationClick(${n.id}, '${n.link || ''}')">
+                    <div class="d-flex align-items-start">
+                        <div class="icon-circle bg-${n.type}-subtle text-${n.type} me-3">
+                            <i class="fas ${this.getNotificationIcon(n.type)}"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <p class="mb-0 small fw-bold">${n.title}</p>
+                            <p class="mb-0 small text-muted text-wrap" style="line-height: 1.3;">${n.message}</p>
+                        </div>
+                    </div>
+                </li>
+            `).join('');
         }
 
-        listEl.innerHTML = notifications.map(n => `
-            <li class="notification-item p-3 border-bottom unread pointer" onclick="App.handleNotificationClick(${n.id}, '${n.link || ''}')">
-                <div class="d-flex align-items-start">
-                    <div class="icon-circle bg-${n.type}-subtle text-${n.type} me-3">
-                        <i class="fas ${this.getNotificationIcon(n.type)}"></i>
-                    </div>
-                    <div class="flex-grow-1">
-                        <p class="mb-0 small fw-bold">${n.title}</p>
-                        <p class="mb-0 small text-muted text-wrap" style="line-height: 1.3;">${n.message}</p>
-                    </div>
-                </div>
-            </li>
-        `).join('');
+        // Translate the newly injected content
+        this.translate(listEl);
     },
 
     getNotificationIcon(type) {

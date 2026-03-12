@@ -91,7 +91,9 @@ const notificationsModule = {
     }
 };
 
-// Initialize if loaded directly
-if (App.state.currentRoute === 'notifications') {
+// Initialize if loaded directly or via SPA
+if (document.getElementById('notificationsTable')) {
     notificationsModule.init();
 }
+
+window.notificationsModule = notificationsModule;
