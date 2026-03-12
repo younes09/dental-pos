@@ -319,6 +319,67 @@ try {
             }
             exit;
             
+        case 'get_details':
+            $id = $_GET['id'];
+            
+            // Basic Product Info
+            $stmt = $pdo->prepare("
+                SELECT p.*, c.name as category_name, b.name as brand_name
+                FROM products p
+                LEFT JOIN categories c ON p.category_id = c.id
+                LEFT JOIN brands b ON p.brand_id = b.id
+                WHERE p.id = ?
+            ");
+            $stmt->execute([$id]);
+            $product = $stmt->fetch();
+            
+            if (!$product) {
+                echo json_encode(['error' => 'Product not found']);
+                exit;
+            }
+            
+            // Batches
+            $batch_stmt = $pdo->prepare("
+                SELECT purchase_type, initial_qty, remaining_qty, expiry_date, created_at
+                FROM stock_batches 
+                WHERE product_id = ? AND remaining_qty > 0
+                ORDER BY IFNULL(expiry_date, '9999-12-31') ASC, created_at ASC
+            ");
+            $batch_stmt->execute([$id]);
+            $batches = $batch_stmt->fetchAll();
+            
+            // Purchase History
+            $history_stmt = $pdo->prepare("
+                SELECT po.id as po_id, po.date as po_date, s.name as supplier_name, 
+                       poi.qty, poi.received_qty, poi.unit_cost
+                FROM purchase_order_items poi
+                JOIN purchase_orders po ON poi.po_id = po.id
+                JOIN suppliers s ON po.supplier_id = s.id
+                WHERE poi.product_id = ?
+                ORDER BY po.date DESC, po.id DESC
+            ");
+            $history_stmt->execute([$id]);
+            $history = $history_stmt->fetchAll();
+            
+            // Adjustments History
+            $adj_stmt = $pdo->prepare("
+                SELECT type, qty, reason, date, u.name as user_name
+                FROM stock_adjustments sa
+                LEFT JOIN users u ON sa.user_id = u.id
+                WHERE sa.product_id = ?
+                ORDER BY sa.date DESC
+            ");
+            $adj_stmt->execute([$id]);
+            $adjustments = $adj_stmt->fetchAll();
+            
+            echo json_encode([
+                'product' => $product,
+                'batches' => $batches,
+                'history' => $history,
+                'adjustments' => $adjustments
+            ]);
+            break;
+
         default:
             echo json_encode(['error' => 'Invalid action']);
             break;

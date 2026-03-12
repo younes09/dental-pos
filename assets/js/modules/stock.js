@@ -456,7 +456,7 @@ const stockModule = {
                 batchesBody.innerHTML += `
                     <tr>
                         <td>${addedDate}</td>
-                        <td><span class="badge bg-secondary-subtle text-body border border-secondary-subtle">${b.purchase_type || 'BA'}</span></td>
+                        <td><span class="badge bg-secondary-subtle border border-secondary-subtle">${b.purchase_type || 'BA'}</span></td>
                         <td>${b.initial_qty}</td>
                         <td class="fw-bold text-primary">${b.remaining_qty}</td>
                         <td class="${expClass}">${b.expiry_date || '<span class="text-muted">N/A</span>'}</td>
