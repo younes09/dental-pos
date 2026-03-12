@@ -41,6 +41,17 @@ const customersModule = {
                 { data: 'phone', render: (data) => data || `<span class="text-muted">${App.t('customers.js.na') || 'N/A'}</span>` },
                 { data: 'email', render: (data) => data || `<span class="text-muted">${App.t('customers.js.na') || 'N/A'}</span>` },
                 {
+                    data: 'total_purchases',
+                    type: 'num',
+                    render: (data, type) => {
+                        const val = parseFloat(data || 0);
+                        if (type === 'display') {
+                            return `<span class="fw-bold text-teal">${App.formatCurrency(val)}</span>`;
+                        }
+                        return val;
+                    }
+                },
+                {
                     data: 'balance',
                     type: 'num',
                     render: (data, type, row) => {

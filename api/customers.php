@@ -8,10 +8,11 @@ $action = $_GET['action'] ?? 'list';
 try {
     switch ($action) {
         case 'list':
-            // Added subquery or join for last visit (latest sale date)
+            // Added subquery or join for last visit and total purchases
             $stmt = $pdo->prepare("
                 SELECT c.*, 
-                (SELECT date FROM sales WHERE customer_id = c.id ORDER BY date DESC LIMIT 1) as last_visit
+                (SELECT date FROM sales WHERE customer_id = c.id ORDER BY date DESC LIMIT 1) as last_visit,
+                (SELECT COALESCE(SUM(total), 0) FROM sales WHERE customer_id = c.id AND (status != 'Cancelled' OR status IS NULL)) as total_purchases
                 FROM customers c
                 ORDER BY c.id DESC
             ");
