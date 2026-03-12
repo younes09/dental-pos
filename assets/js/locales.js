@@ -764,6 +764,7 @@ const locales = {
         "reports.btn.generate": "Generate Report",
         "reports.js.exporting_pdf": "PDF Exporting...",
         "reports.js.exporting_excel": "Excel Exporting...",
+        "reports.js.no_data_export": "No data to export",
         "reports.js.no_data": "No data found for the selected period",
         "reports.col.id": "ID",
         "reports.col.customer": "Customer",

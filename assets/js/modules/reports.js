@@ -24,8 +24,8 @@ const reportsModule = {
             this.generateReport();
         };
 
-        document.getElementById('btn-export-pdf').onclick = () => App.toast('info', App.t('reports.js.exporting_pdf') || 'PDF Exporting...');
-        document.getElementById('btn-export-excel').onclick = () => App.toast('info', App.t('reports.js.exporting_excel') || 'Excel Exporting...');
+        document.getElementById('btn-export-pdf').onclick = () => this.exportPDF();
+        document.getElementById('btn-export-excel').onclick = () => this.exportExcel();
     },
 
     async generateReport() {
@@ -39,8 +39,57 @@ const reportsModule = {
 
         const result = await App.api(`reports.php?type=${type}&from=${from}&to=${to}`);
         if (result) {
+            this.currentData = result.data;
+            this.currentType = type;
             this.renderTable(type, result.data);
         }
+    },
+
+    exportPDF() {
+        if (!this.currentData || this.currentData.length === 0) {
+            App.toast('warning', App.t('reports.js.no_data_export') || 'No data to export');
+            return;
+        }
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('l', 'pt', 'a4');
+        
+        const type = this.currentType;
+        const title = App.t(`reports.filter.type.${type}`) || (this.capitalize(type) + ' Report');
+        const from = document.getElementById('date-from').value;
+        const to = document.getElementById('date-to').value;
+
+        doc.setFontSize(18);
+        doc.text(title, 40, 40);
+        doc.setFontSize(10);
+        doc.text(`${App.t('reports.filter.from_date')}: ${from}  |  ${App.t('reports.filter.to_date')}: ${to}`, 40, 60);
+
+        const table = document.getElementById('reportsTable');
+        doc.autoTable({
+            html: '#reportsTable',
+            startY: 80,
+            theme: 'striped',
+            headStyles: { fillColor: [0, 191, 166] }, // Teal color
+            styles: { fontSize: 9 },
+            margin: { top: 80 }
+        });
+
+        doc.save(`Report_${type}_${from}_to_${to}.pdf`);
+    },
+
+    exportExcel() {
+        if (!this.currentData || this.currentData.length === 0) {
+            App.toast('warning', App.t('reports.js.no_data_export') || 'No data to export');
+            return;
+        }
+
+        const type = this.currentType;
+        const from = document.getElementById('date-from').value;
+        const to = document.getElementById('date-to').value;
+
+        const table = document.getElementById('reportsTable');
+        const wb = XLSX.utils.table_to_book(table, { sheet: "Report" });
+        XLSX.writeFile(wb, `Report_${type}_${from}_to_${to}.xlsx`);
     },
 
     renderTable(type, data) {
