@@ -12,9 +12,8 @@ const sales_historyModule = {
     },
 
     bindEvents() {
-        document.getElementById('btn-export-sales').onclick = () => {
-            App.toast('info', App.t('sh.msg.export_soon') || 'Export functionality coming soon');
-        };
+        document.getElementById('btn-export-pdf').onclick = () => this.exportPDF();
+        document.getElementById('btn-export-excel').onclick = () => this.exportExcel();
 
         document.getElementById('btn-print-receipt').onclick = () => {
             window.print();
@@ -102,6 +101,74 @@ const sales_historyModule = {
             language: App.getDataTableLanguage(),
             dom: '<"d-flex justify-content-between align-items-center mb-3"lf>rt<"d-flex justify-content-between align-items-center mt-3"ip>'
         });
+    },
+
+    exportPDF() {
+        const data = this.table.rows({ search: 'applied' }).data().toArray();
+        if (data.length === 0) {
+            App.toast('warning', App.t('reports.js.no_data_export') || 'No data to export');
+            return;
+        }
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('l', 'pt', 'a4');
+        
+        doc.setFontSize(18);
+        doc.text(App.t('sh.page_title') || 'Sales History', 40, 40);
+
+        const columns = [
+            App.t('sh.table.invoice'),
+            App.t('sh.table.datetime'),
+            App.t('sh.table.customer'),
+            App.t('sh.table.cashier'),
+            App.t('sh.table.payment'),
+            App.t('sh.table.doc'),
+            App.t('sh.table.total')
+        ];
+
+        const rows = data.map(r => [
+            `#INV-${r.id}`,
+            new Date(r.date).toLocaleString(),
+            r.customer_name || App.t('sh.text.walk_in'),
+            r.user_name,
+            r.payment_method,
+            r.invoice_type || 'BV',
+            `${parseFloat(r.total).toFixed(2)} ${App.state.settings.currency}`
+        ]);
+
+        doc.autoTable({
+            head: [columns],
+            body: rows,
+            startY: 60,
+            theme: 'striped',
+            headStyles: { fillColor: [0, 191, 166] },
+            styles: { fontSize: 9 }
+        });
+
+        doc.save(`Sales_History_${new Date().toISOString().split('T')[0]}.pdf`);
+    },
+
+    exportExcel() {
+        const data = this.table.rows({ search: 'applied' }).data().toArray();
+        if (data.length === 0) {
+            App.toast('warning', App.t('reports.js.no_data_export') || 'No data to export');
+            return;
+        }
+
+        const rows = data.map(r => ({
+            [App.t('sh.table.invoice')]: `#INV-${r.id}`,
+            [App.t('sh.table.datetime')]: new Date(r.date).toLocaleString(),
+            [App.t('sh.table.customer')]: r.customer_name || App.t('sh.text.walk_in'),
+            [App.t('sh.table.cashier')]: r.user_name,
+            [App.t('sh.table.payment')]: r.payment_method,
+            [App.t('sh.table.doc')]: r.invoice_type || 'BV',
+            [App.t('sh.table.total')]: `${parseFloat(r.total).toFixed(2)} ${App.state.settings.currency}`
+        }));
+
+        const ws = XLSX.utils.json_to_sheet(rows);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Sales History");
+        XLSX.writeFile(wb, `Sales_History_${new Date().toISOString().split('T')[0]}.xlsx`);
     },
 
     async directPrint(id) {

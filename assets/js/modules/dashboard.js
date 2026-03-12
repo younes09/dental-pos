@@ -16,7 +16,7 @@ const dashboardModule = {
         const rangeButtons = document.querySelectorAll('.btn-group [class*="btn-outline-secondary"]');
         rangeButtons.forEach(btn => {
             btn.addEventListener('click', (e) => {
-                const range = e.target.textContent.toLowerCase();
+                const range = e.target.getAttribute('data-range');
                 if (range === this.currentRange) return;
 
                 // Update UI active state
