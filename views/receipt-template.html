@@ -438,18 +438,37 @@
             document.getElementById('receipt-total').textContent = formatCurrency(parseFloat(sale.total));
         }
 
+        // Helper to handle population and translation
+        function initTemplate(payload) {
+            const t = window.opener && window.opener.App && window.opener.App.t ? window.opener.App.t : (k) => k.split('.').pop();
+            
+            // Translate static UI elements
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                el.innerHTML = t(key);
+            });
+
+            populateReceipt(payload, t);
+        }
+
         // Listen for data from parent window
         window.addEventListener('message', function (event) {
             if (event.data && event.data.type === 'POPULATE_RECEIPT') {
-                const t = window.opener && window.opener.App && window.opener.App.t ? window.opener.App.t : (k) => k.split('.').pop();
-                
-                // Translate static UI elements
-                document.querySelectorAll('[data-i18n]').forEach(el => {
-                    const key = el.getAttribute('data-i18n');
-                    el.innerHTML = t(key);
-                });
+                // Persistent storage for reload
+                sessionStorage.setItem('receipt_data', JSON.stringify(event.data.payload));
+                initTemplate(event.data.payload);
+            }
+        });
 
-                populateReceipt(event.data.payload, t);
+        // Check for persisted data on load
+        window.addEventListener('DOMContentLoaded', function() {
+            const savedData = sessionStorage.getItem('receipt_data');
+            if (savedData) {
+                try {
+                    initTemplate(JSON.parse(savedData));
+                } catch (e) {
+                    console.error('Error parsing persisted Receipt data', e);
+                }
             }
         });
     </script>
