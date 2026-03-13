@@ -1,0 +1,156 @@
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <h4 class="fw-bold mb-0"><i class="fas fa-chart-line me-2 text-primary"></i>Advanced Analytics</h4>
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <div class="btn-group btn-group-sm" id="analytics-period-group">
+                <button class="btn btn-outline-secondary active" data-period="daily">Daily</button>
+                <button class="btn btn-outline-secondary" data-period="weekly">Weekly</button>
+                <button class="btn btn-outline-secondary" data-period="monthly">Monthly</button>
+            </div>
+            <input type="date" class="form-control form-control-sm" id="analytics-from" style="width:140px">
+            <span class="text-muted small">to</span>
+            <input type="date" class="form-control form-control-sm" id="analytics-to" style="width:140px">
+            <button class="btn btn-teal btn-sm" id="btn-analytics-apply">
+                <i class="fas fa-sync-alt me-1"></i>Apply
+            </button>
+            <button class="btn btn-outline-secondary btn-sm" id="btn-analytics-pdf">
+                <i class="fas fa-file-pdf me-1"></i>PDF
+            </button>
+            <button class="btn btn-outline-secondary btn-sm" id="btn-analytics-excel">
+                <i class="fas fa-file-excel me-1"></i>Excel
+            </button>
+        </div>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="row g-3 mb-4" id="analytics-kpi-row">
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="kpi-card h-100">
+                <div class="kpi-icon bg-primary-subtle text-primary">
+                    <i class="fas fa-hand-holding-dollar"></i>
+                </div>
+                <h6 class="text-muted mb-1 small">Revenue</h6>
+                <h4 class="fw-bold mb-0" id="an-kpi-revenue">—</h4>
+                <small class="text-muted" id="an-kpi-revenue-sub">Period</small>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="kpi-card h-100">
+                <div class="kpi-icon bg-success-subtle text-success">
+                    <i class="fas fa-chart-bar"></i>
+                </div>
+                <h6 class="text-muted mb-1 small">Profit</h6>
+                <h4 class="fw-bold mb-0" id="an-kpi-profit">—</h4>
+                <small class="text-muted" id="an-kpi-margin">0% margin</small>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="kpi-card h-100">
+                <div class="kpi-icon bg-teal-subtle text-teal">
+                    <i class="fas fa-shopping-cart"></i>
+                </div>
+                <h6 class="text-muted mb-1 small">Orders</h6>
+                <h4 class="fw-bold mb-0" id="an-kpi-orders">—</h4>
+                <small class="text-muted">Completed sales</small>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="kpi-card h-100">
+                <div class="kpi-icon bg-info-subtle text-info">
+                    <i class="fas fa-receipt"></i>
+                </div>
+                <h6 class="text-muted mb-1 small">Avg Order</h6>
+                <h4 class="fw-bold mb-0" id="an-kpi-avg">—</h4>
+                <small class="text-muted">Per transaction</small>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="kpi-card h-100">
+                <div class="kpi-icon bg-warning-subtle text-warning">
+                    <i class="fas fa-user-plus"></i>
+                </div>
+                <h6 class="text-muted mb-1 small">New Customers</h6>
+                <h4 class="fw-bold mb-0" id="an-kpi-customers">—</h4>
+                <small class="text-muted">Registered in period</small>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="kpi-card h-100">
+                <div class="kpi-icon bg-danger-subtle text-danger">
+                    <i class="fas fa-star"></i>
+                </div>
+                <h6 class="text-muted mb-1 small">Top Category</h6>
+                <h4 class="fw-bold mb-0 fs-6" id="an-kpi-topcat">—</h4>
+                <small class="text-muted">By revenue</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Revenue & Profit Trend -->
+    <div class="row g-3 mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold mb-0"><i class="fas fa-chart-area me-2 text-primary"></i>Revenue & Profit Trend</h5>
+                        <small class="text-muted" id="an-trend-range-label"></small>
+                    </div>
+                    <div style="height:300px; position:relative;">
+                        <canvas id="chartRevenueTrend"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Products + Payment Methods -->
+    <div class="row g-3 mb-4">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3"><i class="fas fa-trophy me-2 text-warning"></i>Top Products</h5>
+                    <div style="height:300px; position:relative;">
+                        <canvas id="chartTopProducts"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3"><i class="fas fa-credit-card me-2 text-info"></i>Payment Methods</h5>
+                    <div style="height:260px; position:relative;">
+                        <canvas id="chartPaymentMethods"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Customer Insights + Hourly Heatmap -->
+    <div class="row g-3 mb-4">
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3"><i class="fas fa-users me-2 text-success"></i>Customer Insights</h5>
+                    <div style="height:280px; position:relative;">
+                        <canvas id="chartCustomerInsights"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3"><i class="fas fa-fire me-2 text-danger"></i>Sales Heatmap <small class="text-muted fw-normal fs-6">(Hour × Day)</small></h5>
+                    <div id="analytics-heatmap-container" style="overflow-x:auto;">
+                        <div id="analytics-heatmap" style="min-height:240px; display:flex; align-items:center; justify-content:center;">
+                            <div class="spinner-border text-teal" role="status"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

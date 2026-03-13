@@ -200,6 +200,11 @@ if (!isset($_SESSION['user_id'])) {
                         </a>
                     </li>
                     <li>
+                        <a href="#analytics">
+                            <i class="fas fa-chart-line"></i> <span data-i18n="sidebar.analytics">Analytics</span>
+                        </a>
+                    </li>
+                    <li>
                         <a href="#settings">
                             <i class="fas fa-cog"></i> <span data-i18n="sidebar.settings">Settings</span>
                         </a>

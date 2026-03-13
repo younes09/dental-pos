@@ -46,6 +46,7 @@ const locales = {
         "sidebar.system_admin": "System Admin",
         "sidebar.users": "User Management",
         "sidebar.reports": "Reports",
+        "sidebar.analytics": "Analytics",
         "sidebar.settings": "Settings",
 
         // Topbar
@@ -1092,6 +1093,7 @@ const locales = {
         "sidebar.system_admin": "Admin Système",
         "sidebar.users": "Gestion des Utilisateurs",
         "sidebar.reports": "Rapports",
+        "sidebar.analytics": "Analytique",
         "sidebar.settings": "Paramètres",
 
         // Topbar
