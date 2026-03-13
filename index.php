@@ -14,23 +14,24 @@ if (!isset($_SESSION['user_id'])) {
     
     <link rel="icon" type="image/png" href="assets/img/favicon.png">
     <!-- Google Fonts -->
+    <!-- Note: Fonts could also be localized if needed, but they are often cached or handled separately. For now, keepingInter/Outfit linkage but localizing CSS/JS -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Icon Fonts -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="assets/vendor/css/all.min.css">
+    <link rel="stylesheet" href="assets/vendor/css/bootstrap-icons.css">
     
     <!-- Flag Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.0.0/css/flag-icons.min.css"/>
+    <link rel="stylesheet" href="assets/vendor/css/flag-icons.min.css"/>
     
     <!-- Bootstrap 5 -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="assets/vendor/css/bootstrap.min.css" rel="stylesheet">
     
     <!-- DataTables -->
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="assets/vendor/css/dataTables.bootstrap5.min.css">
     
     <!-- SweetAlert2 -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <link rel="stylesheet" href="assets/vendor/css/sweetalert2.min.css">
     
     <!-- Custom CSS -->
     <link rel="stylesheet" href="assets/css/style.css">
@@ -218,7 +219,7 @@ if (!isset($_SESSION['user_id'])) {
         
         <div class="sidebar-footer">
             <a href="#profile" class="user-info text-decoration-none">
-                <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($_SESSION['user_name'] ?? 'User'); ?>&background=00BFA6&color=fff" alt="User" class="rounded-circle">
+                <img src="assets/vendor/img/default-avatar.png" alt="User" class="rounded-circle">
                 <div class="ms-2">
                     <p class="mb-0 fw-bold text-truncate text-white"><?php echo htmlspecialchars($_SESSION['user_name'] ?? 'User'); ?></p>
                     <small class="text-primary"><?php echo htmlspecialchars($_SESSION['user_role'] ?? 'User'); ?></small>
@@ -279,7 +280,7 @@ if (!isset($_SESSION['user_id'])) {
 
                     <div class="dropdown ms-3">
                         <button class="btn btn-link dropdown-toggle text-decoration-none d-flex align-items-center p-0" type="button" data-bs-toggle="dropdown">
-                            <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($_SESSION['user_name'] ?? 'User'); ?>&background=00BFA6&color=fff" alt="User" class="rounded-circle me-2" style="width: 32px; height: 32px;">
+                            <img src="assets/vendor/img/default-avatar.png" alt="User" class="rounded-circle me-2" style="width: 32px; height: 32px;">
                             <span class="d-none d-md-inline text-dark fw-medium small user-name-nav"><?php echo htmlspecialchars($_SESSION['user_name'] ?? 'User'); ?></span>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 mt-3 p-2">
@@ -324,17 +325,17 @@ if (!isset($_SESSION['user_id'])) {
     </div>
 
     <!-- Scripts -->
-    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="assets/vendor/js/jquery.min.js"></script>
+    <script src="assets/vendor/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/vendor/js/jquery.dataTables.min.js"></script>
+    <script src="assets/vendor/js/dataTables.bootstrap5.min.js"></script>
+    <script src="assets/vendor/js/chart.min.js"></script>
+    <script src="assets/vendor/js/sweetalert2.all.min.js"></script>
     
     <!-- Export Libraries -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="assets/vendor/js/jspdf.umd.min.js"></script>
+    <script src="assets/vendor/js/jspdf.plugin.autotable.min.js"></script>
+    <script src="assets/vendor/js/xlsx.full.min.js"></script>
     
     <!-- Translation Dictionary -->
     <script src="assets/js/locales.js?v=<?= time() ?>"></script>

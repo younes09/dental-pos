@@ -12,9 +12,9 @@ if (isset($_SESSION['user_id'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - DentalPOS</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Outfit:wght@600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <link rel="stylesheet" href="assets/vendor/css/all.min.css">
+    <link href="assets/vendor/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="assets/vendor/css/sweetalert2.min.css">
     <style>
         :root {
             --primary-navy: #0A1628;
@@ -117,17 +117,17 @@ if (isset($_SESSION['user_id'])) {
             <!-- Language Switcher -->
             <div class="text-center mt-3 border-top pt-3">
                 <button onclick="setLang('en')" class="btn btn-sm btn-outline-secondary rounded-circle px-2 py-1 mx-1 border-0" title="English">
-                    <img src="https://flagcdn.com/w20/us.png" width="20" alt="EN">
+                    <img src="assets/vendor/img/flags/us.png" width="20" alt="EN">
                 </button>
                 <button onclick="setLang('fr')" class="btn btn-sm btn-outline-secondary rounded-circle px-2 py-1 mx-1 border-0" title="Français">
-                    <img src="https://flagcdn.com/w20/fr.png" width="20" alt="FR">
+                    <img src="assets/vendor/img/flags/fr.png" width="20" alt="FR">
                 </button>
             </div>
         </div>
     </div>
 
     <script src="assets/js/locales.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="assets/vendor/js/sweetalert2.all.min.js"></script>
     <script>
         // Simple I18n for Login Page
         function t(key) {
