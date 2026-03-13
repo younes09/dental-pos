@@ -317,6 +317,12 @@ const locales = {
         "stock.details.adj_reason": "Reason",
         "stock.details.adj_user": "User",
         "stock.details.no_adjustments": "No stock adjustments found.",
+        "stock.details.status_in_stock": "In Stock",
+        "stock.details.status_low_stock": "Low Stock",
+        "stock.details.status_out_of_stock": "Out of Stock",
+        "stock.details.status_expired": "Expired",
+        "stock.details.status_expiring_soon": "Expiring Soon",
+        "stock.details.status": "Status",
 
         // Sales History
         "sh.page_title": "Sales History",
@@ -1365,6 +1371,12 @@ const locales = {
         "stock.details.adj_reason": "Raison",
         "stock.details.adj_user": "Utilisateur",
         "stock.details.no_adjustments": "Aucun ajustement de stock trouvé.",
+        "stock.details.status_in_stock": "En Stock",
+        "stock.details.status_low_stock": "Stock Faible",
+        "stock.details.status_out_of_stock": "Rupture de Stock",
+        "stock.details.status_expired": "Expiré",
+        "stock.details.status_expiring_soon": "Périme Bientôt",
+        "stock.details.status": "Statut",
 
         // Sales History
         "sh.page_title": "Historique des Ventes",

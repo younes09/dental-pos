@@ -30,7 +30,11 @@ const posModule = {
         const params = new URLSearchParams(window.location.hash.split('?')[1]);
         const searchQuery = params.get('search');
 
-        this.loadProducts(searchQuery);
+        this.restoreCartState();
+
+        this.loadProducts(searchQuery).then(() => {
+            this.calculateTotals();
+        });
         this.loadCustomers();
         this.bindEvents();
         console.log('POS Module Loaded');
@@ -169,9 +173,9 @@ const posModule = {
         localStorage.setItem('pos_held_sales', JSON.stringify(heldSales));
 
         this.clearCart();
-        this.selectCustomer(null);
         document.getElementById('cart-discount').value = 0;
         document.getElementById('cart-points-redeem').value = 0;
+        this.selectCustomer(null); // This calls calculateTotals() too, but placing inputs reset before it ensures they are saved to localStorage correctly
 
         App.toast('success', 'Sale held successfully');
         this.renderHeldSales();
@@ -707,7 +711,68 @@ const posModule = {
             }
         }
 
+        this.saveCartState();
         return { subtotal, discountAmount, tax, total, pointsRedeemed, pointsEarned, paidAmount: isNaN(paidVal) ? total : paidVal };
+    },
+
+    saveCartState() {
+        const state = {
+            cart: this.cart,
+            selectedCustomer: this.selectedCustomer,
+            discount: document.getElementById('cart-discount')?.value || 0,
+            points_redeemed: document.getElementById('cart-points-redeem')?.value || 0,
+            invoice_type: document.querySelector('input[name="invoice-type"]:checked')?.value || 'BV',
+            paid_amount: document.getElementById('cart-paid-amount')?.value || ''
+        };
+        localStorage.setItem('pos_current_state', JSON.stringify(state));
+    },
+
+    restoreCartState() {
+        try {
+            const savedStateStr = localStorage.getItem('pos_current_state');
+            if (savedStateStr) {
+                const state = JSON.parse(savedStateStr);
+                
+                if (state.cart && Array.isArray(state.cart)) {
+                    this.cart = state.cart;
+                }
+                
+                if (state.selectedCustomer) {
+                    this.selectedCustomer = state.selectedCustomer;
+                    // Update UI for customer
+                    const nameEl = document.getElementById('pos-selected-customer-name');
+                    if (nameEl) {
+                        nameEl.textContent = this.selectedCustomer.name;
+                        document.getElementById('pos-selected-customer-phone').textContent = this.selectedCustomer.phone || '';
+                        document.getElementById('pos-selected-customer-points-container').classList.remove('d-none');
+                        document.getElementById('pos-selected-customer-points').textContent = this.selectedCustomer.loyalty_points || 0;
+                        document.getElementById('cart-points-row').classList.remove('d-none');
+                    }
+                }
+                
+                if (state.discount) {
+                    const discountEl = document.getElementById('cart-discount');
+                    if (discountEl) discountEl.value = state.discount;
+                }
+                
+                if (state.points_redeemed) {
+                    const pointsEl = document.getElementById('cart-points-redeem');
+                    if (pointsEl) pointsEl.value = state.points_redeemed;
+                }
+                
+                if (state.invoice_type) {
+                    const invoiceRadio = document.querySelector(`input[name="invoice-type"][value="${state.invoice_type}"]`);
+                    if (invoiceRadio) invoiceRadio.checked = true;
+                }
+
+                if (state.paid_amount) {
+                    const paidEl = document.getElementById('cart-paid-amount');
+                    if (paidEl) paidEl.value = state.paid_amount;
+                }
+            }
+        } catch (e) {
+            console.error('Failed to restore POS state', e);
+        }
     },
 
     async processCheckout() {
