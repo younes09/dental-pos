@@ -55,6 +55,7 @@ const locales = {
         "topbar.mark_all_read": "Mark all as read",
         "topbar.view_all": "View All Notifications",
         "topbar.no_notifications": "No new notifications",
+        "topbar.fullscreen": "Toggle Fullscreen",
 
         // Modules placeholders
         "dashboard.title": "Dashboard",
@@ -1102,6 +1103,7 @@ const locales = {
         "topbar.mark_all_read": "Tout marquer comme lu",
         "topbar.view_all": "Voir toutes les notifications",
         "topbar.no_notifications": "Aucune nouvelle notification",
+        "topbar.fullscreen": "Plein écran",
 
         // Modules placeholders
         "dashboard.title": "Tableau de Bord",

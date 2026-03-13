@@ -965,3 +965,25 @@ body.dark-mode .custom-pills .nav-link.active {
         margin-left: var(--sidebar-width);
     }
 }
+
+/* Flag Icon Overrides (using local PNGs because SVGs are missing) */
+.fi {
+    background-size: cover !important;
+    background-position: center !important;
+    display: inline-block;
+    width: 1.33333333em;
+    line-height: 1em;
+}
+
+.fi-fr {
+    background-image: url('../vendor/img/flags/fr.png') !important;
+}
+
+.fi-gb, .fi-us {
+    background-image: url('../vendor/img/flags/us.png') !important;
+}
+
+.fi.fis {
+    width: 1.2em !important;
+    height: 1.2em !important;
+}

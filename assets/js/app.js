@@ -266,6 +266,22 @@ const App = {
         document.getElementById('darkModeToggle').addEventListener('click', () => {
             this.toggleDarkMode();
         });
+
+        // Fullscreen Toggle
+        document.getElementById('fullscreenToggle')?.addEventListener('click', () => {
+            this.toggleFullscreen();
+        });
+
+        document.addEventListener('fullscreenchange', () => {
+            const icon = document.querySelector('#fullscreenToggle i');
+            if (icon) {
+                if (document.fullscreenElement) {
+                    icon.classList.replace('fa-expand', 'fa-compress');
+                } else {
+                    icon.classList.replace('fa-compress', 'fa-expand');
+                }
+            }
+        });
     },
 
     toggleSidebar() {
@@ -484,6 +500,18 @@ const App = {
 
         // Notify modules of theme change
         window.dispatchEvent(new Event('themeChanged'));
+    },
+
+    toggleFullscreen() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(err => {
+                console.error(`Error attempting to enable full-screen mode: ${err.message}`);
+            });
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            }
+        }
     },
 
     // Global API Utility

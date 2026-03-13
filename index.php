@@ -253,6 +253,10 @@ if (!isset($_SESSION['user_id'])) {
                         <!-- Flag will be injected by app.js -->
                     </div>
 
+                    <button id="fullscreenToggle" class="btn btn-link text-dark p-2 me-2" title="Toggle Fullscreen" data-i18n="topbar.fullscreen" data-i18n-target="title">
+                        <i class="fas fa-expand"></i>
+                    </button>
+                    
                     <button id="darkModeToggle" class="btn btn-link text-dark p-2 me-2">
                         <i class="fas fa-moon"></i>
                     </button>
