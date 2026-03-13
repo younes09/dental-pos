@@ -53,6 +53,7 @@ try {
             break;
     }
 } catch (PDOException $e) {
-    echo json_encode(['error' => $e->getMessage()]);
+    error_log("Auth error: " . $e->getMessage());
+    echo json_encode(['error' => 'An internal error occurred. Please try again later.']);
 }
 // Removed closing tag

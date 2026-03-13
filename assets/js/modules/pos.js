@@ -8,10 +8,10 @@ const posModule = {
     selectedCustomer: null,
     cart: [],
     taxRate: 0, // F1.5: Default to 0, will be loaded from settings
+    _debtWarningShown: false,
 
     async init() {
         this.loadSettings();
-        this.loadCategories();
 
         const session = await App.api('cash_register.php?action=get_status');
         if (!session || session.status !== 'open') {
@@ -196,13 +196,13 @@ const posModule = {
             <div class="held-sale-item p-3 mb-3 bg-light rounded-4 border">
                 <div class="d-flex justify-content-between align-items-start mb-2">
                     <div>
-                        <h6 class="fw-bold mb-0">${sale.customer ? sale.customer.name : 'Walking Customer'}</h6>
+                        <h6 class="fw-bold mb-0">${sale.customer ? App.escapeHtml(sale.customer.name) : 'Walking Customer'}</h6>
                         <small class="text-muted">${new Date(sale.timestamp).toLocaleString()}</small>
                     </div>
                     <span class="badge bg-teal-soft text-teal rounded-pill">${App.formatCurrency(sale.total)}</span>
                 </div>
                 <div class="small mb-3 text-muted">
-                    ${sale.cart.length} items: ${sale.cart.map(i => i.name).join(', ')}
+                    ${sale.cart.length} items: ${sale.cart.map(i => App.escapeHtml(i.name)).join(', ')}
                 </div>
                 <div class="d-flex gap-2">
                     <button class="btn btn-teal btn-sm rounded-pill px-3" onclick="posModule.resumeSale(${sale.id})">
@@ -313,8 +313,8 @@ const posModule = {
                     <i class="fas fa-user"></i>
                 </div>
                 <div>
-                    <h6 class="mb-0 fw-bold">${c.name}</h6>
-                    <small class="text-muted">${c.phone || 'No phone'}</small>
+                    <h6 class="mb-0 fw-bold">${App.escapeHtml(c.name)}</h6>
+                    <small class="text-muted">${App.escapeHtml(c.phone) || 'No phone'}</small>
                 </div>
             </div>
         `).join('');
@@ -399,13 +399,13 @@ const posModule = {
             <div class="col-md-4 col-xl-3">
                 <div class="card product-card border-0 shadow-sm h-100 rounded-4 pointer" onclick="posModule.addToCart(${p.id})">
                     <div class="p-3 position-relative">
-                        <img src="assets/img/products/${p.image || 'default.jpg'}" class="card-img-top rounded-4" style="height: 120px; object-fit: contain;" onerror="this.src='assets/img/img_holder.png'">
+                        <img src="assets/img/products/${App.escapeHtml(p.image) || 'default.jpg'}" class="card-img-top rounded-4" style="height: 120px; object-fit: contain;" onerror="this.src='assets/img/img_holder.png'">
                         <div class="position-absolute top-0 end-0 m-3 d-flex flex-column gap-1 align-items-end">
                             ${badges}
                         </div>
                     </div>
                     <div class="card-body pt-0 text-center">
-                        <h6 class="fw-bold mb-1 text-truncate">${p.name}</h6>
+                        <h6 class="fw-bold mb-1 text-truncate">${App.escapeHtml(p.name)}</h6>
                         <span class="text-teal fw-bold">${App.formatCurrency(p.selling_price)}</span>
                     </div>
                 </div>
@@ -474,7 +474,7 @@ const posModule = {
             }
 
             if (!alreadyHitBL) {
-                const confirm = await Swal.fire({
+                const blConfirm = await Swal.fire({
                     title: 'Attention!',
                     text: `The requested quantity for "${product.name}" requires using stock from a "Delivery Note" (BL). Do you really want to add it to the cart?`,
                     icon: 'warning',
@@ -486,7 +486,7 @@ const posModule = {
                     reverseButtons: true
                 });
 
-                if (!confirm.isConfirmed) {
+                if (!blConfirm.isConfirmed) {
                     return;
                 }
             }
@@ -553,7 +553,7 @@ const posModule = {
                         } catch (e) { }
 
                         if (!alreadyHitBL) {
-                            const confirm = await Swal.fire({
+                            const blConfirm = await Swal.fire({
                                 title: 'Attention!',
                                 text: `This additional quantity requires using stock from a "Delivery Note" (BL). Do you want to continue?`,
                                 icon: 'warning',
@@ -565,7 +565,7 @@ const posModule = {
                                 reverseButtons: true
                             });
 
-                            if (!confirm.isConfirmed) {
+                            if (!blConfirm.isConfirmed) {
                                 return;
                             }
                         }
@@ -605,9 +605,9 @@ const posModule = {
 
         cartList.innerHTML = this.cart.map(item => `
             <div class="cart-item d-flex align-items-center mb-3 p-2 bg-light rounded-4">
-                <img src="assets/img/products/${item.image || 'default.jpg'}" class="rounded-3 me-3" width="50" height="50" onerror="this.src='assets/img/img_holder.png'">
+                <img src="assets/img/products/${App.escapeHtml(item.image) || 'default.jpg'}" class="rounded-3 me-3" width="50" height="50" onerror="this.src='assets/img/img_holder.png'">
                 <div class="flex-grow-1">
-                    <h6 class="mb-0 fw-bold small text-truncate" style="max-width: 140px;">${item.name}</h6>
+                    <h6 class="mb-0 fw-bold small text-truncate" style="max-width: 140px;">${App.escapeHtml(item.name)}</h6>
                     <span class="text-teal fw-bold">${App.formatCurrency(item.price)}</span>
                 </div>
                 <div class="d-flex align-items-center me-3">
@@ -630,7 +630,8 @@ const posModule = {
         const subtotal = this.cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
 
         // Manual Discount
-        const discountPercent = parseFloat(document.getElementById('cart-discount').value) || 0;
+        let discountPercent = parseFloat(document.getElementById('cart-discount').value) || 0;
+        discountPercent = Math.max(0, Math.min(100, discountPercent));
         let discountAmount = subtotal * (discountPercent / 100);
 
         // Points Discount
@@ -705,10 +706,16 @@ const posModule = {
             } else {
                 changeDebtLabel.textContent = App.t('pos.debt') || 'Debt';
                 changeDebtDisplay.className = 'fw-bold mb-0 text-danger';
-                if (!this.selectedCustomer) {
+                if (!this.selectedCustomer && !this._debtWarningShown) {
+                    this._debtWarningShown = true;
                     App.toast('warning', App.t('pos.msg.debt_not_allowed') || 'Debt is only allowed for registered customers.');
                 }
             }
+        }
+
+        // Reset debt warning flag when no debt or customer is selected
+        if (!isNaN(paidVal) && (paidVal - total) >= 0 || this.selectedCustomer) {
+            this._debtWarningShown = false;
         }
 
         this.saveCartState();
@@ -724,7 +731,11 @@ const posModule = {
             invoice_type: document.querySelector('input[name="invoice-type"]:checked')?.value || 'BV',
             paid_amount: document.getElementById('cart-paid-amount')?.value || ''
         };
-        localStorage.setItem('pos_current_state', JSON.stringify(state));
+        try {
+            localStorage.setItem('pos_current_state', JSON.stringify(state));
+        } catch (e) {
+            console.error('Failed to save cart state (localStorage full?)', e);
+        }
     },
 
     restoreCartState() {

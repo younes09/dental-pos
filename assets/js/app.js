@@ -72,6 +72,13 @@ const App = {
         return translation;
     },
 
+    escapeHtml(str) {
+        if (str == null) return '';
+        const div = document.createElement('div');
+        div.textContent = String(str);
+        return div.innerHTML;
+    },
+
     getDataTableLanguage() {
         return {
             emptyTable: this.t('dt.emptyTable'),
@@ -290,10 +297,6 @@ const App = {
     },
 
     closeSidebar() {
-        document.getElementById('sidebar').classList.add('active'); // On mobile 'active' means hidden or shown? 
-        // Wait, let's check CSS again.
-        // @media (max-width: 992px) { .sidebar { margin-left: -260px; } .sidebar.active { margin-left: 0; } }
-        // So on mobile, 'active' means SHOWN. To CLOSE it, we REMOVE 'active'.
         document.getElementById('sidebar').classList.remove('active');
         document.getElementById('content').classList.remove('active');
     },
@@ -544,7 +547,8 @@ const App = {
 
     formatCurrency(amount) {
         const symbol = this.state.settings.currency || '$';
-        return `${parseFloat(amount).toFixed(2)} ${symbol} `;
+        const num = parseFloat(amount);
+        return `${(isNaN(num) ? 0 : num).toFixed(2)} ${symbol}`;
     },
 
     formatDate(dateString) {

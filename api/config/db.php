@@ -19,6 +19,7 @@ try {
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
-    die(json_encode(['error' => 'Database connection failed: ' . $e->getMessage()]));
+    error_log("Database connection failed: " . $e->getMessage());
+    die(json_encode(['error' => 'Database connection failed. Please contact the administrator.']));
 }
 // Removed closing tag to prevent accidental whitespace/output before headers sent

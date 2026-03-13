@@ -349,8 +349,8 @@ if (!isset($_SESSION['user_id'])) {
     <script>
         // Inject user session data for RBAC
         App.state.user = {
-            role: '<?php echo $_SESSION['user_role'] ?? 'Cashier'; ?>',
-            name: '<?php echo $_SESSION['user_name'] ?? 'User'; ?>'
+            role: <?php echo json_encode($_SESSION['user_role'] ?? 'Cashier'); ?>,
+            name: <?php echo json_encode($_SESSION['user_name'] ?? 'User'); ?>
         };
     </script>
 </body>

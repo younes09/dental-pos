@@ -110,9 +110,7 @@ if (isset($_SESSION['user_id'])) {
                 </div>
                 <button type="submit" class="btn btn-teal" data-i18n="login.btn_signin">SIGN IN</button>
             </form>
-            <div class="text-center mt-4">
-                <p class="small text-muted" data-i18n="login.demo">Demo Credentials: admin@dentalpos.com / admin123</p>
-            </div>
+            <!-- Demo credentials removed for production -->
             
             <!-- Language Switcher -->
             <div class="text-center mt-3 border-top pt-3">
@@ -132,7 +130,7 @@ if (isset($_SESSION['user_id'])) {
         // Simple I18n for Login Page
         function t(key) {
             const lang = localStorage.getItem('app_language') || 'en';
-            return locales[lang][key] || key;
+            return (locales[lang] && locales[lang][key]) || key;
         }
 
         function translate() {
