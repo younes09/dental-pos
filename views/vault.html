@@ -5,6 +5,9 @@
             <p class="text-muted small" data-i18n="vault.page_subtitle">Tracking funds (Vault, Bank) and transaction history.</p>
         </div>
         <div>
+            <button class="btn btn-primary rounded-pill px-4 me-2" onclick="vaultModule.openAddAccountModal()">
+                <i class="fas fa-plus-circle me-2"></i><span data-i18n="vault.btn.new_account">New Account</span>
+            </button>
             <button class="btn btn-teal rounded-pill px-4 me-2" onclick="vaultModule.openTransferModal()">
                 <i class="fas fa-exchange-alt me-2"></i><span data-i18n="vault.btn.transfer">Internal Transfer</span>
             </button>
@@ -143,6 +146,95 @@
                     <button type="button" class="btn btn-light rounded-pill px-4"
                         data-bs-dismiss="modal" data-i18n="vault.modal.btn.cancel">Cancel</button>
                     <button type="submit" class="btn btn-teal rounded-pill px-4" data-i18n="vault.modal.btn.perform">Perform</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Add Account -->
+<div class="modal fade" id="modalAddAccount" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 p-4 pb-0">
+                <h5 class="fw-bold" data-i18n="vault.modal.new_account">New Account</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="formAddAccount">
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold" data-i18n="vault.modal.account_name">Account Name</label>
+                        <input type="text" name="name" class="form-control rounded-3" required 
+                            placeholder="Ex: Main Cash Register, Bank BNP..." data-i18n="vault.modal.account_name_placeholder" data-i18n-target="placeholder">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold" data-i18n="vault.modal.account_type">Account Type</label>
+                        <select name="type" class="form-select rounded-3" required>
+                            <option value="bank" data-i18n="vault.modal.type_bank">Bank</option>
+                            <option value="cash" data-i18n="vault.modal.type_cash">Cash Register</option>
+                            <option value="safe" data-i18n="vault.modal.type_safe">Safe / Vault</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Initial Balance (Optional)</label>
+                        <div class="input-group">
+                            <input type="number" name="balance" step="0.01" class="form-control rounded-3" placeholder="0.00">
+                            <span class="input-group-text bg-light border-start-0">DZD</span>
+                        </div>
+                        <div class="form-text small text-muted mt-1">Leave empty to initialize with 0.</div>
+                    </div>
+                    <div class="mb-0">
+                        <div class="form-check form-switch mt-2">
+                            <input class="form-check-input mt-1" type="checkbox" role="switch" name="is_default" id="addDefaultAccount" value="1">
+                            <label class="form-check-label ms-2" for="addDefaultAccount">Set as Default Account</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-4 pt-0">
+                    <button type="button" class="btn btn-light rounded-pill px-4"
+                        data-bs-dismiss="modal" data-i18n="vault.modal.btn.cancel">Cancel</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4" data-i18n="vault.modal.btn.save">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Edit Account -->
+<div class="modal fade" id="modalEditAccount" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 p-4 pb-0">
+                <h5 class="fw-bold" data-i18n="vault.modal.edit_account">Edit Account</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="formEditAccount">
+                <input type="hidden" name="id">
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold" data-i18n="vault.modal.account_name">Account Name</label>
+                        <input type="text" name="name" class="form-control rounded-3" required 
+                            placeholder="Ex: Main Cash Register, Bank BNP..." data-i18n="vault.modal.account_name_placeholder" data-i18n-target="placeholder">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold" data-i18n="vault.modal.account_type">Account Type</label>
+                        <select name="type" class="form-select rounded-3" required>
+                            <option value="bank" data-i18n="vault.modal.type_bank">Bank</option>
+                            <option value="cash" data-i18n="vault.modal.type_cash">Cash Register</option>
+                            <option value="safe" data-i18n="vault.modal.type_safe">Safe / Vault</option>
+                        </select>
+                    </div>
+                    <div class="mb-0">
+                        <div class="form-check form-switch mt-2">
+                            <input class="form-check-input mt-1" type="checkbox" role="switch" name="is_default" id="editDefaultAccount" value="1">
+                            <label class="form-check-label ms-2" for="editDefaultAccount">Set as Default Account</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-4 pt-0">
+                    <button type="button" class="btn btn-light rounded-pill px-4"
+                        data-bs-dismiss="modal" data-i18n="vault.modal.btn.cancel">Cancel</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4" data-i18n="vault.modal.btn.save">Save</button>
                 </div>
             </form>
         </div>

@@ -94,14 +94,58 @@ try {
             break;
 
         case 'add_account':
-            if (($_SESSION['user_role'] ?? '') !== 'Admin') throw new Exception('Accès refusé.');
+            if (($_SESSION['user_role'] ?? '') !== 'Admin') throw new Exception('Access denied.');
             $data = json_decode(file_get_contents('php://input'), true);
             $name = $data['name'];
             $type = $data['type'];
+            $balance = isset($data['balance']) ? (float)$data['balance'] : 0.00;
+            $is_default = isset($data['is_default']) && $data['is_default'] ? 1 : 0;
             
-            $stmt = $pdo->prepare("INSERT INTO vault_accounts (name, type) VALUES (?, ?)");
-            $stmt->execute([$name, $type]);
+            if ($is_default) {
+                $pdo->query("UPDATE vault_accounts SET is_default = 0");
+            }
+
+            $stmt = $pdo->prepare("INSERT INTO vault_accounts (name, type, balance, is_default) VALUES (?, ?, ?, ?)");
+            $stmt->execute([$name, $type, $balance, $is_default]);
             echo json_encode(['success' => 'Account created successfully']);
+            break;
+
+        case 'update_account':
+            if (($_SESSION['user_role'] ?? '') !== 'Admin') throw new Exception('Access denied.');
+            $data = json_decode(file_get_contents('php://input'), true);
+            $id = $data['id'];
+            $name = $data['name'];
+            $type = $data['type'];
+            $is_default = isset($data['is_default']) && $data['is_default'] ? 1 : 0;
+
+            if ($is_default) {
+                $pdo->query("UPDATE vault_accounts SET is_default = 0");
+            }
+
+            $stmt = $pdo->prepare("UPDATE vault_accounts SET name = ?, type = ?, is_default = ? WHERE id = ?");
+            $stmt->execute([$name, $type, $is_default, $id]);
+            echo json_encode(['success' => 'Account updated successfully']);
+            break;
+
+        case 'delete_account':
+            if (($_SESSION['user_role'] ?? '') !== 'Admin') throw new Exception('Access denied.');
+            $id = $_GET['id'] ?? null;
+            
+            if (!$id) throw new Exception('Account ID is required.');
+            
+            // Allow deletion only if balance is 0 and no transactions exist, or whatever business rule applies. 
+            // For now, let's just do a soft or hard delete. Since `vault_transactions` references `account_id`, 
+            // we should probably prevent deletion if there are transactions, or cascade delete (risky for financial data).
+            // Let's check for transactions first.
+            $stmt = $pdo->prepare("SELECT COUNT(*) FROM vault_transactions WHERE account_id = ?");
+            $stmt->execute([$id]);
+            if ($stmt->fetchColumn() > 0) {
+                throw new Exception('Cannot delete an account with existing transactions.');
+            }
+
+            $stmt = $pdo->prepare("DELETE FROM vault_accounts WHERE id = ?");
+            $stmt->execute([$id]);
+            echo json_encode(['success' => 'Account deleted successfully']);
             break;
 
         default:

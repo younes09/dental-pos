@@ -21,6 +21,22 @@ const vaultModule = {
             e.preventDefault();
             this.transfer(new FormData(e.target));
         };
+
+        const formAddAccount = document.getElementById('formAddAccount');
+        if (formAddAccount) {
+            formAddAccount.onsubmit = (e) => {
+                e.preventDefault();
+                this.addAccount(new FormData(e.target));
+            };
+        }
+
+        const formEditAccount = document.getElementById('formEditAccount');
+        if (formEditAccount) {
+            formEditAccount.onsubmit = (e) => {
+                e.preventDefault();
+                this.updateAccount(new FormData(e.target));
+            };
+        }
     },
 
     async loadAccounts() {
@@ -58,8 +74,22 @@ const vaultModule = {
                             <div class="rounded-circle bg-${config.color}-subtle d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
                                 <i class="fas fa-${config.icon} text-${config.color}"></i>
                             </div>
+                            <!-- Actions dropdown -->
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-light rounded-circle" type="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-4">
+                                    <li><a class="dropdown-item py-2" href="javascript:void(0)" onclick="vaultModule.openEditAccountModal(${acc.id})"><i class="fas fa-edit me-2 text-muted"></i> <span data-i18n="vault.modal.edit_account">Edit</span></a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item py-2 text-danger" href="javascript:void(0)" onclick="vaultModule.deleteAccount(${acc.id})"><i class="fas fa-trash-alt me-2"></i> Supprimer</a></li>
+                                </ul>
+                            </div>
                         </div>
-                        <h6 class="text-muted small fw-bold text-uppercase mb-1 tracking-wider">${acc.name}</h6>
+                        <h6 class="text-muted small fw-bold text-uppercase mb-1 tracking-wider">
+                            ${acc.name}
+                            ${acc.is_default == 1 ? '<span class="badge bg-primary-subtle text-primary rounded-pill ms-2"><i class="fas fa-star text-warning"></i> Default</span>' : ''}
+                        </h6>
                         <h3 class="fw-bold mb-0 text-navy">${App.formatCurrency(acc.balance)}</h3>
                         
                         <!-- Decorative element -->
@@ -80,12 +110,17 @@ const vaultModule = {
             document.getElementById('filter-account')
         ];
 
-        const options = this.accounts.map(acc => `<option value="${acc.id}">${acc.name} (${App.formatCurrency(acc.balance)})</option>`).join('');
+        const options = this.accounts.map(acc => {
+            const selected = acc.is_default == 1 ? 'selected' : '';
+            return `<option value="${acc.id}" ${selected}>${acc.name} (${App.formatCurrency(acc.balance)})</option>`;
+        }).join('');
 
         selectors.forEach(s => {
             if (!s) return;
             const isFilter = s.id === 'filter-account';
-            s.innerHTML = (isFilter ? `<option value="">${App.t('vault.filter.all_accounts') || 'All accounts'}</option>` : '') + options;
+            // For the filter, we don't want a pre-selected specific account usually, or we do?
+            // Usually "All Accounts" is better for filtering by default.
+            s.innerHTML = (isFilter ? `<option value="" selected>${App.t('vault.filter.all_accounts') || 'All accounts'}</option>` : '') + options;
         });
     },
 
@@ -142,6 +177,11 @@ const vaultModule = {
         });
     },
 
+    openAddAccountModal() {
+        document.getElementById('formAddAccount').reset();
+        new bootstrap.Modal(document.getElementById('modalAddAccount')).show();
+    },
+
     openAddTransactionModal() {
         document.getElementById('formAddTransaction').reset();
         new bootstrap.Modal(document.getElementById('modalAddTransaction')).show();
@@ -171,6 +211,54 @@ const vaultModule = {
             bootstrap.Modal.getInstance(document.getElementById('modalTransfer')).hide();
             this.loadAccounts();
             this.loadTransactions();
+        }
+    },
+
+    async addAccount(formData) {
+        const data = Object.fromEntries(formData.entries());
+        data.is_default = formData.get('is_default') ? 1 : 0;
+        const result = await App.api('vault.php?action=add_account', 'POST', data);
+        if (result && result.success) {
+            App.toast('success', result.success);
+            bootstrap.Modal.getInstance(document.getElementById('modalAddAccount')).hide();
+            this.loadAccounts();
+        }
+    },
+
+    openEditAccountModal(id) {
+        const acc = this.accounts.find(a => a.id == id);
+        if (!acc) return;
+
+        const form = document.getElementById('formEditAccount');
+        form.reset();
+        
+        form.elements['id'].value = acc.id;
+        form.elements['name'].value = acc.name;
+        form.elements['type'].value = acc.type.toLowerCase();
+        form.elements['is_default'].checked = acc.is_default == 1;
+
+        new bootstrap.Modal(document.getElementById('modalEditAccount')).show();
+    },
+
+    async updateAccount(formData) {
+        const data = Object.fromEntries(formData.entries());
+        data.is_default = formData.get('is_default') ? 1 : 0;
+        const result = await App.api('vault.php?action=update_account', 'POST', data);
+        if (result && result.success) {
+            App.toast('success', result.success);
+            bootstrap.Modal.getInstance(document.getElementById('modalEditAccount')).hide();
+            this.loadAccounts();
+        }
+    },
+
+    async deleteAccount(id) {
+        const confirmMsg = App.t('vault.msg.delete_confirm') || 'Are you sure you want to delete this account?';
+        if (confirm(confirmMsg)) {
+            const result = await App.api(`vault.php?action=delete_account&id=${id}`);
+            if (result && result.success) {
+                App.toast('success', result.success);
+                this.loadAccounts();
+            }
         }
     }
 };
