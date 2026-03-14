@@ -51,6 +51,9 @@ CREATE TABLE products (
     FOREIGN KEY (brand_id) REFERENCES brands(id) ON DELETE SET NULL
 );
 
+insert into products (name, category_id, brand_id, barcode, purchase_price, selling_price, stock_qty, min_stock, expiry_date, image, status) values
+('Product 1', 1, 1, '1234567890123', 0.00, 0.00, 0, 5, '2027-12-31', 'product1.png', 'Active');
+
 -- Stock Batches table
 CREATE TABLE stock_batches (
     id INT AUTO_INCREMENT PRIMARY KEY,

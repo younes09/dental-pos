@@ -153,7 +153,7 @@ const suppliersModule = {
         window.location.hash = `#purchase_orders?supplier_id=${id}`;
     },
 
-    openSettleDebt(id) {
+    async openSettleDebt(id) {
         const supplier = this.table.rows().data().toArray().find(s => s.id == id);
         if (!supplier) return;
 
@@ -165,6 +165,14 @@ const suppliersModule = {
         amountInput.value = '';
         amountInput.max = supplier.balance || 0;
         amountInput.dataset.max = supplier.balance || 0;
+
+        // Load accounts
+        const accountRes = await App.api('vault.php?action=list_accounts');
+        if (accountRes && accountRes.data) {
+            const select = document.getElementById('debt-account-id');
+            select.innerHTML = `<option value="">-- Select account --</option>` +
+                accountRes.data.map(acc => `<option value="${acc.id}">${acc.name} (${App.formatCurrency(acc.balance)})</option>`).join('');
+        }
 
         new bootstrap.Modal(document.getElementById('settleDebtModal')).show();
     },

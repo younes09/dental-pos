@@ -6,6 +6,7 @@ const purchase_ordersModule = {
     table: null,
     products: [],
     suppliers: [],
+    accountBalances: {}, // map of account_id -> balance
 
     async init() {
         this.initDataTable();
@@ -199,6 +200,12 @@ const purchase_ordersModule = {
         // Load accounts for vault integration
         const accountRes = await App.api('vault.php?action=list_accounts');
         if (accountRes && accountRes.data) {
+            // Cache balances for client-side validation
+            this.accountBalances = {};
+            accountRes.data.forEach(acc => {
+                this.accountBalances[acc.id] = parseFloat(acc.balance);
+            });
+
             const options = `<option value="">${App.t('po.modal.account_no')}</option>` +
                 accountRes.data.map(acc => `<option value="${acc.id}">${acc.name} (${App.formatCurrency(acc.balance)})</option>`).join('');
 
@@ -266,6 +273,37 @@ const purchase_ordersModule = {
             total += qty * cost;
         });
         document.getElementById('po-total-display').textContent = App.formatCurrency(total);
+
+        // Update max hint for paid amount
+        const hint = document.getElementById('po-paid-amount-max-hint');
+        if (hint) {
+            hint.textContent = total > 0 ? `Max payable: ${App.formatCurrency(total)}` : '';
+        }
+        const paidInput = document.getElementById('po-paid-amount');
+        if (paidInput) paidInput.max = total;
+    },
+
+    /**
+     * Validate paid_amount against order total and selected account balance.
+     * Returns true if valid, false (and shows toast) if not.
+     */
+    validatePayment(paidAmount, orderTotal, accountId) {
+        if (paidAmount < 0) {
+            App.toast('error', App.t('po.js.err_negative_payment') || 'Payment amount cannot be negative.');
+            return false;
+        }
+        if (paidAmount > orderTotal) {
+            App.toast('error', App.t('po.js.err_overpayment') || `Payment (${App.formatCurrency(paidAmount)}) cannot exceed order total (${App.formatCurrency(orderTotal)}).`);
+            return false;
+        }
+        if (accountId && paidAmount > 0) {
+            const balance = this.accountBalances[accountId];
+            if (balance !== undefined && paidAmount > balance) {
+                App.toast('error', App.t('po.js.err_insufficient_balance') || `Insufficient account balance. Available: ${App.formatCurrency(balance)}, Required: ${App.formatCurrency(paidAmount)}.`);
+                return false;
+            }
+        }
+        return true;
     },
 
     async savePO() {
@@ -306,8 +344,11 @@ const purchase_ordersModule = {
 
         if (status === 'Received') {
             data.purchase_type = document.getElementById('po-purchase-type').value;
-            data.paid_amount = document.getElementById('po-paid-amount').value || 0;
+            data.paid_amount = parseFloat(document.getElementById('po-paid-amount').value) || 0;
             data.account_id = document.getElementById('po-account-id').value;
+
+            // Client-side payment validation
+            if (!this.validatePayment(data.paid_amount, total, data.account_id)) return;
         }
 
         const result = await App.api('purchase_orders.php?action=save', 'POST', data);
@@ -386,7 +427,8 @@ const purchase_ordersModule = {
                     <td class="text-center">${item.received_qty || 0}</td>
                     <td>
                         <input type="number" class="form-control form-control-sm receive-item-input" 
-                            data-item-id="${item.id}" data-product-id="${item.product_id}" data-max="${remaining}" 
+                            data-item-id="${item.id}" data-product-id="${item.product_id}" data-max="${remaining}"
+                            data-cost="${item.unit_cost}"
                             value="${remaining}">
                         <div class="invalid-feedback" style="font-size: 0.7rem;">${App.t('po.js.max')}: ${remaining}</div>
                     </td>
@@ -410,6 +452,18 @@ const purchase_ordersModule = {
                 }
             });
         });
+
+        // Compute total receivable value and update max hint
+        let totalReceivableValue = 0;
+        document.querySelectorAll('.receive-item-input').forEach(input => {
+            const qty = parseInt(input.value) || 0;
+            const cost = parseFloat(input.dataset.cost) || 0;
+            totalReceivableValue += qty * cost;
+        });
+        const receiveHint = document.getElementById('receive-paid-amount-max-hint');
+        if (receiveHint) receiveHint.textContent = totalReceivableValue > 0 ? `Max payable: ${App.formatCurrency(totalReceivableValue)}` : '';
+        const receivePaidInput = document.getElementById('receive-po-paid-amount');
+        if (receivePaidInput) receivePaidInput.max = totalReceivableValue;
 
         new bootstrap.Modal(document.getElementById('receivePoModal')).show();
     },
@@ -454,8 +508,20 @@ const purchase_ordersModule = {
             return;
         }
 
-        const paidAmount = document.getElementById('receive-po-paid-amount').value || 0;
+        const paidAmount = parseFloat(document.getElementById('receive-po-paid-amount').value) || 0;
         const accountId = document.getElementById('receive-po-account-id').value;
+
+        // Calculate the total value of items being received now for overpayment check
+        let receivingTotal = 0;
+        receivedItems.forEach(item => {
+            // unit cost is stored in the input's closest row context; read from data attr if available
+            const input = document.querySelector(`.receive-item-input[data-item-id="${item.item_id}"]`);
+            const cost = input ? parseFloat(input.dataset.cost || 0) : 0;
+            receivingTotal += item.receiving_qty * cost;
+        });
+
+        // Client-side payment validation
+        if (!this.validatePayment(paidAmount, receivingTotal, accountId)) return;
 
         const data = {
             po_id: id,

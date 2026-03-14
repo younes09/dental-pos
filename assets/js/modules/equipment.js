@@ -73,10 +73,19 @@ const equipmentModule = {
         });
     },
 
-    resetForm() {
+    async resetForm() {
         $('#equipmentForm')[0].reset();
         $('#equipmentId').val('');
         $('#equipmentModalLabel').text(App.t('equipment.modal.add_title') || 'Add Equipment');
+        $('#equipment-account-container').removeClass('d-none');
+
+        // Load accounts
+        const accountRes = await App.api('vault.php?action=list_accounts');
+        if (accountRes && accountRes.data) {
+            const select = document.getElementById('equipment-account-id');
+            select.innerHTML = `<option value="">-- Select account --</option>` +
+                accountRes.data.map(acc => `<option value="${acc.id}">${acc.name} (${App.formatCurrency(acc.balance)})</option>`).join('');
+        }
     },
 
     edit(data) {
@@ -87,6 +96,7 @@ const equipmentModule = {
         $('#equipmentQuantity').val(data.quantity);
         $('#equipmentCondition').val(data.condition_status);
         $('#equipmentModalLabel').text(App.t('equipment.js.edit_title') || 'Edit Equipment');
+        $('#equipment-account-container').addClass('d-none'); // Hide for edits
         $('#equipmentModal').modal('show');
     },
 

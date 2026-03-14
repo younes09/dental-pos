@@ -61,6 +61,25 @@ try {
             // Determine payment_status
             $payment_status = 'Unpaid';
             if ($status === 'Received') {
+                // Guard: no overpayment
+                if ($paid_amount > $total) {
+                    $pdo->rollBack();
+                    echo json_encode(['error' => 'Payment amount cannot exceed order total.']);
+                    exit;
+                }
+                // Guard: sufficient account balance
+                $account_id = $data['account_id'] ?? null;
+                if ($account_id && $paid_amount > 0) {
+                    $balStmt = $pdo->prepare("SELECT balance FROM vault_accounts WHERE id = ?");
+                    $balStmt->execute([$account_id]);
+                    $acctBalance = (float)($balStmt->fetchColumn() ?? 0);
+                    if ($paid_amount > $acctBalance) {
+                        $pdo->rollBack();
+                        echo json_encode(['error' => 'Insufficient account balance. Available: ' . number_format($acctBalance, 2) . ', Required: ' . number_format($paid_amount, 2)]);
+                        exit;
+                    }
+                }
+
                 if ($paid_amount >= $total && $total > 0) {
                     $payment_status = 'Paid';
                 } elseif ($paid_amount > 0) {
@@ -94,12 +113,27 @@ try {
                 }
             }
 
-            // If received, update supplier balance based on unpaid amount
+            // If received, update supplier balance based on unpaid amount and record vault transaction
             if ($status === 'Received') {
                 $debt = $total - $paid_amount;
                 if ($debt > 0) {
                     $stmtSupplier = $pdo->prepare("UPDATE suppliers SET balance = balance + ? WHERE id = ?");
                     $stmtSupplier->execute([$debt, $supplier_id]);
+                }
+
+                $account_id = $data['account_id'] ?? null;
+                if ($account_id && $paid_amount > 0) {
+                    $user_id = $_SESSION['user_id'] ?? 1;
+                    $stmtTx = $pdo->prepare("INSERT INTO vault_transactions (account_id, type, amount, description, related_type, related_id, user_id) VALUES (?, 'Expense', ?, ?, 'PurchaseOrder', ?, ?)");
+                    $stmtTx->execute([
+                        $account_id,
+                        $paid_amount,
+                        "Supplier Order Payment #$po_id (Direct Receipt)",
+                        $po_id,
+                        $user_id
+                    ]);
+
+                    $pdo->prepare("UPDATE vault_accounts SET balance = balance - ? WHERE id = ?")->execute([$paid_amount, $account_id]);
                 }
             }
 
@@ -228,6 +262,22 @@ try {
             // F10.3: Vault Integration - Record Expense if account is specified
             $account_id = $data['account_id'] ?? null;
             if ($account_id && $paid_amount > 0) {
+                // Guard: no overpayment against items received now
+                if ($paid_amount > $total_received_value) {
+                    $pdo->rollBack();
+                    echo json_encode(['error' => 'Payment amount cannot exceed the value of items being received.']);
+                    exit;
+                }
+                // Guard: sufficient account balance
+                $balStmt = $pdo->prepare("SELECT balance FROM vault_accounts WHERE id = ? FOR UPDATE");
+                $balStmt->execute([$account_id]);
+                $acctBalance = (float)($balStmt->fetchColumn() ?? 0);
+                if ($paid_amount > $acctBalance) {
+                    $pdo->rollBack();
+                    echo json_encode(['error' => 'Insufficient account balance. Available: ' . number_format($acctBalance, 2) . ', Required: ' . number_format($paid_amount, 2)]);
+                    exit;
+                }
+
                 $stmtTx = $pdo->prepare("INSERT INTO vault_transactions (account_id, type, amount, description, related_type, related_id, user_id) VALUES (?, 'Expense', ?, ?, 'PurchaseOrder', ?, ?)");
                 $stmtTx->execute([
                     $account_id,

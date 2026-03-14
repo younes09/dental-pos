@@ -40,6 +40,24 @@ try {
                 ");
                 $stmt->execute([$name, $purchase_price, $condition_status, $quantity]);
                 $id = $pdo->lastInsertId(); // Get ID for new items
+                
+                // F10.2: Vault Integration - Record Expense for NEW equipment
+                $account_id = $_POST['account_id'] ?? null;
+                $total_cost = $purchase_price * $quantity;
+                if ($account_id && $total_cost > 0) {
+                    $user_id = $_SESSION['user_id'] ?? 1;
+                    $stmtTx = $pdo->prepare("INSERT INTO vault_transactions (account_id, type, amount, description, related_type, related_id, user_id) VALUES (?, 'Expense', ?, ?, 'Equipment', ?, ?)");
+                    $stmtTx->execute([
+                        $account_id,
+                        $total_cost,
+                        "Equipment Purchase - $name (Qty: $quantity)",
+                        $id,
+                        $user_id
+                    ]);
+
+                    $pdo->prepare("UPDATE vault_accounts SET balance = balance - ? WHERE id = ?")->execute([$total_cost, $account_id]);
+                }
+                
                 echo json_encode(['success' => 'Equipment added successfully']);
             }
             

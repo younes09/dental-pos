@@ -102,6 +102,21 @@ try {
             $stmt2 = $pdo->prepare("UPDATE suppliers SET balance = balance - ? WHERE id = ?");
             $stmt2->execute([$amount, $supplier_id]);
 
+            // F10.2: Vault Integration - Record Expense if account is specified
+            $account_id = $_POST['account_id'] ?? null;
+            if ($account_id) {
+                $stmtTx = $pdo->prepare("INSERT INTO vault_transactions (account_id, type, amount, description, related_type, related_id, user_id) VALUES (?, 'Expense', ?, ?, 'SupplierPayment', ?, ?)");
+                $stmtTx->execute([
+                    $account_id,
+                    $amount,
+                    "Supplier Debt Payment - " . ($notes ?: "Payment #$payment_id"),
+                    1, // Using a dummy related_id or could use payment_id if we returned it
+                    $user_id
+                ]);
+
+                $pdo->prepare("UPDATE vault_accounts SET balance = balance - ? WHERE id = ?")->execute([$amount, $account_id]);
+            }
+
             $pdo->commit();
             echo json_encode(['success' => 'Debt payment recorded successfully']);
             break;

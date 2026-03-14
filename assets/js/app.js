@@ -670,7 +670,7 @@ const App = {
                         <div class="icon-circle bg-${this.escapeHtml(n.type)}-subtle text-${this.escapeHtml(n.type)} me-3">
                             <i class="fas ${this.getNotificationIcon(n.type)}"></i>
                         </div>
-                        <div class="flex-grow-1">
+                        <div class="flex-grow-1" style="width: 80%;">
                             <p class="mb-0 small fw-bold">${this.escapeHtml(n.title)}</p>
                             <p class="mb-0 small text-muted text-wrap" style="line-height: 1.3;">${this.escapeHtml(n.message)}</p>
                         </div>
