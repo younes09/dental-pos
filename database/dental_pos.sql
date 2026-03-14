@@ -20,11 +20,17 @@ CREATE TABLE categories (
     name VARCHAR(100) NOT NULL UNIQUE
 );
 
+INSERT INTO categories (name) VALUES
+('Hygiene & Prevention');
+
 -- Brands table
 CREATE TABLE brands (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL UNIQUE
 );
+
+INSERT INTO brands (name) VALUES
+('3M Oral Care');
 
 -- Products table
 CREATE TABLE products (
@@ -68,6 +74,9 @@ CREATE TABLE customers (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+INSERT INTO customers (name, phone, email, balance, loyalty_points) VALUES
+('Dr. Abigail Thompson', '555-0101', 'abigail@clinic.com', 0.00, 0);
+
 -- Suppliers table
 CREATE TABLE suppliers (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -79,6 +88,9 @@ CREATE TABLE suppliers (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+INSERT INTO suppliers (name, company, phone, email) VALUES
+('Sam Dental Supplies', 'Sam Medical Corp', '888-001', 'orders@samdent.com');
+
 -- Vault Accounts table
 CREATE TABLE vault_accounts (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -88,6 +100,11 @@ CREATE TABLE vault_accounts (
     is_default BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+INSERT INTO vault_accounts (name, type, balance, is_default) VALUES
+('Principal Safe', 'Safe', 0.00, TRUE),
+('Cash Drawer 1', 'Cash', 0.00, FALSE),
+('Bank Account (BNA)', 'Bank', 100.00, FALSE);
 
 -- Vault Transactions table
 CREATE TABLE vault_transactions (

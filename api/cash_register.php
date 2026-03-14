@@ -52,7 +52,19 @@ try {
 
             // F10.4: Vault Integration - Deduct from treasury if account selected
             if ($account_id && $opening_balance > 0) {
-                // Check balance
+                // 1. Find the "Caisse" account
+                $caisse_stmt = $pdo->query("SELECT id FROM vault_accounts WHERE name = 'Caisse' OR type = 'Cash' LIMIT 1");
+                $caisse_acc = $caisse_stmt->fetch();
+                if (!$caisse_acc) {
+                    throw new Exception("The 'Caisse' account was not found in the treasury.");
+                }
+                $caisse_id = $caisse_acc['id'];
+
+                if ($account_id == $caisse_id) {
+                    throw new Exception("Source and destination ('Caisse') accounts must be different.");
+                }
+
+                // 2. Check source balance
                 $acc_stmt = $pdo->prepare("SELECT balance FROM vault_accounts WHERE id = ? FOR UPDATE");
                 $acc_stmt->execute([$account_id]);
                 $current_bal = (float)$acc_stmt->fetchColumn();
@@ -61,18 +73,20 @@ try {
                     throw new Exception("Insufficient balance in the selected account (" . number_format($current_bal, 2) . ")");
                 }
 
-                // Record transaction
-                $tx_stmt = $pdo->prepare("INSERT INTO vault_transactions (account_id, type, amount, description, related_type, related_id, user_id) VALUES (?, 'Expense', ?, ?, 'CashSession', ?, ?)");
-                $tx_stmt->execute([
-                    $account_id,
-                    $opening_balance,
-                    "Cash opening - Session #$session_id",
-                    $session_id,
-                    $user_id
-                ]);
+                $description = "Cash opening - Session #$session_id";
 
-                // Update vault balance
+                // 3. Record transactions (Transfer_Out and Transfer_In)
+                $tx_stmt = $pdo->prepare("INSERT INTO vault_transactions (account_id, type, amount, description, related_type, related_id, user_id) VALUES (?, ?, ?, ?, 'CashSession', ?, ?)");
+                
+                // Transfer Out from source
+                $tx_stmt->execute([$account_id, 'Transfer_Out', $opening_balance, $description, $session_id, $user_id]);
+                
+                // Transfer In to Caisse
+                $tx_stmt->execute([$caisse_id, 'Transfer_In', $opening_balance, $description, $session_id, $user_id]);
+
+                // 4. Update balances
                 $pdo->prepare("UPDATE vault_accounts SET balance = balance - ? WHERE id = ?")->execute([$opening_balance, $account_id]);
+                $pdo->prepare("UPDATE vault_accounts SET balance = balance + ? WHERE id = ?")->execute([$opening_balance, $caisse_id]);
             }
 
             $pdo->commit();
@@ -119,22 +133,35 @@ try {
             $update_stmt->execute([$expected, $closing_balance, $difference, $notes, $session['id']]);
             
             // F10.1: Vault Integration - Transfer ALL cash (opening balance + sales) to selected Vault account
-            // The opening balance was deducted from a vault on open, so it must be returned on close
             $vault_id = $data['account_id'] ?? null;
-
             $total_cash_to_vault = $expected; // Full amount: opening_balance + cash_sales
+
             if ($vault_id && $total_cash_to_vault > 0) {
-                // Record transaction
-                $tx_stmt = $pdo->prepare("INSERT INTO vault_transactions (account_id, type, amount, description, related_type, related_id, user_id) VALUES (?, 'Income', ?, ?, 'CashSession', ?, ?)");
-                $tx_stmt->execute([
-                    $vault_id, 
-                    $total_cash_to_vault, 
-                    "Cash closing - Session #" . $session['id'] . " (Opening: " . number_format((float)$session['opening_balance'], 2) . " + Sales: " . number_format($cash_sales, 2) . ")",
-                    $session['id'],
-                    $user_id
-                ]);
+                // 1. Find the "Caisse" account
+                $caisse_stmt = $pdo->query("SELECT id FROM vault_accounts WHERE name = 'Caisse' OR type = 'Cash' LIMIT 1");
+                $caisse_acc = $caisse_stmt->fetch();
+                if (!$caisse_acc) {
+                    throw new Exception("The 'Caisse' account was not found in the treasury.");
+                }
+                $caisse_id = $caisse_acc['id'];
+
+                if ($vault_id == $caisse_id) {
+                    throw new Exception("Source ('Caisse') and destination accounts must be different.");
+                }
+
+                $description = "Cash closing - Session #" . $session['id'] . " (Opening: " . number_format((float)$session['opening_balance'], 2) . " + Sales: " . number_format($cash_sales, 2) . ")";
+
+                // 2. Record transactions (Transfer_Out from Caisse and Transfer_In to Destination)
+                $tx_stmt = $pdo->prepare("INSERT INTO vault_transactions (account_id, type, amount, description, related_type, related_id, user_id) VALUES (?, ?, ?, ?, 'CashSession', ?, ?)");
                 
-                // Update account balance
+                // Transfer Out from Caisse
+                $tx_stmt->execute([$caisse_id, 'Transfer_Out', $total_cash_to_vault, $description, $session['id'], $user_id]);
+                
+                // Transfer In to Destination
+                $tx_stmt->execute([$vault_id, 'Transfer_In', $total_cash_to_vault, $description, $session['id'], $user_id]);
+                
+                // 3. Update balances
+                $pdo->prepare("UPDATE vault_accounts SET balance = balance - ? WHERE id = ?")->execute([$total_cash_to_vault, $caisse_id]);
                 $pdo->prepare("UPDATE vault_accounts SET balance = balance + ? WHERE id = ?")->execute([$total_cash_to_vault, $vault_id]);
             } else {
                 error_log("Vault transfer skipped for session " . $session['id'] . ". Vault ID: " . ($vault_id ?: 'NONE') . ", Total: " . $total_cash_to_vault);

@@ -20,7 +20,10 @@ const cash_registerModule = {
 
         const result = await App.api('vault.php?action=list_accounts');
         if (result && result.data) {
-            const options = result.data.map(acc => `<option value="${acc.id}">${acc.name} (${App.formatCurrency(acc.balance)})</option>`).join('');
+            // Filter out 'Caisse' or 'Cash' type account to prevent choosing it as source/destination
+            const filteredAccounts = result.data.filter(acc => acc.name !== 'Caisse' && acc.type !== 'Cash');
+            
+            const options = filteredAccounts.map(acc => `<option value="${acc.id}">${acc.name} (${App.formatCurrency(acc.balance)})</option>`).join('');
             if (selectOpen) {
                 selectOpen.innerHTML = `<option value="">${App.t('cr.js.select_source') || '-- Select source --'}</option>` + options;
             }
