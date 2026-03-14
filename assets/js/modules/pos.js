@@ -475,7 +475,7 @@ const posModule = {
 
             if (!alreadyHitBL) {
                 const blConfirm = await Swal.fire({
-                    title: 'Attention!',
+                    title: 'Attention! (BL)',
                     text: `The requested quantity for "${product.name}" requires using stock from a "Delivery Note" (BL). Do you really want to add it to the cart?`,
                     icon: 'warning',
                     showCancelButton: true,

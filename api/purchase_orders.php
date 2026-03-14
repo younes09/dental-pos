@@ -435,6 +435,7 @@ try {
     if ($pdo->inTransaction()) {
         $pdo->rollBack();
     }
+    error_log("Purchase Orders API Error: " . $e->getMessage());
     echo json_encode(['error' => $e->getMessage()]);
 }
 // Removed closing tag

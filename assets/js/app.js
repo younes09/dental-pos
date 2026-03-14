@@ -51,6 +51,9 @@ const App = {
         this.applySettings();
         this.loadSidebarState();
 
+        // Start Realtime Clock
+        this.startRealtimeClock();
+
         // Start Notifications
         this.loadNotifications();
         setInterval(() => this.loadNotifications(), 60000); // Check every minute
@@ -588,6 +591,34 @@ const App = {
         return result.isConfirmed;
     },
 
+    startRealtimeClock() {
+        const clockEl = document.getElementById('realtimeClock');
+        if (!clockEl) return;
+
+        const updateClock = () => {
+            const now = new Date();
+            const lang = localStorage.getItem('app_language') || 'fr';
+            
+            const timeOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit' };
+            const dateOptions = { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' };
+            
+            const timeStr = now.toLocaleTimeString(lang, timeOptions);
+            const dateStr = now.toLocaleDateString(lang, dateOptions);
+            
+            clockEl.innerHTML = `
+                <div class="d-flex align-items-center">
+                    <i class="far fa-calendar-alt text-muted me-2"></i>
+                    <span class="me-3 ">${dateStr}</span>
+                    <i class="far fa-clock text-muted me-2"></i>
+                    <span class="">${timeStr}</span>
+                </div>
+            `;
+        };
+        
+        updateClock();
+        setInterval(updateClock, 1000);
+    },
+
     async loadNotifications() {
         const result = await this.api('notifications.php?action=list');
         if (result && result.data) {
@@ -631,19 +662,31 @@ const App = {
                     <p class="mb-0 small" data-i18n="topbar.no_notifications">No new notifications</p>
                 </li>`;
         } else {
-            listEl.innerHTML = notifications.map(n => `
-                <li class="notification-item p-3 border-bottom unread pointer" onclick="App.handleNotificationClick(${n.id}, '${n.link || ''}')">
+            listEl.innerHTML = notifications.map(n => {
+                const safeLink = this.escapeHtml(n.link || '');
+                return `
+                <li class="notification-item p-3 border-bottom unread pointer" data-notif-id="${n.id}" data-notif-link="${safeLink}">
                     <div class="d-flex align-items-start">
-                        <div class="icon-circle bg-${n.type}-subtle text-${n.type} me-3">
+                        <div class="icon-circle bg-${this.escapeHtml(n.type)}-subtle text-${this.escapeHtml(n.type)} me-3">
                             <i class="fas ${this.getNotificationIcon(n.type)}"></i>
                         </div>
                         <div class="flex-grow-1">
-                            <p class="mb-0 small fw-bold">${n.title}</p>
-                            <p class="mb-0 small text-muted text-wrap" style="line-height: 1.3;">${n.message}</p>
+                            <p class="mb-0 small fw-bold">${this.escapeHtml(n.title)}</p>
+                            <p class="mb-0 small text-muted text-wrap" style="line-height: 1.3;">${this.escapeHtml(n.message)}</p>
                         </div>
                     </div>
                 </li>
-            `).join('');
+            `;
+            }).join('');
+
+            // Bind click events safely instead of inline onclick
+            listEl.querySelectorAll('.notification-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const id = item.dataset.notifId;
+                    const link = item.dataset.notifLink;
+                    App.handleNotificationClick(id, link);
+                });
+            });
         }
 
         // Translate the newly injected content

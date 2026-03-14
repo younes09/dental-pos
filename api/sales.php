@@ -502,6 +502,6 @@ try {
 } catch (Exception $e) {
     if ($pdo->inTransaction()) $pdo->rollBack();
     error_log("Sales API Error: " . $e->getMessage() . " | User: " . ($_SESSION['user_id'] ?? 'unknown'));
-    echo json_encode(['error' => $e->getMessage()]);
+    echo json_encode(['error' => 'An error occurred while processing the sale.']);
 }
 // Removed closing tag

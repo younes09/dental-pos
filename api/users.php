@@ -23,12 +23,14 @@ try {
         case 'save':
             $data = $_POST;
             $id = $data['id'] ?? null;
-            $name = $data['name'];
-            $email = $data['email'];
+            $name = $data['name'] ?? '';
+            $email = $data['email'] ?? '';
             $phone = $data['phone'] ?? null;
-            $role = $data['role'];
+            $role = $data['role'] ?? 'Cashier';
             $status = $data['status'] ?? 'Active';
             $password = $data['password'] ?? null;
+
+            if (empty($name) || empty($email)) throw new Exception('Name and email are required.');
 
             if ($id) {
                 // Update
@@ -66,5 +68,6 @@ try {
             break;
     }
 } catch (Exception $e) {
+    error_log("Users API Error: " . $e->getMessage());
     echo json_encode(['error' => $e->getMessage()]);
 }

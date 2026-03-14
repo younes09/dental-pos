@@ -234,7 +234,7 @@ try {
                 echo json_encode(['success' => 'Stock adjusted successfully']);
             } catch (Exception $e) {
                 $pdo->rollBack();
-                echo json_encode(['error' => 'Failed to adjust stock: ' . $e->getMessage()]);
+                echo json_encode(['error' => 'Failed to adjust stock. Please try again.']);
             }
             break;
 
@@ -341,7 +341,7 @@ try {
             } catch (Exception $e) {
                 $pdo->rollBack();
                 fclose($handle);
-                echo json_encode(['error' => 'Database error: ' . $e->getMessage()]);
+                echo json_encode(['error' => 'Import failed. Please check your CSV file.']);
             }
             exit;
             
@@ -412,6 +412,6 @@ try {
     }
 } catch (PDOException $e) {
     error_log("Products API Error: " . $e->getMessage() . " | User: " . ($_SESSION['user_id'] ?? 'unknown'));
-    echo json_encode(['error' => $e->getMessage()]);
+    echo json_encode(['error' => 'An internal error occurred.']);
 }
 // Removed closing tag

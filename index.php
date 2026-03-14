@@ -249,6 +249,10 @@ if (!isset($_SESSION['user_id'])) {
                         <input type="text" id="globalSearchInput" class="form-control" placeholder="Search products..." data-i18n="topbar.search_placeholder" data-i18n-target="placeholder">
                     </div>
                     
+                    <div id="realtimeClock" class="me-3 d-none d-md-block fw-bold text-teal" style="font-size: 0.95rem;">
+                        <!-- Clock will be injected here -->
+                    </div>
+                    
                     <div class="d-flex align-items-center me-2 border-end pe-2" id="languageSelector">
                         <!-- Flag will be injected by app.js -->
                     </div>

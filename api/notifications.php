@@ -84,5 +84,6 @@ try {
             break;
     }
 } catch (Exception $e) {
+    error_log("Notifications API Error: " . $e->getMessage());
     echo json_encode(['error' => $e->getMessage()]);
 }

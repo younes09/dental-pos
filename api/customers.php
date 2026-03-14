@@ -26,11 +26,13 @@ try {
                 throw new Exception('Access denied.');
             }
             $id = $_POST['id'] ?? null;
-            $name = $_POST['name'];
-            $phone = $_POST['phone'];
-            $email = $_POST['email'];
-            $balance = $_POST['balance'];
-            $loyalty_points = $_POST['loyalty_points'];
+            $name = $_POST['name'] ?? '';
+            $phone = $_POST['phone'] ?? '';
+            $email = $_POST['email'] ?? '';
+            $balance = $_POST['balance'] ?? 0;
+            $loyalty_points = $_POST['loyalty_points'] ?? 0;
+
+            if (empty($name)) throw new Exception('Customer name is required.');
 
             if ($id) {
                 $stmt = $pdo->prepare("UPDATE customers SET name=?, phone=?, email=?, balance=?, loyalty_points=? WHERE id=?");
@@ -75,6 +77,15 @@ try {
 
             $pdo->beginTransaction();
 
+            // S7: Validate payment doesn't exceed current debt
+            $stmtBal = $pdo->prepare("SELECT balance FROM customers WHERE id = ? FOR UPDATE");
+            $stmtBal->execute([$customer_id]);
+            $currentBalance = (float)$stmtBal->fetchColumn();
+
+            if ($amount > $currentBalance) {
+                throw new Exception("Payment amount (" . number_format($amount, 2) . ") exceeds current debt (" . number_format($currentBalance, 2) . ")");
+            }
+
             $stmt = $pdo->prepare("INSERT INTO customer_payments (customer_id, amount, payment_method, notes, user_id) VALUES (?, ?, ?, ?, ?)");
             $stmt->execute([$customer_id, $amount, $method, $notes, $user_id]);
             $payment_id = $pdo->lastInsertId();
@@ -106,6 +117,7 @@ try {
     }
 } catch (Exception $e) {
     if ($pdo && $pdo->inTransaction()) $pdo->rollBack();
+    error_log("Customers API Error: " . $e->getMessage());
     echo json_encode(['error' => $e->getMessage()]);
 }
-?>
+

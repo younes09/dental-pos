@@ -74,6 +74,7 @@ try {
     if ($e->getCode() == 23000) {
         echo json_encode(['error' => 'This name already exists']);
     } else {
+        error_log("Catalog API Error: " . $e->getMessage());
         echo json_encode(['error' => $e->getMessage()]);
     }
 }

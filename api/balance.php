@@ -55,5 +55,6 @@ try {
     ]);
 
 } catch (PDOException $e) {
+    error_log("Balance API Error: " . $e->getMessage());
     echo json_encode(['error' => $e->getMessage()]);
 }

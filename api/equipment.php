@@ -70,5 +70,6 @@ try {
             break;
     }
 } catch (Exception $e) {
+    error_log("Equipment API Error: " . $e->getMessage());
     echo json_encode(['error' => $e->getMessage()]);
 }

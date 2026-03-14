@@ -72,5 +72,6 @@ try {
             break;
     }
 } catch (Exception $e) {
+    error_log("Profile API Error: " . $e->getMessage());
     echo json_encode(['error' => $e->getMessage()]);
 }

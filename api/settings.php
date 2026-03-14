@@ -39,7 +39,7 @@ switch ($method) {
                 exit;
             } catch (Exception $e) {
                 http_response_code(500);
-                echo json_encode(['error' => 'Backup failed: ' . $e->getMessage()]);
+                echo json_encode(['error' => 'Backup failed. Please try again.']);
                 exit;
             }
         }
@@ -53,7 +53,8 @@ switch ($method) {
             echo json_encode($settings);
         } catch (PDOException $e) {
             http_response_code(500);
-            echo json_encode(['error' => $e->getMessage()]);
+            error_log("Settings GET Error: " . $e->getMessage());
+            echo json_encode(['error' => 'Failed to load settings.']);
         }
         break;
 
@@ -113,7 +114,7 @@ switch ($method) {
                 exit;
             } catch (Exception $e) {
                 http_response_code(500);
-                echo json_encode(['error' => 'Restore failed: ' . $e->getMessage()]);
+                echo json_encode(['error' => 'Restore failed. Please check the backup file.']);
                 exit;
             }
         }
@@ -139,7 +140,8 @@ switch ($method) {
         } catch (PDOException $e) {
             $pdo->rollBack();
             http_response_code(500);
-            echo json_encode(['error' => $e->getMessage()]);
+            error_log("Settings POST Error: " . $e->getMessage());
+            echo json_encode(['error' => 'Failed to update settings.']);
         }
         break;
 

@@ -168,5 +168,6 @@ try {
     }
 } catch (Exception $e) {
     if ($pdo->inTransaction()) $pdo->rollBack();
+    error_log("Cash Register API Error: " . $e->getMessage());
     echo json_encode(['error' => $e->getMessage()]);
 }

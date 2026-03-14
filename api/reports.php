@@ -68,6 +68,7 @@ try {
             break;
     }
 } catch (PDOException $e) {
+    error_log("Reports API Error: " . $e->getMessage());
     echo json_encode(['error' => $e->getMessage()]);
 }
 // Removed closing tag

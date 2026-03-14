@@ -54,10 +54,12 @@ try {
                 throw new Exception('Access denied.');
             }
             $id = $_POST['id'] ?? null;
-            $name = $_POST['name'];
-            $company = $_POST['company'];
-            $phone = $_POST['phone'];
-            $email = $_POST['email'];
+            $name = $_POST['name'] ?? '';
+            $company = $_POST['company'] ?? '';
+            $phone = $_POST['phone'] ?? '';
+            $email = $_POST['email'] ?? '';
+
+            if (empty($name)) throw new Exception('Supplier name is required.');
 
             if ($id) {
                 $stmt = $pdo->prepare("UPDATE suppliers SET name=?, company=?, phone=?, email=? WHERE id=?");
@@ -121,6 +123,7 @@ try {
             break;
     }
 } catch (PDOException $e) {
+    error_log("Suppliers API Error: " . $e->getMessage());
     echo json_encode(['error' => $e->getMessage()]);
 }
-?>
+

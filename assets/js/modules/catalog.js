@@ -18,13 +18,13 @@ const catalogModule = {
             ajax: 'api/catalog.php?action=list&type=categories',
             columns: [
                 { data: 'id' },
-                { data: 'name', render: (data) => `<span class="fw-bold">${data}</span>` },
+                { data: 'name', render: (data) => `<span class="fw-bold">${App.escapeHtml(data)}</span>` },
                 {
                     data: null,
                     className: 'text-end',
                     orderable: false,
                     render: (data) => `
-                        <button class="btn btn-sm btn-light-primary me-2" onclick="catalogModule.editItem('categories', ${data.id}, '${data.name}')">
+                        <button class="btn btn-sm btn-light-primary me-2" onclick="catalogModule.editItem('categories', ${data.id}, this)" data-name="${App.escapeHtml(data.name)}">
                             <i class="fas fa-edit"></i>
                         </button>
                         <button class="btn btn-sm btn-light-danger" onclick="catalogModule.deleteItem('categories', ${data.id})">
@@ -42,13 +42,13 @@ const catalogModule = {
             ajax: 'api/catalog.php?action=list&type=brands',
             columns: [
                 { data: 'id' },
-                { data: 'name', render: (data) => `<span class="fw-bold">${data}</span>` },
+                { data: 'name', render: (data) => `<span class="fw-bold">${App.escapeHtml(data)}</span>` },
                 {
                     data: null,
                     className: 'text-end',
                     orderable: false,
                     render: (data) => `
-                        <button class="btn btn-sm btn-light-primary me-2" onclick="catalogModule.editItem('brands', ${data.id}, '${data.name}')">
+                        <button class="btn btn-sm btn-light-primary me-2" onclick="catalogModule.editItem('brands', ${data.id}, this)" data-name="${App.escapeHtml(data.name)}">
                             <i class="fas fa-edit"></i>
                         </button>
                         <button class="btn btn-sm btn-light-danger" onclick="catalogModule.deleteItem('brands', ${data.id})">
@@ -85,7 +85,8 @@ const catalogModule = {
         new bootstrap.Modal(document.getElementById('catalogModal')).show();
     },
 
-    editItem(type, id, name) {
+    editItem(type, id, btnEl) {
+        const name = btnEl.dataset.name || '';
         document.getElementById('catalog-id').value = id;
         document.getElementById('catalog-type').value = type;
         document.getElementById('catalog-name').value = name;

@@ -42,6 +42,8 @@ try {
             $amount = (float)$data['amount'];
             $description = $data['description'] ?? '';
 
+            // S4: Validate transaction type
+            if (!in_array($type, ['Income', 'Expense'])) throw new Exception('Invalid transaction type. Must be Income or Expense.');
             if ($amount <= 0) throw new Exception('Invalid amount.');
 
             $pdo->beginTransaction();
@@ -107,5 +109,6 @@ try {
     }
 } catch (Exception $e) {
     if ($pdo->inTransaction()) $pdo->rollBack();
+    error_log("Vault API Error: " . $e->getMessage());
     echo json_encode(['error' => $e->getMessage()]);
 }
