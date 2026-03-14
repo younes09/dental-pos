@@ -107,8 +107,15 @@ try {
 
             // M11: Notification Trigger - New PO Created
             if ($status === 'Pending') {
+                $supplier_name = $data['supplier_name'] ?? '';
+                if (empty($supplier_name)) {
+                    $stmtSuppName = $pdo->prepare("SELECT name FROM suppliers WHERE id = ?");
+                    $stmtSuppName->execute([$supplier_id]);
+                    $supplier_name = $stmtSuppName->fetchColumn() ?: 'Unknown';
+                }
+
                 $ins_notif = $pdo->prepare("INSERT INTO notifications (role, title, message, type, link) VALUES (?, ?, ?, ?, ?)");
-                $po_msg = "New Purchase Order #$po_id has been created for " . $data['supplier_name'] . ". Status: Pending.";
+                $po_msg = "New Purchase Order #$po_id has been created for " . $supplier_name . ". Status: Pending.";
                 $ins_notif->execute(['Admin', 'New PO: #' . $po_id, $po_msg, 'info', '#purchase_orders']);
                 $ins_notif->execute(['Stock Manager', 'New PO: #' . $po_id, $po_msg, 'info', '#purchase_orders']);
             }

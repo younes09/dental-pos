@@ -68,36 +68,42 @@ const vaultModule = {
             const config = typeConfig[typeKey] || { icon: 'vault', color: 'teal' };
             return `
             <div class="col-md-4 mb-3">
-                <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
+                <div class="card border-0 shadow-sm rounded-4 h-100">
                     <div class="card-body p-4 position-relative">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <div class="rounded-circle bg-${config.color}-subtle d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
-                                <i class="fas fa-${config.icon} text-${config.color}"></i>
+                        <!-- Card Content -->
+                        <div class="position-relative" style="z-index: 2;">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div class="rounded-circle bg-${config.color}-subtle d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
+                                    <i class="fas fa-${config.icon} text-${config.color}"></i>
+                                </div>
+                                <!-- Actions dropdown -->
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-light rounded-circle" type="button" data-bs-toggle="dropdown">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-4">
+                                        <li><a class="dropdown-item py-2" href="javascript:void(0)" onclick="vaultModule.openEditAccountModal(${acc.id})"><i class="fas fa-edit me-2 text-muted"></i> <span data-i18n="vault.modal.edit_account">Edit</span></a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item py-2 text-danger" href="javascript:void(0)" onclick="vaultModule.deleteAccount(${acc.id})"><i class="fas fa-trash-alt me-2"></i> Supprimer</a></li>
+                                    </ul>
+                                </div>
                             </div>
-                            <!-- Actions dropdown -->
-                            <div class="dropdown">
-                                <button class="btn btn-sm btn-light rounded-circle" type="button" data-bs-toggle="dropdown">
-                                    <i class="fas fa-ellipsis-v"></i>
-                                </button>
-                                <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-4">
-                                    <li><a class="dropdown-item py-2" href="javascript:void(0)" onclick="vaultModule.openEditAccountModal(${acc.id})"><i class="fas fa-edit me-2 text-muted"></i> <span data-i18n="vault.modal.edit_account">Edit</span></a></li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item py-2 text-danger" href="javascript:void(0)" onclick="vaultModule.deleteAccount(${acc.id})"><i class="fas fa-trash-alt me-2"></i> Supprimer</a></li>
-                                </ul>
-                            </div>
+                            <h6 class="text-muted small fw-bold text-uppercase mb-1 tracking-wider">
+                                ${acc.name}
+                                ${acc.is_default == 1 ? '<span class="badge bg-primary-subtle text-primary rounded-pill ms-2"><i class="fas fa-star text-warning"></i> Default</span>' : ''}
+                            </h6>
+                            <h3 class="fw-bold mb-0 text-navy">${App.formatCurrency(acc.balance)}</h3>
                         </div>
-                        <h6 class="text-muted small fw-bold text-uppercase mb-1 tracking-wider">
-                            ${acc.name}
-                            ${acc.is_default == 1 ? '<span class="badge bg-primary-subtle text-primary rounded-pill ms-2"><i class="fas fa-star text-warning"></i> Default</span>' : ''}
-                        </h6>
-                        <h3 class="fw-bold mb-0 text-navy">${App.formatCurrency(acc.balance)}</h3>
                         
-                        <!-- Decorative element -->
-                        <div class="position-absolute opacity-10" style="bottom: -20px; right: -10px; font-size: 80px;">
-                            <i class="fas fa-${config.icon}"></i>
+                        <!-- Decorative element (Clipped) -->
+                        <div class="position-absolute top-0 start-0 w-100 h-100 overflow-hidden" style="border-radius: inherit; pointer-events: none; z-index: 1;">
+                            <div class="position-absolute opacity-10" style="bottom: -20px; right: -10px; font-size: 80px;">
+                                <i class="fas fa-${config.icon}"></i>
+                            </div>
                         </div>
                     </div>
                 </div>
+            </div>
             </div>
         `}).join('');
     },

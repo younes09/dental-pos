@@ -385,7 +385,9 @@ const purchase_ordersModule = {
                     <td class="text-center">${item.qty}</td>
                     <td class="text-center">${item.received_qty || 0}</td>
                     <td>
-                             value="${remaining}">
+                        <input type="number" class="form-control form-control-sm receive-item-input" 
+                            data-item-id="${item.id}" data-product-id="${item.product_id}" data-max="${remaining}" 
+                            value="${remaining}">
                         <div class="invalid-feedback" style="font-size: 0.7rem;">${App.t('po.js.max')}: ${remaining}</div>
                     </td>
                     <td>
