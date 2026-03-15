@@ -472,6 +472,32 @@ try {
             echo json_encode(['success' => 'Purchase order deleted successfully']);
             break;
 
+        case 'cancel':
+            // Only Admin can cancel purchase orders
+            if (($_SESSION['user_role'] ?? '') !== 'Admin') {
+                throw new Exception('Only Admins can cancel purchase orders.');
+            }
+            $id = $_GET['id'];
+
+            $status_stmt = $pdo->prepare("SELECT status FROM purchase_orders WHERE id = ?");
+            $status_stmt->execute([$id]);
+            $po_status = $status_stmt->fetchColumn();
+
+            if ($po_status === 'Received') {
+                echo json_encode(['error' => 'Cannot cancel a fully received purchase order. Process a return instead.']);
+                exit;
+            }
+
+            if ($po_status === 'Cancelled') {
+                echo json_encode(['error' => 'This purchase order is already cancelled.']);
+                exit;
+            }
+
+            $stmt = $pdo->prepare("UPDATE purchase_orders SET status = 'Cancelled' WHERE id = ?");
+            $stmt->execute([$id]);
+            echo json_encode(['success' => 'Purchase order has been cancelled successfully.']);
+            break;
+
         case 'get_products':
             $stmt = $pdo->query("SELECT id, name, barcode, purchase_price, stock_qty, min_stock FROM products ORDER BY name ASC");
             $products = $stmt->fetchAll();

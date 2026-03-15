@@ -157,6 +157,11 @@ const purchase_ordersModule = {
                             receiveBtn = `<li><a class="dropdown-item text-success" href="javascript:void(0)" onclick="purchase_ordersModule.openReceiveModal(${data.id})"><i class="fas fa-check-circle me-2"></i>${App.t('po.js.status_receive')}</a></li>`;
                         }
 
+                        let cancelBtn = '';
+                        if (data.status === 'Pending' || data.status === 'Partial') {
+                            cancelBtn = `<li><a class="dropdown-item text-warning" href="javascript:void(0)" onclick="purchase_ordersModule.cancelPO(${data.id})"><i class="fas fa-ban me-2"></i>${App.t('po.js.status_cancel')}</a></li>`;
+                        }
+
                         return `
                         <div class="dropdown">
                             <button class="btn btn-sm btn-light" data-bs-toggle="dropdown"><i class="fas fa-ellipsis-v"></i></button>
@@ -167,6 +172,7 @@ const purchase_ordersModule = {
                                 ${data.status === 'Received' || data.status === 'Partial' ? `
                                     <li><a class="dropdown-item" href="javascript:void(0)" onclick="purchase_ordersModule.openReturnModal(${data.id})"><i class="fas fa-undo me-2 text-warning"></i>${App.t('po.js.status_return')}</a></li>
                                 ` : ''}
+                                ${cancelBtn}
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item text-danger" href="javascript:void(0)" onclick="purchase_ordersModule.deletePO(${data.id})"><i class="fas fa-trash me-2"></i>${App.t('po.js.status_del')}</a></li>
                             </ul>
@@ -618,6 +624,32 @@ const purchase_ordersModule = {
 
         // Show Modal
         new bootstrap.Modal(document.getElementById('poDetailsModal')).show();
+    },
+
+    async cancelPO(id) {
+        const confirmed = await Swal.fire({
+            title: App.t('po.js.cancel_title'),
+            text: App.t('po.js.cancel_text'),
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#f39c12',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: App.t('po.js.cancel_confirm'),
+            cancelButtonText: App.t('po.js.cancel_abort')
+        });
+
+        if (!confirmed.isConfirmed) return;
+
+        const result = await App.api(`purchase_orders.php?action=cancel&id=${id}`);
+        if (!result) return;
+
+        if (result.error) {
+            App.toast('error', result.error);
+            return;
+        }
+
+        App.toast('success', result.success || App.t('po.js.cancelled'));
+        this.table.ajax.reload(null, false);
     },
 
     async printBC(id) {

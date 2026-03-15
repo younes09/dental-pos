@@ -964,6 +964,11 @@ const locales = {
         "po.js.status_view": "View Details",
         "po.js.status_return": "Return to Supplier",
         "po.js.status_del": "Delete",
+        "po.js.status_cancel": "Cancel Order",
+        "po.js.cancel_title": "Cancel Purchase Order?",
+        "po.js.cancel_text": "This will mark the order as Cancelled. This action cannot be undone.",
+        "po.js.cancel_confirm": "Yes, Cancel It",
+        "po.js.cancel_abort": "Keep Order",
 
         // Profile
         "profile.basic_info": "Basic Information",
@@ -2034,6 +2039,11 @@ const locales = {
         "po.js.status_view": "Voir les Détails",
         "po.js.status_return": "Retourner au Fournisseur",
         "po.js.status_del": "Supprimer",
+        "po.js.status_cancel": "Annuler la Commande",
+        "po.js.cancel_title": "Annuler le bon de commande ?",
+        "po.js.cancel_text": "Cela marquera la commande comme Annulée. Cette action est irréversible.",
+        "po.js.cancel_confirm": "Oui, Annuler",
+        "po.js.cancel_abort": "Conserver la Commande",
 
         // Profile
         "profile.basic_info": "Informations de Base",
