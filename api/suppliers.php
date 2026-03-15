@@ -102,6 +102,23 @@ try {
             $stmt2 = $pdo->prepare("UPDATE suppliers SET balance = balance - ? WHERE id = ?");
             $stmt2->execute([$amount, $supplier_id]);
 
+            // Auto-update PO payment_status: if supplier balance is now 0,
+            // mark all their Received POs that are still Unpaid/Partial as Paid.
+            $stmtNewBal = $pdo->prepare("SELECT balance FROM suppliers WHERE id = ?");
+            $stmtNewBal->execute([$supplier_id]);
+            $newBalance = (float)$stmtNewBal->fetchColumn();
+
+            if ($newBalance <= 0) {
+                $stmtPayPO = $pdo->prepare("
+                    UPDATE purchase_orders
+                    SET payment_status = 'Paid', paid_amount = total
+                    WHERE supplier_id = ?
+                      AND status = 'Received'
+                      AND payment_status IN ('Unpaid', 'Partial')
+                ");
+                $stmtPayPO->execute([$supplier_id]);
+            }
+
             // F10.2: Vault Integration - Record Expense if account is specified
             $account_id = $_POST['account_id'] ?? null;
             if ($account_id) {

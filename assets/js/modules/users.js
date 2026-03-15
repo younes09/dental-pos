@@ -150,7 +150,7 @@ const usersModule = {
             confirmButtonColor: '#00BFA6',
             cancelButtonColor: '#d33',
             confirmButtonText: App.t('users.js.btn_yes') || 'Yes, delete!',
-            cancelButtonText: App.t('btn_cancel') || 'Cancel'
+            cancelButtonText: App.t('users.js.btn_cancel') || 'Cancel'
         });
 
         if (confirm.isConfirmed) {

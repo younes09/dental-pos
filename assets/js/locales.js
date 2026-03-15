@@ -735,6 +735,7 @@ const locales = {
         "users.js.delete_title": "Delete User?",
         "users.js.delete_text": "This user will lose all system access!",
         "users.js.btn_yes": "Yes, delete!",
+        "users.js.btn_cancel": "Cancel",
 
         // Equipment
         "equipment.page_title": "Equipment Management",
@@ -1805,6 +1806,7 @@ const locales = {
         "users.js.delete_title": "Supprimer l'Utilisateur ?",
         "users.js.delete_text": "Cet utilisateur perdra tout accès au système !",
         "users.js.btn_yes": "Oui, supprimer !",
+        "users.js.btn_cancel": "Annuler",
 
         // Equipment
         "equipment.page_title": "Gestion du Matériel",

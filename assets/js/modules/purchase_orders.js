@@ -237,7 +237,7 @@ const purchase_ordersModule = {
             </td>
             <td><input type="number" class="form-control form-control-sm item-qty" value="1" min="1" required></td>
             <td><input type="number" step="0.01" class="form-control form-control-sm item-cost" value="0.00" required></td>
-            <td><input type="date" class="form-control form-control-sm item-expiry"></td>
+            <td><input type="date" class="form-control form-control-sm item-expiry" min="${new Date().toISOString().split('T')[0]}" required></td>
             <td class="item-total fw-bold text-navy">${App.formatCurrency(0)}</td>
             <td class="text-end">
                 <button type="button" class="btn btn-sm text-danger btn-remove-item">
@@ -433,8 +433,7 @@ const purchase_ordersModule = {
                         <div class="invalid-feedback" style="font-size: 0.7rem;">${App.t('po.js.max')}: ${remaining}</div>
                     </td>
                     <td>
-                        <input type="date" class="form-control form-control-sm receive-item-expiry" 
-                            data-item-id="${item.id}">
+                        <input type="date" class="form-control form-control-sm receive-item-expiry" min="${new Date().toISOString().split('T')[0]}" required data-item-id="${item.id}">
                     </td>
                 </tr>
             `;

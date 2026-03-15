@@ -413,5 +413,7 @@ try {
 } catch (PDOException $e) {
     error_log("Products API Error: " . $e->getMessage() . " | User: " . ($_SESSION['user_id'] ?? 'unknown'));
     echo json_encode(['error' => 'An internal error occurred.']);
+} catch (Exception $e) {
+    echo json_encode(['error' => $e->getMessage()]);
 }
 // Removed closing tag
