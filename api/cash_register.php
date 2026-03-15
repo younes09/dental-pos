@@ -134,7 +134,7 @@ try {
             
             // F10.1: Vault Integration - Transfer ALL cash (opening balance + sales) to selected Vault account
             $vault_id = $data['account_id'] ?? null;
-            $total_cash_to_vault = $expected; // Full amount: opening_balance + cash_sales
+            $total_cash_to_vault = $closing_balance; // Actual cash physically counted at close (may differ from $expected due to outflows like PO payments)
 
             if ($vault_id && $total_cash_to_vault > 0) {
                 // 1. Find the "Caisse" account
@@ -149,7 +149,8 @@ try {
                     throw new Exception("Source ('Caisse') and destination accounts must be different.");
                 }
 
-                $description = "Cash closing - Session #" . $session['id'] . " (Opening: " . number_format((float)$session['opening_balance'], 2) . " + Sales: " . number_format($cash_sales, 2) . ")";
+                $description = "Cash closing - Session #" . $session['id'] . " (Closing Balance: " . number_format($closing_balance, 2) . ")";
+                // $description = "Cash closing - Session #" . $session['id'] . " (Opening: " . number_format((float)$session['opening_balance'], 2) . " + Sales: " . number_format($cash_sales, 2) . ")";
 
                 // 2. Record transactions (Transfer_Out from Caisse and Transfer_In to Destination)
                 $tx_stmt = $pdo->prepare("INSERT INTO vault_transactions (account_id, type, amount, description, related_type, related_id, user_id) VALUES (?, ?, ?, ?, 'CashSession', ?, ?)");
