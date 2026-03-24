@@ -328,7 +328,7 @@ if (!isset($_SESSION['user_id'])) {
         </main>
         
         <footer class="text-center py-3 text-muted small">
-            &copy; 2026 DentalPOS v1.0. All Rights Reserved.
+            &copy; 2026 DentalPOS v1.0. All Rights Reserved to <a href="https://www.facebook.com/younesouzn">YOUNES OUZNADJI</a>.
         </footer>
     </div>
 

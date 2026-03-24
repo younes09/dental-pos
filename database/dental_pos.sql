@@ -52,7 +52,7 @@ CREATE TABLE products (
 );
 
 insert into products (name, category_id, brand_id, barcode, purchase_price, selling_price, stock_qty, min_stock, expiry_date, image, status) values
-('Product 1', 1, 1, '1234567890123', 0.00, 0.00, 0, 5, '2027-12-31', 'product1.png', 'Active');
+('Product 1', 1, 1, '1234567890123', 10.00, 20.00, 5, 5, '2027-12-31', 'product1.png', 'Active');
 
 -- Stock Batches table
 CREATE TABLE stock_batches (
@@ -105,9 +105,9 @@ CREATE TABLE vault_accounts (
 );
 
 INSERT INTO vault_accounts (name, type, balance, is_default) VALUES
-('Principal Safe', 'Safe', 0.00, TRUE),
+('Principal Safe', 'Safe', 100.00, TRUE),
 ('Cash Drawer 1', 'Cash', 0.00, FALSE),
-('Bank Account (BNA)', 'Bank', 100.00, FALSE);
+('Bank Account (BNA)', 'Bank', 0.00, FALSE);
 
 -- Vault Transactions table
 CREATE TABLE vault_transactions (
@@ -150,6 +150,9 @@ CREATE TABLE purchase_orders (
     FOREIGN KEY (supplier_id) REFERENCES suppliers(id)
 );
 
+INSERT INTO `purchase_orders` (`id`, `supplier_id`, `date`, `status`, `total`, `paid_amount`, `payment_status`, `created_at`) VALUES
+(1, 1, '2026-03-24', 'Received', 50.00, 50.00, 'Paid', '2026-03-24 09:36:59');
+
 -- Purchase Order Items table
 CREATE TABLE purchase_order_items (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -164,6 +167,9 @@ CREATE TABLE purchase_order_items (
     FOREIGN KEY (po_id) REFERENCES purchase_orders(id) ON DELETE CASCADE,
     FOREIGN KEY (product_id) REFERENCES products(id)
 );
+
+INSERT INTO `purchase_order_items` (`id`, `po_id`, `product_id`, `qty`, `received_qty`, `returned_qty`, `unit_cost`, `old_unit_cost`) VALUES
+(1, 1, 1, 5, 5, 0, 10.00, 10.00);
 
 -- Purchase Returns table
 CREATE TABLE purchase_returns (

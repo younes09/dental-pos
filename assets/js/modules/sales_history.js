@@ -32,9 +32,10 @@ const sales_historyModule = {
                 {
                     data: 'id',
                     type: 'num',
-                    render: (data, type) => {
+                    render: (data, type, row) => {
                         if (type === 'display') {
-                            return `<span class="fw-bold">#INV-${data}</span>`;
+                            const returnBadge = row.has_returns > 0 ? `<span class="badge bg-danger-subtle text-danger ms-2 small" title="Contains Returned Items"><i class="fas fa-undo me-1"></i>Returned</span>` : '';
+                            return `<span class="fw-bold">#INV-${data}</span>${returnBadge}`;
                         }
                         return data;
                     }
@@ -215,10 +216,11 @@ const sales_historyModule = {
         // Populate Item Table
         const tbody = document.querySelector('#sale-details-items-table tbody');
         tbody.innerHTML = items.map(item => `
-            <tr>
+            <tr ${item.returned_qty > 0 ? 'class="table-warning"' : ''}>
                 <td>
                     <div class="fw-medium">${item.product_name}</div>
                     <small class="text-muted small">${item.barcode || ''}</small>
+                    ${item.returned_qty > 0 ? `<div class="mt-1"><span class="badge bg-danger-subtle text-danger"><i class="fas fa-undo me-1"></i>Returned: ${item.returned_qty}</span></div>` : ''}
                 </td>
                 <td class="text-center">${item.qty}</td>
                 <td class="text-end">${App.formatCurrency(item.unit_price)}</td>

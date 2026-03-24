@@ -435,7 +435,8 @@ try {
             }
             $customer_id = $_GET['customer_id'] ?? null;
             $query = "
-                SELECT s.*, c.name as customer_name, u.name as user_name
+                SELECT s.*, c.name as customer_name, u.name as user_name,
+                       (SELECT COUNT(*) FROM sale_returns WHERE sale_id = s.id) as has_returns
                 FROM sales s
                 LEFT JOIN customers c ON s.customer_id = c.id
                 LEFT JOIN users u ON s.user_id = u.id
