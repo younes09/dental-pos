@@ -90,7 +90,8 @@ try {
             // 1. Record salary payment
             $stmt = $pdo->prepare("INSERT INTO salary_payments (staff_id, vault_account_id, amount, payment_date, period_month, period_year, payment_method, notes, user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
             $stmt->execute([$staff_id, $vault_account_id, $amount, $payment_date, $period_month, $period_year, $payment_method, $notes, $user_id]);
-
+            $payment_id = $pdo->lastInsertId();
+            
             // 2. Record expense in vault_transactions
             $staff_stmt = $pdo->prepare("SELECT name FROM staff WHERE id = ?");
             $staff_stmt->execute([$staff_id]);
@@ -99,8 +100,8 @@ try {
             $month_name = date("F", mktime(0, 0, 0, $period_month, 10));
             $tx_description = "Salary: $staff_name ($month_name $period_year)";
             
-            $stmtTx = $pdo->prepare("INSERT INTO vault_transactions (account_id, type, amount, description, user_id) VALUES (?, 'Expense', ?, ?, ?)");
-            $stmtTx->execute([$vault_account_id, $amount, $tx_description, $user_id]);
+            $stmtTx = $pdo->prepare("INSERT INTO vault_transactions (account_id, type, amount, description, related_type, related_id, user_id) VALUES (?, 'Expense', ?, ?, 'Salary', ?, ?)");
+            $stmtTx->execute([$vault_account_id, $amount, $tx_description, $payment_id, $user_id]);
 
             // 3. Update vault balance
             $stmtBal = $pdo->prepare("UPDATE vault_accounts SET balance = balance - ? WHERE id = ?");

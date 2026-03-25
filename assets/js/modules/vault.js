@@ -237,7 +237,7 @@ const vaultModule = {
 
         const form = document.getElementById('formEditAccount');
         form.reset();
-        
+
         form.elements['id'].value = acc.id;
         form.elements['name'].value = acc.name;
         form.elements['type'].value = acc.type.toLowerCase();

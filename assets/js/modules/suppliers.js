@@ -37,6 +37,7 @@ const suppliersModule = {
             destroy: true,
             ajax: 'api/suppliers.php?action=list',
             columns: [
+                { data: 'id', visible: true, orderable: true, searchable: true, width: "5%", className: "text-center" },
                 {
                     data: 'name',
                     render: (data, type, row) => `

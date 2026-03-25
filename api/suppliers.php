@@ -99,6 +99,9 @@ try {
             $stmt = $pdo->prepare("INSERT INTO supplier_payments (supplier_id, amount, payment_method, notes, user_id) VALUES (?, ?, ?, ?, ?)");
             $stmt->execute([$supplier_id, $amount, $method, $notes, $user_id]);
 
+            // Get the payment ID
+            $payment_id = $pdo->lastInsertId();
+
             $stmt2 = $pdo->prepare("UPDATE suppliers SET balance = balance - ? WHERE id = ?");
             $stmt2->execute([$amount, $supplier_id]);
 
@@ -126,8 +129,8 @@ try {
                 $stmtTx->execute([
                     $account_id,
                     $amount,
-                    "Supplier Debt Payment - " . ($notes ?: "Payment #$payment_id"),
-                    1, // Using a dummy related_id or could use payment_id if we returned it
+                    "Supplier Debt Payment - " . ($notes ?: "#PO-" . ($payment_id + 1)),
+                    $supplier_id,
                     $user_id
                 ]);
 

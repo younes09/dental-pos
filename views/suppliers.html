@@ -13,6 +13,7 @@
                 <table id="suppliersTable" class="table table-hover align-middle w-100">
                     <thead class="table-light">
                         <tr>
+                            <th>#</th>
                             <th data-i18n="suppliers.table.name">Supplier Name</th>
                             <th data-i18n="suppliers.table.company">Company</th>
                             <th data-i18n="suppliers.table.phone">Phone</th>
@@ -36,7 +37,8 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4">
             <div class="modal-header border-bottom-0 p-4">
-                <h5 class="modal-title fw-bold" id="supplierModalLabel" data-i18n="suppliers.modal.add_title">Add New Supplier</h5>
+                <h5 class="modal-title fw-bold" id="supplierModalLabel" data-i18n="suppliers.modal.add_title">Add New
+                    Supplier</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-4 pt-0">
@@ -44,29 +46,37 @@
                     <input type="hidden" name="id" id="supplier-id">
                     <div class="row g-3">
                         <div class="col-12">
-                            <label class="form-label fw-semibold" data-i18n="suppliers.modal.contact_person">Contact Person</label>
-                            <input type="text" name="name" class="form-control" required placeholder="e.g. Jane Smith" data-i18n="suppliers.modal.contact_placeholder" data-i18n-target="placeholder">
+                            <label class="form-label fw-semibold" data-i18n="suppliers.modal.contact_person">Contact
+                                Person</label>
+                            <input type="text" name="name" class="form-control" required placeholder="e.g. Jane Smith"
+                                data-i18n="suppliers.modal.contact_placeholder" data-i18n-target="placeholder">
                         </div>
                         <div class="col-12">
-                            <label class="form-label fw-semibold" data-i18n="suppliers.modal.company_name">Company Name</label>
-                            <input type="text" name="company" class="form-control"
-                                placeholder="e.g. Dental Supply Corp" data-i18n="suppliers.modal.company_placeholder" data-i18n-target="placeholder">
+                            <label class="form-label fw-semibold" data-i18n="suppliers.modal.company_name">Company
+                                Name</label>
+                            <input type="text" name="company" class="form-control" placeholder="e.g. Dental Supply Corp"
+                                data-i18n="suppliers.modal.company_placeholder" data-i18n-target="placeholder">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-semibold" data-i18n="suppliers.modal.phone">Phone Number</label>
-                            <input type="tel" name="phone" class="form-control" placeholder="e.g. +1 555 0123" data-i18n="suppliers.modal.phone_placeholder" data-i18n-target="placeholder">
+                            <input type="tel" name="phone" class="form-control" placeholder="e.g. +1 555 0123"
+                                data-i18n="suppliers.modal.phone_placeholder" data-i18n-target="placeholder">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold" data-i18n="suppliers.modal.email">Email Address</label>
+                            <label class="form-label fw-semibold" data-i18n="suppliers.modal.email">Email
+                                Address</label>
                             <input type="email" name="email" class="form-control"
-                                placeholder="e.g. sales@supplycorp.com" data-i18n="suppliers.modal.email_placeholder" data-i18n-target="placeholder">
+                                placeholder="e.g. sales@supplycorp.com" data-i18n="suppliers.modal.email_placeholder"
+                                data-i18n-target="placeholder">
                         </div>
                     </div>
                 </form>
             </div>
             <div class="modal-footer border-top-0 p-4">
-                <button type="button" class="btn btn-light" data-bs-dismiss="modal" data-i18n="suppliers.modal.btn.cancel">Cancel</button>
-                <button type="submit" form="supplierForm" class="btn btn-teal px-4" data-i18n="suppliers.modal.btn.save">Save Supplier</button>
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal"
+                    data-i18n="suppliers.modal.btn.cancel">Cancel</button>
+                <button type="submit" form="supplierForm" class="btn btn-teal px-4"
+                    data-i18n="suppliers.modal.btn.save">Save Supplier</button>
             </div>
         </div>
     </div>
@@ -95,7 +105,8 @@
                     <hr>
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold"><span data-i18n="suppliers.modal.payment_amount">Payment Amount</span> <span
+                            <label class="form-label fw-semibold"><span
+                                    data-i18n="suppliers.modal.payment_amount">Payment Amount</span> <span
                                     class="text-danger">*</span></label>
                             <div class="input-group">
                                 <input type="number" step="0.01" min="0.01" name="amount" id="debt-payment-amount"
@@ -104,29 +115,36 @@
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold" data-i18n="suppliers.modal.payment_method">Payment Method</label>
+                            <label class="form-label fw-semibold" data-i18n="suppliers.modal.payment_method">Payment
+                                Method</label>
                             <select name="payment_method" class="form-select">
                                 <option value="Cash" data-i18n="suppliers.method.cash">Cash</option>
-                                <option value="Bank Transfer" data-i18n="suppliers.method.transfer">Bank Transfer</option>
+                                <option value="Bank Transfer" data-i18n="suppliers.method.transfer">Bank Transfer
+                                </option>
                                 <option value="Cheque" data-i18n="suppliers.method.cheque">Cheque</option>
                             </select>
                         </div>
                         <div class="col-12">
-                            <label class="form-label fw-semibold" data-i18n="suppliers.modal.account">Treasury Account</label>
+                            <label class="form-label fw-semibold" data-i18n="suppliers.modal.account">Treasury
+                                Account</label>
                             <select name="account_id" id="debt-account-id" class="form-select" required>
                                 <option value="">-- Select account --</option>
                             </select>
                         </div>
                         <div class="col-12">
-                            <label class="form-label fw-semibold" data-i18n="suppliers.modal.notes">Notes / Reference</label>
-                            <input type="text" name="notes" class="form-control" placeholder="e.g. Cheque #123456" data-i18n="suppliers.modal.notes_placeholder" data-i18n-target="placeholder">
+                            <label class="form-label fw-semibold" data-i18n="suppliers.modal.notes">Notes /
+                                Reference</label>
+                            <input type="text" name="notes" class="form-control" placeholder="e.g. Cheque #123456"
+                                data-i18n="suppliers.modal.notes_placeholder" data-i18n-target="placeholder">
                         </div>
                     </div>
                 </form>
             </div>
             <div class="modal-footer border-top-0 p-4">
-                <button type="button" class="btn btn-light" data-bs-dismiss="modal" data-i18n="suppliers.modal.btn.cancel">Cancel</button>
-                <button type="submit" form="settleDebtForm" class="btn btn-teal px-4 text-white" data-i18n="suppliers.modal.btn.record">Record Payment</button>
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal"
+                    data-i18n="suppliers.modal.btn.cancel">Cancel</button>
+                <button type="submit" form="settleDebtForm" class="btn btn-teal px-4 text-white"
+                    data-i18n="suppliers.modal.btn.record">Record Payment</button>
             </div>
         </div>
     </div>
@@ -137,7 +155,8 @@
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 shadow-lg rounded-4">
             <div class="modal-header border-bottom-0 p-4">
-                <h5 class="modal-title fw-bold"><span data-i18n="suppliers.modal.products_title">Products Provided by </span><span id="supplierProductsModalTitle" class="text-teal"></span></h5>
+                <h5 class="modal-title fw-bold"><span data-i18n="suppliers.modal.products_title">Products Provided by
+                    </span><span id="supplierProductsModalTitle" class="text-teal"></span></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-4 pt-0">
@@ -160,7 +179,8 @@
                 </div>
             </div>
             <div class="modal-footer border-top-0 p-4">
-                <button type="button" class="btn btn-light" data-bs-dismiss="modal" data-i18n="suppliers.modal.btn.close">Close</button>
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal"
+                    data-i18n="suppliers.modal.btn.close">Close</button>
             </div>
         </div>
     </div>
