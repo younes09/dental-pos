@@ -152,10 +152,19 @@ try {
         case 'delete':
             // F4.1: Only Admin can delete suppliers
             if (($_SESSION['user_role'] ?? '') !== 'Admin') {
-                echo json_encode(['error' => 'Only Admins can delete suppliers.']);
-                exit;
+                throw new Exception('Only Admins can delete suppliers.');
             }
-            $id = $_GET['id'];
+            // Fix #7: Validate and cast id
+            $id = isset($_GET['id']) ? (int)$_GET['id'] : null;
+            if (!$id) throw new Exception('Supplier ID required.');
+
+            // Fix #8: Check for linked purchase orders before deleting
+            $check = $pdo->prepare("SELECT COUNT(*) FROM purchase_orders WHERE supplier_id = ?");
+            $check->execute([$id]);
+            if ($check->fetchColumn() > 0) {
+                throw new Exception('Cannot delete supplier with existing purchase orders. Please reassign or delete them first.');
+            }
+
             $stmt = $pdo->prepare("DELETE FROM suppliers WHERE id = ?");
             $stmt->execute([$id]);
             echo json_encode(['success' => 'Supplier deleted successfully']);

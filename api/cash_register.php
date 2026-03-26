@@ -166,19 +166,30 @@ try {
             
             if ($caisse_acc) {
                 $caisse_id = $caisse_acc['id'];
-                
-                // 1. Record Net Sales into Caisse 
+
+                // Fetch and lock Caisse balance for validation
+                $caisseBalStmt = $pdo->prepare("SELECT balance FROM vault_accounts WHERE id = ? FOR UPDATE");
+                $caisseBalStmt->execute([$caisse_id]);
+                $caisseBalance = (float)$caisseBalStmt->fetchColumn();
+
+                // 1. Record Net Sales into Caisse
                 if ($net_sales > 0) {
                     $desc = "Cash Sales - Session #" . $session['id'];
                     $tx_stmt = $pdo->prepare("INSERT INTO vault_transactions (account_id, type, amount, description, related_type, related_id, user_id) VALUES (?, 'Income', ?, ?, 'CashSession', ?, ?)");
                     $tx_stmt->execute([$caisse_id, $net_sales, $desc, $session['id'], $user_id]);
                     $pdo->prepare("UPDATE vault_accounts SET balance = balance + ? WHERE id = ?")->execute([$net_sales, $caisse_id]);
+                    $caisseBalance += $net_sales;
                 } elseif ($net_sales < 0) {
                     $amount = abs($net_sales);
+                    // Fix #4: Validate Caisse balance before deducting net returns
+                    if ($caisseBalance < $amount) {
+                        throw new Exception("Insufficient Caisse balance (" . number_format($caisseBalance, 2) . ") for net returns deduction (" . number_format($amount, 2) . ").");
+                    }
                     $desc = "Net Cash Returns - Session #" . $session['id'];
                     $tx_stmt = $pdo->prepare("INSERT INTO vault_transactions (account_id, type, amount, description, related_type, related_id, user_id) VALUES (?, 'Expense', ?, ?, 'CashSession', ?, ?)");
                     $tx_stmt->execute([$caisse_id, $amount, $desc, $session['id'], $user_id]);
                     $pdo->prepare("UPDATE vault_accounts SET balance = balance - ? WHERE id = ?")->execute([$amount, $caisse_id]);
+                    $caisseBalance -= $amount;
                 }
                 
                 // 2. Record Discrepancy into Caisse
@@ -187,12 +198,18 @@ try {
                     $tx_stmt = $pdo->prepare("INSERT INTO vault_transactions (account_id, type, amount, description, related_type, related_id, user_id) VALUES (?, 'Income', ?, ?, 'CashSession', ?, ?)");
                     $tx_stmt->execute([$caisse_id, $difference, $desc, $session['id'], $user_id]);
                     $pdo->prepare("UPDATE vault_accounts SET balance = balance + ? WHERE id = ?")->execute([$difference, $caisse_id]);
+                    $caisseBalance += $difference;
                 } elseif ($difference < 0) {
-                    $desc = "Cash Shortage - Session #" . $session['id'];
                     $amount = abs($difference);
+                    // Fix #5: Validate Caisse balance before deducting cash shortage
+                    if ($caisseBalance < $amount) {
+                        throw new Exception("Insufficient Caisse balance (" . number_format($caisseBalance, 2) . ") for cash shortage deduction (" . number_format($amount, 2) . ").");
+                    }
+                    $desc = "Cash Shortage - Session #" . $session['id'];
                     $tx_stmt = $pdo->prepare("INSERT INTO vault_transactions (account_id, type, amount, description, related_type, related_id, user_id) VALUES (?, 'Expense', ?, ?, 'CashSession', ?, ?)");
                     $tx_stmt->execute([$caisse_id, $amount, $desc, $session['id'], $user_id]);
                     $pdo->prepare("UPDATE vault_accounts SET balance = balance - ? WHERE id = ?")->execute([$amount, $caisse_id]);
+                    $caisseBalance -= $amount;
                 }
                 
                 // 3. Transfer ALL cash to selected Vault account (if applicable)

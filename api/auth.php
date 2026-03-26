@@ -44,13 +44,14 @@ try {
             break;
 
         case 'logout':
-            session_destroy();
-            // Fix #15: Support both GET (legacy) and POST (CSRF-safe) logout
-            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-                echo json_encode(['success' => true, 'redirect' => '../login.php']);
-            } else {
-                header('Location: ../login.php');
+            // Fix #13: Require POST to prevent CSRF logout via GET image tags
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                http_response_code(405);
+                echo json_encode(['error' => 'Logout requires POST method.']);
+                exit;
             }
+            session_destroy();
+            echo json_encode(['success' => true, 'redirect' => '../login.php']);
             exit;
 
         default:

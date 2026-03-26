@@ -140,11 +140,18 @@ switch ($method) {
         }
 
         try {
+            // Fix #15: Whitelist allowed setting keys to prevent arbitrary key injection
+            $allowed_keys = [
+                'clinic_name', 'clinic_phone', 'clinic_email', 'clinic_address',
+                'currency', 'tax_rate', 'low_stock_threshold', 'receipt_footer',
+                'language', 'timezone', 'date_format', 'theme'
+            ];
+
             $pdo->beginTransaction();
             $stmt = $pdo->prepare("INSERT INTO settings (setting_key, setting_value) VALUES (?, ?) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)");
             
             foreach ($data as $key => $value) {
-                // Sanitize key to prevent potential issues, though it's coming from our own JS
+                if (!in_array($key, $allowed_keys)) continue; // Skip unknown keys
                 $stmt->execute([$key, $value]);
             }
             

@@ -78,4 +78,4 @@ try {
         echo json_encode(['error' => $e->getMessage()]);
     }
 }
-?>
+// Removed closing tag

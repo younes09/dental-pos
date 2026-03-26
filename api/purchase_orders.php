@@ -289,13 +289,13 @@ try {
                 $pdo->prepare("UPDATE vault_accounts SET balance = balance - ? WHERE id = ?")->execute([$paid_amount, $account_id]);
             }
 
-            $pdo->commit();
-            
-            // M11: Notification Trigger - PO Received
+            // M11: Notification Trigger - PO Received (INSIDE transaction)
             $ins_notif = $pdo->prepare("INSERT INTO notifications (role, title, message, type, link) VALUES (?, ?, ?, ?, ?)");
             $po_msg = "Order #$po_id has been " . (($new_status === 'Received') ? 'fully received.' : 'partially received.');
             $ins_notif->execute(['Admin', 'PO Received: #' . $po_id, $po_msg, 'success', '#purchase_orders']);
             $ins_notif->execute(['Stock Manager', 'PO Received: #' . $po_id, $po_msg, 'success', '#purchase_orders']);
+
+            $pdo->commit();
 
             $msg = ($new_status === 'Received') ? 'Order fully received' : 'Order partially received';
             echo json_encode(['success' => $msg]);
@@ -398,15 +398,15 @@ try {
                     ->execute([$total_return_amount, $po['supplier_id']]);
             }
 
-            $pdo->commit();
-            
-            // M11: Notification Trigger - Supplier Return
+            // M11: Notification Trigger - Supplier Return (INSIDE transaction)
             $ins_notif = $pdo->prepare("INSERT INTO notifications (role, title, message, type, link) VALUES (?, ?, ?, ?, ?)");
             $ret_msg = "Return to supplier processed for PO #$po_id. Amount: " . number_format($total_return_amount, 2);
             if ($reason) $ret_msg .= " Reason: $reason";
             
             $ins_notif->execute(['Admin', 'Supplier Return Processed', $ret_msg, 'warning', '#purchase_orders']);
             $ins_notif->execute(['Stock Manager', 'Supplier Return Processed', $ret_msg, 'warning', '#purchase_orders']);
+
+            $pdo->commit();
 
             echo json_encode(['success' => 'Supplier return processed successfully', 'return_id' => $return_id]);
             break;
@@ -415,7 +415,8 @@ try {
             if (!in_array($_SESSION['user_role'] ?? '', ['Admin', 'Stock Manager'])) {
                 throw new Exception('Access denied.');
             }
-            $id = $_GET['id'];
+            $id = isset($_GET['id']) ? (int)$_GET['id'] : null;
+            if (!$id) throw new Exception('Purchase Order ID is required.');
             
             // Get PO header
             $stmt = $pdo->prepare("
@@ -453,7 +454,8 @@ try {
             if (($_SESSION['user_role'] ?? '') !== 'Admin') {
                 throw new Exception('Only Admins can delete purchase orders.');
             }
-            $id = $_GET['id'];
+            $id = isset($_GET['id']) ? (int)$_GET['id'] : null;
+            if (!$id) throw new Exception('Purchase Order ID is required.');
             
             // F2.3: Prevent deletion of POs that have received stock
             $status_stmt = $pdo->prepare("SELECT status FROM purchase_orders WHERE id = ?");
@@ -476,7 +478,8 @@ try {
             if (($_SESSION['user_role'] ?? '') !== 'Admin') {
                 throw new Exception('Only Admins can cancel purchase orders.');
             }
-            $id = $_GET['id'];
+            $id = isset($_GET['id']) ? (int)$_GET['id'] : null;
+            if (!$id) throw new Exception('Purchase Order ID is required.');
 
             $status_stmt = $pdo->prepare("SELECT status FROM purchase_orders WHERE id = ?");
             $status_stmt->execute([$id]);

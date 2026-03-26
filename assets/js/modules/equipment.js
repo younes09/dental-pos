@@ -138,7 +138,7 @@ const equipmentModule = {
             confirmButtonColor: '#00BFA6',
             cancelButtonColor: '#d33',
             confirmButtonText: App.t('equipment.js.btn_yes') || 'Yes, delete it!',
-            cancelButtonText: App.t('btn_cancel') || 'Cancel'
+            cancelButtonText: App.t('users.js.btn_cancel') || 'Cancel'
         });
 
         if (confirmed.isConfirmed) {

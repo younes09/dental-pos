@@ -46,6 +46,10 @@ try {
             } else {
                 // Create
                 if (empty($password)) throw new Exception('Password is required for new users');
+                // Fix #14: Check for duplicate email before INSERT
+                $chk = $pdo->prepare("SELECT id FROM users WHERE email = ?");
+                $chk->execute([$email]);
+                if ($chk->fetch()) throw new Exception('A user with this email already exists.');
                 $hashed_password = password_hash($password, PASSWORD_DEFAULT);
                 $stmt = $pdo->prepare("INSERT INTO users (name, email, phone, role, status, password) VALUES (?, ?, ?, ?, ?, ?)");
                 $stmt->execute([$name, $email, $phone, $role, $status, $hashed_password]);

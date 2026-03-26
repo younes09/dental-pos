@@ -84,11 +84,17 @@ try {
 
             $pdo->beginTransaction();
 
-            // 1. Check source balance
+            // 1. Check source balance (lock source row)
             $stmt = $pdo->prepare("SELECT balance FROM vault_accounts WHERE id = ? FOR UPDATE");
             $stmt->execute([$from_id]);
-            $from_balance = (float)$stmt->fetchColumn();
-            if ($from_balance < $amount) throw new Exception('Insufficient balance in source account.');
+            $from_balance = $stmt->fetchColumn();
+            if ($from_balance === false) throw new Exception('Source account not found.');
+            if ((float)$from_balance < $amount) throw new Exception('Insufficient balance in source account.');
+
+            // Fix #6: Lock destination account too to prevent race conditions
+            $stmt->execute([$to_id]);
+            $to_exists = $stmt->fetchColumn();
+            if ($to_exists === false) throw new Exception('Destination account not found.');
 
             // 2. Record transactions
             $stmtTx = $pdo->prepare("INSERT INTO vault_transactions (account_id, type, amount, description, user_id) VALUES (?, ?, ?, ?, ?)");
