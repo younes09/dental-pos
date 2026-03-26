@@ -163,17 +163,30 @@ try {
             break;
 
         case 'adjust_stock':
+            // Fix #11: Enforce POST method for mutating stock adjustments
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                throw new Exception('Stock adjustment requires POST method.');
+            }
             // F4.1: Only Admin or Stock Manager can adjust stock
             $user_role = $_SESSION['user_role'] ?? '';
             if (!in_array($user_role, ['Admin', 'Stock Manager'])) {
                 throw new Exception('Only Admins or Stock Managers can adjust stock.');
             }
-            $id = $_GET['id'];
-            $type = $_GET['type'];
-            $qty = (int)$_GET['qty'];
-            $expiry_date = !empty($_GET['expiry_date']) ? $_GET['expiry_date'] : null;
-            $purchase_type = $_GET['purchase_type'] ?? 'BA';
             
+            // Read from JSON body instead of $_GET
+            $input = json_decode(file_get_contents('php://input'), true);
+            if (!$input) {
+                throw new Exception('Invalid request body.');
+            }
+            
+            $id = isset($input['id']) ? (int)$input['id'] : null;
+            if (!$id) throw new Exception('Product ID is required.');
+            $type = $input['type'] ?? '';
+            $qty = (int)($input['qty'] ?? 0);
+            $expiry_date = !empty($input['expiry_date']) ? $input['expiry_date'] : null;
+            $purchase_type = $input['purchase_type'] ?? 'BA';
+            
+            if (!in_array($type, ['add', 'subtract'])) throw new Exception('Invalid adjustment type.');
             if ($qty <= 0) throw new Exception('Adjustment quantity must be positive');
             
             $pdo->beginTransaction();
@@ -228,7 +241,7 @@ try {
                 // F5.3: Write to stock_adjustments audit trail
                 $user_id = $_SESSION['user_id'] ?? null;
                 $adj_type = ($type === 'add') ? 'Add Stock' : 'Write-off';
-                $reason = $_GET['reason'] ?? 'Manual adjustment';
+                $reason = $input['reason'] ?? 'Manual adjustment';
                 $adj_stmt = $pdo->prepare("INSERT INTO stock_adjustments (product_id, type, qty, reason, user_id) VALUES (?, ?, ?, ?, ?)");
                 $adj_stmt->execute([$id, $adj_type, $qty, $reason, $user_id]);
                 
