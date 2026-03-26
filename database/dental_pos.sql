@@ -142,7 +142,8 @@ CREATE TABLE purchase_orders (
     id INT AUTO_INCREMENT PRIMARY KEY,
     supplier_id INT,
     date DATE NOT NULL,
-    status ENUM('Pending', 'Partial', 'Received') DEFAULT 'Pending',
+    -- Fix #14: Added 'Cancelled' to ENUM to match cancel action in purchase_orders.php
+    status ENUM('Pending', 'Partial', 'Received', 'Cancelled') DEFAULT 'Pending',
     total DECIMAL(10, 2) DEFAULT 0.00,
     paid_amount DECIMAL(10, 2) DEFAULT 0.00,
     payment_status ENUM('Unpaid', 'Partial', 'Paid') DEFAULT 'Unpaid',
@@ -370,3 +371,9 @@ CREATE TABLE notifications (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+
+-- ============================================================
+-- Fix #14: ALTER for existing databases (run if DB already exists)
+-- ============================================================
+-- ALTER TABLE purchase_orders
+--   MODIFY COLUMN status ENUM('Pending', 'Partial', 'Received', 'Cancelled') DEFAULT 'Pending';

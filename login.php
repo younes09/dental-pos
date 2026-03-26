@@ -174,7 +174,14 @@ if (isset($_SESSION['user_id'])) {
                     });
                 }
             } catch (error) {
-                console.error('Error:', error);
+                // Fix #17: Show user-visible feedback on network/fetch error
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Connection Error',
+                    text: 'Unable to reach the server. Please check your connection and try again.',
+                    confirmButtonColor: '#00BFA6'
+                });
+                console.error('Login error:', error);
             }
         };
     </script>

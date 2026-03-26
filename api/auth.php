@@ -45,7 +45,12 @@ try {
 
         case 'logout':
             session_destroy();
-            header('Location: ../login.php');
+            // Fix #15: Support both GET (legacy) and POST (CSRF-safe) logout
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                echo json_encode(['success' => true, 'redirect' => '../login.php']);
+            } else {
+                header('Location: ../login.php');
+            }
             exit;
 
         default:

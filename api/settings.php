@@ -16,16 +16,18 @@ switch ($method) {
 
             try {
                 $filename = 'backup_' . DB_NAME . '_' . date('Y-m-d_H-i-s') . '.sql';
-                $mysqldumpPath = 'C:\\xampp\\mysql\\bin\\mysqldump.exe';
-                
+                // Fix #4: Use a constant so the path is configurable, not hard-coded
+                $mysqldumpPath = defined('MYSQLDUMP_PATH') ? MYSQLDUMP_PATH : 'C:\\xampp\\mysql\\bin\\mysqldump.exe';
+
+                if (!file_exists($mysqldumpPath)) {
+                    throw new Exception('mysqldump binary not found at: ' . $mysqldumpPath);
+                }
+
                 header('Content-Type: application/octet-stream');
                 header('Content-Disposition: attachment; filename="' . $filename . '"');
                 header('Pragma: no-cache');
                 header('Expires: 0');
 
-                // Using direct path to mysqldump in XAMPP
-                // -u {user} -p{pass} {db}
-                // Note: No space between -p and password
                 $command = sprintf(
                     '"%s" --user=%s --password=%s --host=%s %s',
                     $mysqldumpPath,
@@ -39,7 +41,7 @@ switch ($method) {
                 exit;
             } catch (Exception $e) {
                 http_response_code(500);
-                echo json_encode(['error' => 'Backup failed. Please try again.']);
+                echo json_encode(['error' => $e->getMessage()]);
                 exit;
             }
         }
@@ -82,11 +84,22 @@ switch ($method) {
             }
 
             try {
-                $mysqlPath = 'C:\\xampp\\mysql\\bin\\mysql.exe';
+                $mysqlPath = defined('MYSQL_PATH') ? MYSQL_PATH : 'C:\\xampp\\mysql\\bin\\mysql.exe';
                 $tmpFile = $file['tmp_name'];
 
-                // Command to restore: mysql -u {user} -p{pass} {db} < {file}
-                // Wrap EVERYTHING in double quotes for cmd /c on Windows
+                // Fix #5: Validate the uploaded file is actually a .sql file
+                $uploadedName = $file['name'] ?? '';
+                $ext = strtolower(pathinfo($uploadedName, PATHINFO_EXTENSION));
+                if ($ext !== 'sql') {
+                    http_response_code(400);
+                    echo json_encode(['error' => 'Invalid file type. Only .sql backup files are accepted.']);
+                    exit;
+                }
+
+                if (!file_exists($mysqlPath)) {
+                    throw new Exception('mysql binary not found at: ' . $mysqlPath);
+                }
+
                 $command = sprintf(
                     '"%s" --user=%s --password=%s --host=%s %s < "%s"',
                     $mysqlPath,
@@ -97,8 +110,8 @@ switch ($method) {
                     escapeshellarg($tmpFile)
                 );
 
-                $winCommand = 'cmd /c "' . $command . '"'; // Extra quotes around the whole command
-                
+                $winCommand = 'cmd /c "' . $command . '"';
+
                 exec($winCommand, $output, $returnVar);
 
                 if ($returnVar === 0) {
@@ -114,7 +127,7 @@ switch ($method) {
                 exit;
             } catch (Exception $e) {
                 http_response_code(500);
-                echo json_encode(['error' => 'Restore failed. Please check the backup file.']);
+                echo json_encode(['error' => $e->getMessage()]);
                 exit;
             }
         }

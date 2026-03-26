@@ -412,20 +412,17 @@ try {
 
             // Adjust customer balance (decrease debt)
             if ($sale['customer_id']) {
-                // We decrease balance (debt) up to the return amount
-                // If it's more than the balance, it stays at 0 (or goes negative if we support credits, but let's keep it simple)
                 $pdo->prepare("UPDATE customers SET balance = GREATEST(0, balance - ?) WHERE id = ?")
                     ->execute([$total_return_amount, $sale['customer_id']]);
             }
 
-            $pdo->commit();
-            
-            // M11: Notification Trigger - Customer Return
+            // Fix #7: Notification moved BEFORE commit() to be part of the transaction
             $ins_notif = $pdo->prepare("INSERT INTO notifications (role, title, message, type, link) VALUES (?, ?, ?, ?, ?)");
             $ret_msg = "Customer return processed for Sale #$sale_id by " . ($_SESSION['user_name'] ?? 'User') . ". Amount: " . number_format($total_return_amount, 2);
             if ($reason) $ret_msg .= " Reason: $reason";
             $ins_notif->execute(['Admin', 'Customer Return Processed', $ret_msg, 'warning', '#sales_history']);
 
+            $pdo->commit();
             echo json_encode(['success' => 'Return processed successfully', 'return_id' => $return_id]);
             break;
 

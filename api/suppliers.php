@@ -125,12 +125,20 @@ try {
             // F10.2: Vault Integration - Record Expense if account is specified
             $account_id = $_POST['account_id'] ?? null;
             if ($account_id) {
+                // Fix #2: Check vault balance before debiting
+                $vaultBalStmt = $pdo->prepare("SELECT balance FROM vault_accounts WHERE id = ? FOR UPDATE");
+                $vaultBalStmt->execute([$account_id]);
+                $vaultBalance = (float)$vaultBalStmt->fetchColumn();
+                if ($vaultBalance < $amount) {
+                    throw new Exception("Insufficient vault balance (" . number_format($vaultBalance, 2) . ") for this payment (" . number_format($amount, 2) . ").");
+                }
+
                 $stmtTx = $pdo->prepare("INSERT INTO vault_transactions (account_id, type, amount, description, related_type, related_id, user_id) VALUES (?, 'Expense', ?, ?, 'SupplierPayment', ?, ?)");
                 $stmtTx->execute([
                     $account_id,
                     $amount,
-                    "Supplier Debt Payment - " . ($notes ?: "#PO-" . ($payment_id + 1)),
-                    $supplier_id,
+                    "Supplier Debt Payment - " . ($notes ?: "Payment #$payment_id"),
+                    $payment_id,
                     $user_id
                 ]);
 

@@ -87,19 +87,27 @@ try {
 
             $pdo->beginTransaction();
 
+            // Fix #3: Check vault balance before debiting
+            $balChk = $pdo->prepare("SELECT balance FROM vault_accounts WHERE id = ? FOR UPDATE");
+            $balChk->execute([$vault_account_id]);
+            $vaultBalance = (float)$balChk->fetchColumn();
+            if ($vaultBalance < $amount) {
+                throw new Exception("Solde du compte insuffisant (" . number_format($vaultBalance, 2) . ") pour ce paiement (" . number_format($amount, 2) . ").");
+            }
+
             // 1. Record salary payment
             $stmt = $pdo->prepare("INSERT INTO salary_payments (staff_id, vault_account_id, amount, payment_date, period_month, period_year, payment_method, notes, user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
             $stmt->execute([$staff_id, $vault_account_id, $amount, $payment_date, $period_month, $period_year, $payment_method, $notes, $user_id]);
             $payment_id = $pdo->lastInsertId();
-            
+
             // 2. Record expense in vault_transactions
             $staff_stmt = $pdo->prepare("SELECT name FROM staff WHERE id = ?");
             $staff_stmt->execute([$staff_id]);
             $staff_name = $staff_stmt->fetchColumn();
-            
+
             $month_name = date("F", mktime(0, 0, 0, $period_month, 10));
             $tx_description = "Salary: $staff_name ($month_name $period_year)";
-            
+
             $stmtTx = $pdo->prepare("INSERT INTO vault_transactions (account_id, type, amount, description, related_type, related_id, user_id) VALUES (?, 'Expense', ?, ?, 'Salary', ?, ?)");
             $stmtTx->execute([$vault_account_id, $amount, $tx_description, $payment_id, $user_id]);
 
@@ -114,9 +122,27 @@ try {
         case 'delete_payment':
             $id = $_GET['id'] ?? null;
             if (!$id) throw new Exception('Payment ID required');
-            $stmt = $pdo->prepare("DELETE FROM salary_payments WHERE id = ?");
-            $stmt->execute([$id]);
-            echo json_encode(['success' => 'Payment record deleted successfully']);
+
+            // Fix #13: Reverse vault transaction and restore balance
+            $pay = $pdo->prepare("SELECT vault_account_id, amount FROM salary_payments WHERE id = ?");
+            $pay->execute([$id]);
+            $payment = $pay->fetch();
+
+            if ($payment) {
+                $pdo->beginTransaction();
+                // Restore vault balance
+                $pdo->prepare("UPDATE vault_accounts SET balance = balance + ? WHERE id = ?")
+                    ->execute([$payment['amount'], $payment['vault_account_id']]);
+                // Record reversal in vault_transactions
+                $pdo->prepare("INSERT INTO vault_transactions (account_id, type, amount, description, related_type, related_id, user_id) VALUES (?, 'Income', ?, ?, 'Salary', ?, ?)")
+                    ->execute([$payment['vault_account_id'], $payment['amount'], "Salary payment reversal (deleted) #$id", $id, $user_id]);
+                // Delete the payment
+                $pdo->prepare("DELETE FROM salary_payments WHERE id = ?")->execute([$id]);
+                $pdo->commit();
+            } else {
+                $pdo->prepare("DELETE FROM salary_payments WHERE id = ?")->execute([$id]);
+            }
+            echo json_encode(['success' => 'Payment record deleted and vault balance restored']);
             break;
 
         default:

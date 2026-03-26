@@ -29,18 +29,19 @@ try {
             $name = $_POST['name'] ?? '';
             $phone = $_POST['phone'] ?? '';
             $email = $_POST['email'] ?? '';
-            $balance = $_POST['balance'] ?? 0;
-            $loyalty_points = $_POST['loyalty_points'] ?? 0;
 
             if (empty($name)) throw new Exception('Customer name is required.');
 
             if ($id) {
-                $stmt = $pdo->prepare("UPDATE customers SET name=?, phone=?, email=?, balance=?, loyalty_points=? WHERE id=?");
-                $stmt->execute([$name, $phone, $email, $balance, $loyalty_points, $id]);
+                // Fix #12: Do NOT allow overwriting balance/loyalty_points via this form
+                // These are updated only through dedicated payment/sale actions
+                $stmt = $pdo->prepare("UPDATE customers SET name=?, phone=?, email=? WHERE id=?");
+                $stmt->execute([$name, $phone, $email, $id]);
                 echo json_encode(['success' => 'Customer updated successfully']);
             } else {
-                $stmt = $pdo->prepare("INSERT INTO customers (name, phone, email, balance, loyalty_points) VALUES (?, ?, ?, ?, ?)");
-                $stmt->execute([$name, $phone, $email, $balance, $loyalty_points]);
+                // Fix #12: Force balance=0 and loyalty_points=0 for new customers
+                $stmt = $pdo->prepare("INSERT INTO customers (name, phone, email, balance, loyalty_points) VALUES (?, ?, ?, 0, 0)");
+                $stmt->execute([$name, $phone, $email]);
                 $newId = $pdo->lastInsertId();
                 echo json_encode(['success' => 'Customer added successfully', 'id' => $newId]);
             }

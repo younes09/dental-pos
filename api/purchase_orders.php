@@ -137,9 +137,7 @@ try {
                 }
             }
 
-            $pdo->commit();
-
-            // M11: Notification Trigger - New PO Created
+            // Fix #8: Notifications moved BEFORE commit() to be part of the transaction
             if ($status === 'Pending') {
                 $supplier_name = $data['supplier_name'] ?? '';
                 if (empty($supplier_name)) {
@@ -154,6 +152,7 @@ try {
                 $ins_notif->execute(['Stock Manager', 'New PO: #' . $po_id, $po_msg, 'info', '#purchase_orders']);
             }
 
+            $pdo->commit();
             echo json_encode(['success' => 'Purchase order saved successfully', 'id' => $po_id]);
             break;
 

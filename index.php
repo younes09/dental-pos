@@ -225,9 +225,12 @@ if (!isset($_SESSION['user_id'])) {
                     <small class="text-primary"><?php echo htmlspecialchars($_SESSION['user_role'] ?? 'User'); ?></small>
                 </div>
             </a>
-            <a href="api/auth.php?action=logout" class="logout-btn" title="Logout">
-                <i class="fas fa-sign-out-alt"></i>
-            </a>
+            <!-- Fix #15: Logout uses POST form to prevent CSRF via GET link -->
+            <form id="logoutForm" action="api/auth.php?action=logout" method="POST" class="d-inline">
+                <button type="submit" class="logout-btn"  data-toggle="tooltip" data-placement="top" title="Logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </form>
         </div>
     </nav>
 
@@ -304,7 +307,7 @@ if (!isset($_SESSION['user_id'])) {
                             </li>
                             <li><hr class="dropdown-divider"></li>
                             <li>
-                                <a class="dropdown-item rounded-2 py-2 text-danger" href="api/auth.php?action=logout">
+                                <a class="dropdown-item rounded-2 py-2 text-danger" href="#" onclick="document.getElementById('logoutForm').submit(); return false;">
                                     <i class="fas fa-sign-out-alt me-2"></i> Logout
                                 </a>
                             </li>
@@ -346,16 +349,22 @@ if (!isset($_SESSION['user_id'])) {
     <script src="assets/vendor/js/xlsx.full.min.js"></script>
     
     <!-- Translation Dictionary -->
-    <script src="assets/js/locales.js?v=<?= time() ?>"></script>
+    <!-- Fix #19: Use a static version string instead of time() to allow browser caching -->
+    <script src="assets/js/locales.js?v=1.0.0"></script>
     
     <!-- Core App Logic -->
-    <script src="assets/js/app.js?v=<?= time() ?>"></script>
+    <script src="assets/js/app.js?v=1.0.0"></script>
     <script>
         // Inject user session data for RBAC
         App.state.user = {
             role: <?php echo json_encode($_SESSION['user_role'] ?? 'Cashier'); ?>,
             name: <?php echo json_encode($_SESSION['user_name'] ?? 'User'); ?>
         };
+    </script>
+    <script>
+        $(function () {
+            $("[data-toggle='tooltip']").tooltip();
+        });
     </script>
 </body>
 </html>

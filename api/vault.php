@@ -48,6 +48,16 @@ try {
 
             $pdo->beginTransaction();
 
+            // Fix #6: Check vault balance before processing an Expense
+            if ($type === 'Expense') {
+                $balChk = $pdo->prepare("SELECT balance FROM vault_accounts WHERE id = ? FOR UPDATE");
+                $balChk->execute([$account_id]);
+                $currentBal = (float)$balChk->fetchColumn();
+                if ($currentBal < $amount) {
+                    throw new Exception("Insufficient balance (" . number_format($currentBal, 2) . ") for this expense (" . number_format($amount, 2) . ").");
+                }
+            }
+
             $stmt = $pdo->prepare("INSERT INTO vault_transactions (account_id, type, amount, description, user_id) VALUES (?, ?, ?, ?, ?)");
             $stmt->execute([$account_id, $type, $amount, $description, $user_id]);
 

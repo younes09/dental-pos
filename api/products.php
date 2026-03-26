@@ -86,7 +86,7 @@ try {
                 }
                 
                 $target_dir = "../assets/img/products/";
-                if (!is_dir($target_dir)) mkdir($target_dir, 0777, true);
+                if (!is_dir($target_dir)) mkdir($target_dir, 0755, true); // Fix #18: 0755 instead of 0777
                 $file_name = time() . "_" . bin2hex(random_bytes(4)) . "." . $ext;
                 if (move_uploaded_file($_FILES["image"]["tmp_name"], $target_dir . $file_name)) {
                     // If this is an update, delete the old image
@@ -141,7 +141,9 @@ try {
             if (($_SESSION['user_role'] ?? '') !== 'Admin') {
                 throw new Exception('Only Admins can delete products.');
             }
-            $id = $_GET['id'];
+            // Fix #10: Validate id is present and cast to int
+            $id = isset($_GET['id']) ? (int)$_GET['id'] : null;
+            if (!$id) throw new Exception('Product ID is required.');
             
             // Get product image to delete it from disk
             $stmt = $pdo->prepare("SELECT image FROM products WHERE id = ?");
