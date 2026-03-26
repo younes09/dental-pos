@@ -272,12 +272,12 @@ const analyticsModule = {
             <table style="border-collapse:collapse; table-layout:fixed; width:100%; font-size:11px;">
                 <thead><tr><th style="width:36px;"></th>`;
         HOURS.forEach(h => {
-            html += `<th style="color:var(--bs-secondary-color); font-weight:500; padding:2px 1px; text-align:center;">${h}</th>`;
+            html += `<th style="font-weight:500; padding:2px 1px; text-align:center;">${h}</th>`;
         });
         html += `</tr></thead><tbody>`;
 
         DAYS.forEach((day, dow) => {
-            html += `<tr><td style="color:var(--bs-secondary-color); font-weight:600; padding:3px 4px; white-space:nowrap;">${day}</td>`;
+            html += `<tr><td style="font-weight:600; padding:3px 4px; white-space:nowrap;">${day}</td>`;
             HOURS.forEach((_, hour) => {
                 const count = map[`${dow + 1}-${hour}`] || 0;
                 const pct   = count / maxVal;

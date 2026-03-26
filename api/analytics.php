@@ -82,19 +82,14 @@ try {
         // 2. Revenue & Profit Trend
         // ---------------------------------------------------------------
         case 'revenue_trend':
-            switch ($period) {
-                case 'weekly':
-                    $groupExpr  = "YEARWEEK(s.date, 1)";
-                    $labelExpr  = "DATE_FORMAT(MIN(s.date), 'Wk %u %Y')";
-                    break;
-                case 'monthly':
-                    $groupExpr  = "DATE_FORMAT(s.date, '%Y-%m')";
-                    $labelExpr  = "DATE_FORMAT(s.date, '%b %Y')";
-                    break;
-                default: // daily
-                    $groupExpr  = "DATE(s.date)";
-                    $labelExpr  = "DATE_FORMAT(s.date, '%b %d')";
-                    break;
+            $groupExpr = "DATE(s.date)";
+            $labelExpr = "DATE_FORMAT(s.date, '%b %d')";
+            if ($period === 'weekly') {
+                $groupExpr = "YEARWEEK(s.date, 1)";
+                $labelExpr = "DATE_FORMAT(MIN(s.date), 'Wk %u %Y')";
+            } elseif ($period === 'monthly') {
+                $groupExpr = "DATE_FORMAT(s.date, '%Y-%m')";
+                $labelExpr = "DATE_FORMAT(s.date, '%b %Y')";
             }
 
             $stmt = $pdo->prepare("
@@ -155,19 +150,14 @@ try {
         // 5. Customer Insights (New vs Returning)
         // ---------------------------------------------------------------
         case 'customer_insights':
-            switch ($period) {
-                case 'weekly':
-                    $groupExpr = "YEARWEEK(s.date, 1)";
-                    $labelExpr = "DATE_FORMAT(MIN(s.date), 'Wk %u %Y')";
-                    break;
-                case 'monthly':
-                    $groupExpr = "DATE_FORMAT(s.date, '%Y-%m')";
-                    $labelExpr = "DATE_FORMAT(s.date, '%b %Y')";
-                    break;
-                default:
-                    $groupExpr = "DATE(s.date)";
-                    $labelExpr = "DATE_FORMAT(s.date, '%b %d')";
-                    break;
+            $groupExpr = "DATE(s.date)";
+            $labelExpr = "DATE_FORMAT(s.date, '%b %d')";
+            if ($period === 'weekly') {
+                $groupExpr = "YEARWEEK(s.date, 1)";
+                $labelExpr = "DATE_FORMAT(MIN(s.date), 'Wk %u %Y')";
+            } elseif ($period === 'monthly') {
+                $groupExpr = "DATE_FORMAT(s.date, '%Y-%m')";
+                $labelExpr = "DATE_FORMAT(s.date, '%b %Y')";
             }
 
             $stmt = $pdo->prepare("

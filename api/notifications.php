@@ -25,12 +25,12 @@ try {
                 $expiry_stmt->execute();
                 $expiring_products = $expiry_stmt->fetchAll();
 
-                $notif_exists = $pdo->prepare("SELECT id FROM notifications WHERE title LIKE ? AND is_read = 0");
+                $notif_exists = $pdo->prepare("SELECT id FROM notifications WHERE title = ? AND is_read = 0");
                 $ins_notif = $pdo->prepare("INSERT INTO notifications (role, title, message, type, link) VALUES (?, ?, ?, ?, ?)");
 
                 foreach ($expiring_products as $product) {
                     $title = "Expiring soon: " . $product['name'];
-                    $notif_exists->execute(["%" . $title . "%"]);
+                    $notif_exists->execute([$title]);
                     
                     if (!$notif_exists->fetch()) {
                         $msg = "Product expires on " . $product['expiry_date'] . ".";
