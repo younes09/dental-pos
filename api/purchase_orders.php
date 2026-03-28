@@ -251,6 +251,13 @@ try {
             $stmt = $pdo->prepare("UPDATE purchase_orders SET status = ?, paid_amount = ?, payment_status = ? WHERE id = ?");
             $stmt->execute([$new_status, $new_total_paid, $payment_status, $po_id]);
 
+            // Bug #6 Fix: Guard against overpayment BEFORE updating supplier balance
+            if ($paid_amount > 0 && $paid_amount > $total_received_value) {
+                $pdo->rollBack();
+                echo json_encode(['error' => 'Payment amount cannot exceed the value of items being received.']);
+                exit;
+            }
+
             // Update supplier balance
             $net_debt_increase = $total_received_value - $paid_amount;
             if ($net_debt_increase != 0) {
@@ -521,6 +528,12 @@ try {
         $pdo->rollBack();
     }
     error_log("Purchase Orders API Error: " . $e->getMessage());
+    // Bug #4 Fix: Don't expose SQL error details to client
+    echo json_encode(['error' => 'An internal error occurred. Please try again later.']);
+} catch (Exception $e) {
+    if ($pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
     echo json_encode(['error' => $e->getMessage()]);
 }
 // Removed closing tag

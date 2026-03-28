@@ -497,9 +497,14 @@ try {
             echo json_encode(['error' => 'Invalid action']);
             break;
     }
+} catch (PDOException $e) {
+    if ($pdo->inTransaction()) $pdo->rollBack();
+    error_log("Sales API Error: " . $e->getMessage() . " | User: " . ($_SESSION['user_id'] ?? 'unknown'));
+    // Bug #5 Fix: Only mask PDO errors, not business exceptions
+    echo json_encode(['error' => 'An internal error occurred. Please try again later.']);
 } catch (Exception $e) {
     if ($pdo->inTransaction()) $pdo->rollBack();
     error_log("Sales API Error: " . $e->getMessage() . " | User: " . ($_SESSION['user_id'] ?? 'unknown'));
-    echo json_encode(['error' => 'An error occurred while processing the sale.']);
+    echo json_encode(['error' => $e->getMessage()]);
 }
 // Removed closing tag

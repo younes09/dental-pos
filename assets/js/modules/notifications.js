@@ -63,29 +63,32 @@ const notificationsModule = {
     },
 
     async markAsRead(id) {
-        document.querySelectorAll('.tooltip').forEach(t => t.remove()); // Hide stuck tooltips
-        const response = await App.api(`notifications.php?action=mark_read&id=${id}`);
+        document.querySelectorAll('.tooltip').forEach(t => t.remove());
+        // Bug #13 Fix: Use POST for mutative action
+        const response = await App.api('notifications.php?action=mark_read', 'POST', { id: id });
         if (response && response.success) {
-            App.loadNotifications(); // Update the header bell
-            await this.loadData();    // Reload the table
+            App.loadNotifications();
+            await this.loadData();
         }
     },
 
     async markAsReadAndGo(id, link) {
-        document.querySelectorAll('.tooltip').forEach(t => t.remove()); // Hide stuck tooltips
-        await App.api(`notifications.php?action=mark_read&id=${id}`);
-        App.loadNotifications(); // Update the header bell
-        window.location.hash = link; // Navigate
+        document.querySelectorAll('.tooltip').forEach(t => t.remove());
+        // Bug #13 Fix: Use POST for mutative action
+        await App.api('notifications.php?action=mark_read', 'POST', { id: id });
+        App.loadNotifications();
+        window.location.hash = link;
     },
 
     async markAllAsRead() {
         const confirmed = await App.confirm(App.t('notif.js.mark_all_title'), App.t('notif.js.mark_all_text'), 'question');
         if (confirmed) {
-            const response = await App.api('notifications.php?action=mark_all_read');
+            // Bug #13 Fix: Use POST for mutative action
+            const response = await App.api('notifications.php?action=mark_all_read', 'POST');
             if (response && response.success) {
                 App.toast('success', App.t('notif.js.mark_all_success'));
-                App.loadNotifications(); // Update the header bell
-                await this.loadData();    // Reload the table
+                App.loadNotifications();
+                await this.loadData();
             }
         }
     }

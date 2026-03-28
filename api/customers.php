@@ -53,7 +53,8 @@ try {
                 echo json_encode(['error' => 'Only Admins can delete customers.']);
                 exit;
             }
-            $id = $_GET['id'] ?? null;
+            // Bug #9 Fix: Cast id to int for consistency and defense-in-depth
+            $id = isset($_GET['id']) ? (int)$_GET['id'] : null;
             if (!$id) throw new Exception('Customer ID required');
             $stmt = $pdo->prepare("DELETE FROM customers WHERE id = ?");
             $stmt->execute([$id]);

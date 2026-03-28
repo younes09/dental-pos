@@ -6,7 +6,14 @@ header('Content-Type: application/json');
 $action = $_GET['action'] ?? 'list';
 $type = $_GET['type'] ?? 'categories'; // 'categories' or 'brands'
 
-if (!in_array($type, ['categories', 'brands'])) {
+// Bug #1 Fix: Use match() to map to safe table names, preventing SQL injection
+$table = match($type) {
+    'categories' => 'categories',
+    'brands' => 'brands',
+    default => null,
+};
+
+if (!$table) {
     echo json_encode(['error' => 'Invalid type']);
     exit;
 }
@@ -14,7 +21,7 @@ if (!in_array($type, ['categories', 'brands'])) {
 try {
     switch ($action) {
         case 'list':
-            $stmt = $pdo->prepare("SELECT * FROM $type ORDER BY name ASC");
+            $stmt = $pdo->prepare("SELECT * FROM {$table} ORDER BY name ASC");
             $stmt->execute();
             $data = $stmt->fetchAll();
             echo json_encode(['data' => $data]);
@@ -30,11 +37,11 @@ try {
             }
 
             if ($id) {
-                $stmt = $pdo->prepare("UPDATE $type SET name = ? WHERE id = ?");
+                $stmt = $pdo->prepare("UPDATE {$table} SET name = ? WHERE id = ?");
                 $stmt->execute([$name, $id]);
                 echo json_encode(['success' => ucfirst(substr($type, 0, -1)) . ' updated successfully']);
             } else {
-                $stmt = $pdo->prepare("INSERT INTO $type (name) VALUES (?)");
+                $stmt = $pdo->prepare("INSERT INTO {$table} (name) VALUES (?)");
                 $stmt->execute([$name]);
                 echo json_encode(['success' => ucfirst(substr($type, 0, -1)) . ' added successfully']);
             }
@@ -61,7 +68,7 @@ try {
                 exit;
             }
 
-            $stmt = $pdo->prepare("DELETE FROM $type WHERE id = ?");
+            $stmt = $pdo->prepare("DELETE FROM {$table} WHERE id = ?");
             $stmt->execute([$id]);
             echo json_encode(['success' => ucfirst(substr($type, 0, -1)) . ' deleted successfully']);
             break;
@@ -75,7 +82,8 @@ try {
         echo json_encode(['error' => 'This name already exists']);
     } else {
         error_log("Catalog API Error: " . $e->getMessage());
-        echo json_encode(['error' => $e->getMessage()]);
+        // Bug #4 Fix: Don't expose SQL error details to client
+        echo json_encode(['error' => 'An internal error occurred. Please try again later.']);
     }
 }
 // Removed closing tag

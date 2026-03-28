@@ -53,11 +53,11 @@ try {
             $stmt->execute([$from, $to]);
             $newCust = $stmt->fetch()['new_customers'] ?? 0;
 
-            // Top category by revenue in range
+            // Bug #11 Fix: Use item-level revenue to avoid double-counting multi-item sales
             $stmt = $pdo->prepare("
-                SELECT c.name, COALESCE(SUM(s.total), 0) as cat_revenue
-                FROM sales s
-                JOIN sale_items si ON si.sale_id = s.id
+                SELECT c.name, COALESCE(SUM((si.qty - si.returned_qty) * si.unit_price), 0) as cat_revenue
+                FROM sale_items si
+                JOIN sales s ON si.sale_id = s.id
                 JOIN products p ON si.product_id = p.id
                 LEFT JOIN categories c ON p.category_id = c.id
                 WHERE DATE(s.date) BETWEEN ? AND ? AND s.status = 'Completed'
@@ -199,5 +199,6 @@ try {
     }
 } catch (PDOException $e) {
     error_log("Analytics API Error: " . $e->getMessage());
-    echo json_encode(['error' => $e->getMessage()]);
+    // Bug #4 Fix: Don't expose SQL error details to client
+    echo json_encode(['error' => 'An internal error occurred. Please try again later.']);
 }

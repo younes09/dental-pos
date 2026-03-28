@@ -70,8 +70,9 @@ try {
                     $pdo->prepare("UPDATE vault_accounts SET balance = balance - ? WHERE id = ?")->execute([$total_cost, $account_id]);
                 }
                 
-                echo json_encode(['success' => 'Equipment added successfully']);
+                // Bug #8 Fix: Commit before responding to client
                 $pdo->commit();
+                echo json_encode(['success' => 'Equipment added successfully']);
             }
             
             // M11: Notification Trigger - Equipment Damage

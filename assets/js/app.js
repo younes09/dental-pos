@@ -704,13 +704,15 @@ const App = {
     },
 
     async handleNotificationClick(id, link) {
-        await this.api(`notifications.php?action=mark_read&id=${id}`);
+        // Bug #13 Fix: Use POST for mutative action to prevent CSRF
+        await this.api('notifications.php?action=mark_read', 'POST', { id: id });
         if (link) window.location.hash = link;
         this.loadNotifications();
     },
 
     async markAllNotificationsRead() {
-        await this.api('notifications.php?action=mark_all_read');
+        // Bug #13 Fix: Use POST for mutative action
+        await this.api('notifications.php?action=mark_all_read', 'POST');
         this.loadNotifications();
     }
 };

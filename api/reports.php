@@ -69,6 +69,7 @@ try {
     }
 } catch (PDOException $e) {
     error_log("Reports API Error: " . $e->getMessage());
-    echo json_encode(['error' => $e->getMessage()]);
+    // Bug #4 Fix: Don't expose SQL error details to client
+    echo json_encode(['error' => 'An internal error occurred. Please try again later.']);
 }
 // Removed closing tag

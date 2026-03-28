@@ -175,6 +175,12 @@ try {
             break;
     }
 } catch (PDOException $e) {
+    if (isset($pdo) && $pdo->inTransaction()) $pdo->rollBack();
+    error_log("Suppliers API Error: " . $e->getMessage());
+    // Bug #4 Fix: Don't expose SQL error details to client
+    echo json_encode(['error' => 'An internal error occurred. Please try again later.']);
+} catch (Exception $e) {
+    if (isset($pdo) && $pdo->inTransaction()) $pdo->rollBack();
     error_log("Suppliers API Error: " . $e->getMessage());
     echo json_encode(['error' => $e->getMessage()]);
 }

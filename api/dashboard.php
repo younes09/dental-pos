@@ -88,13 +88,13 @@ try {
     
     switch ($filter) {
         case 'weekly':
-            // Last 4 weeks, grouped by week
+            // Bug #10 Fix: Group by YEARWEEK to avoid cross-year week merging
             $stmt = $pdo->prepare("
-                SELECT DATE_FORMAT(date, 'Week %u') as day, SUM(total) as total 
+                SELECT DATE_FORMAT(MIN(date), 'Week %u %Y') as day, SUM(total) as total 
                 FROM sales 
                 WHERE date >= DATE_SUB(CURDATE(), INTERVAL 4 WEEK) AND status = 'Completed'
-                GROUP BY WEEK(date)
-                ORDER BY date ASC
+                GROUP BY YEARWEEK(date, 1)
+                ORDER BY MIN(date) ASC
             ");
             break;
         case 'monthly':
@@ -179,6 +179,7 @@ try {
 
 } catch (PDOException $e) {
     error_log("Dashboard API Error: " . $e->getMessage());
-    echo json_encode(['error' => $e->getMessage()]);
+    // Bug #4 Fix: Don't expose SQL error details to client
+    echo json_encode(['error' => 'An internal error occurred. Please try again later.']);
 }
 // Removed closing tag

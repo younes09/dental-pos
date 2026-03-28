@@ -65,7 +65,12 @@ try {
             break;
 
         case 'mark_read':
-            $id = $_GET['id'] ?? null;
+            // Bug #13 Fix: Require POST to prevent CSRF via GET image tags
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                throw new Exception('mark_read requires POST method.');
+            }
+            $data = json_decode(file_get_contents('php://input'), true);
+            $id = $data['id'] ?? ($_GET['id'] ?? null);
             if (!$id) throw new Exception('Notification ID required');
             
             $stmt = $pdo->prepare("UPDATE notifications SET is_read = 1 WHERE id = ? AND (user_id = ? OR role = ?)");
@@ -74,6 +79,10 @@ try {
             break;
 
         case 'mark_all_read':
+            // Bug #13 Fix: Require POST to prevent CSRF
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                throw new Exception('mark_all_read requires POST method.');
+            }
             $stmt = $pdo->prepare("UPDATE notifications SET is_read = 1 WHERE (user_id = ? OR role = ?)");
             $stmt->execute([$user_id, $user_role]);
             echo json_encode(['success' => true]);

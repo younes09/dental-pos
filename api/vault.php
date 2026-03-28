@@ -117,12 +117,15 @@ try {
             $balance = isset($data['balance']) ? (float)$data['balance'] : 0.00;
             $is_default = isset($data['is_default']) && $data['is_default'] ? 1 : 0;
             
+            // Bug #7 Fix: Wrap in transaction for atomicity
+            $pdo->beginTransaction();
             if ($is_default) {
                 $pdo->query("UPDATE vault_accounts SET is_default = 0");
             }
 
             $stmt = $pdo->prepare("INSERT INTO vault_accounts (name, type, balance, is_default) VALUES (?, ?, ?, ?)");
             $stmt->execute([$name, $type, $balance, $is_default]);
+            $pdo->commit();
             echo json_encode(['success' => 'Account created successfully']);
             break;
 
@@ -134,12 +137,15 @@ try {
             $type = $data['type'];
             $is_default = isset($data['is_default']) && $data['is_default'] ? 1 : 0;
 
+            // Bug #7 Fix: Wrap in transaction for atomicity
+            $pdo->beginTransaction();
             if ($is_default) {
                 $pdo->query("UPDATE vault_accounts SET is_default = 0");
             }
 
             $stmt = $pdo->prepare("UPDATE vault_accounts SET name = ?, type = ?, is_default = ? WHERE id = ?");
             $stmt->execute([$name, $type, $is_default, $id]);
+            $pdo->commit();
             echo json_encode(['success' => 'Account updated successfully']);
             break;
 
