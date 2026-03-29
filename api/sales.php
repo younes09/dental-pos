@@ -376,7 +376,11 @@ try {
                     throw new Exception("Cannot return more than purchased for Product ID $product_id");
                 }
 
-                $item_return_value = $qty_to_return * $sale_item['unit_price'];
+                // Fix #8: Pro-rate discount across returned items so refund = what was actually paid
+                $original_subtotal = (float)$sale['subtotal'];
+                $total_discount    = (float)$sale['discount'];
+                $discount_ratio    = ($original_subtotal > 0) ? (1 - ($total_discount / $original_subtotal)) : 1;
+                $item_return_value = round($qty_to_return * $sale_item['unit_price'] * $discount_ratio, 2);
                 $total_return_amount += $item_return_value;
 
                 // Update sale_items

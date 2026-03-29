@@ -340,13 +340,26 @@ h6,
 }
 
 .logout-btn {
+    background: transparent;
+    border: none;
     color: rgba(255, 255, 255, 0.5);
-    font-size: 18px;
-    transition: color 0.2s;
+    font-size: 20px;
+    padding: 0;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+    cursor: pointer;
 }
 
 .logout-btn:hover {
     color: #FF4D4D;
+    background: rgba(255, 77, 77, 0.1);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 77, 77, 0.15);
 }
 
 /* Content Area */

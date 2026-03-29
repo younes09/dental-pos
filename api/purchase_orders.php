@@ -239,6 +239,11 @@ try {
                 $new_status = 'Received';
             }
 
+            // Fix #3: Guard against overpayment BEFORE any DB writes
+            if ($paid_amount > 0 && $paid_amount > $total_received_value) {
+                throw new Exception('Payment amount cannot exceed the value of items being received.');
+            }
+
             // Update PO status, paid amount
             $new_total_paid = $po['paid_amount'] + $paid_amount;
             $payment_status = 'Unpaid';
@@ -251,13 +256,6 @@ try {
             $stmt = $pdo->prepare("UPDATE purchase_orders SET status = ?, paid_amount = ?, payment_status = ? WHERE id = ?");
             $stmt->execute([$new_status, $new_total_paid, $payment_status, $po_id]);
 
-            // Bug #6 Fix: Guard against overpayment BEFORE updating supplier balance
-            if ($paid_amount > 0 && $paid_amount > $total_received_value) {
-                $pdo->rollBack();
-                echo json_encode(['error' => 'Payment amount cannot exceed the value of items being received.']);
-                exit;
-            }
-
             // Update supplier balance
             $net_debt_increase = $total_received_value - $paid_amount;
             if ($net_debt_increase != 0) {
@@ -268,12 +266,6 @@ try {
             // F10.3: Vault Integration - Record Expense if account is specified
             $account_id = $data['account_id'] ?? null;
             if ($account_id && $paid_amount > 0) {
-                // Guard: no overpayment against items received now
-                if ($paid_amount > $total_received_value) {
-                    $pdo->rollBack();
-                    echo json_encode(['error' => 'Payment amount cannot exceed the value of items being received.']);
-                    exit;
-                }
                 // Guard: sufficient account balance
                 $balStmt = $pdo->prepare("SELECT balance FROM vault_accounts WHERE id = ? FOR UPDATE");
                 $balStmt->execute([$account_id]);

@@ -58,7 +58,8 @@ try {
             break;
 
         case 'delete':
-            $id = $_GET['id'] ?? null;
+            // Fix #12: Cast id to int for consistency and type-safe self-delete comparison
+            $id = isset($_GET['id']) ? (int)$_GET['id'] : null;
             if (!$id) throw new Exception('User ID required');
             if ($id == $_SESSION['user_id']) throw new Exception('You cannot delete your own account');
 

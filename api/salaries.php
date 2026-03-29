@@ -43,7 +43,8 @@ try {
             break;
 
         case 'delete_staff':
-            $id = $_GET['id'] ?? null;
+            // Fix #11: Cast id to int for consistency and defense-in-depth
+            $id = isset($_GET['id']) ? (int)$_GET['id'] : null;
             if (!$id) throw new Exception('Staff ID required');
             $pdo->beginTransaction();
             // Delete payments first

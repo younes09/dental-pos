@@ -424,10 +424,11 @@ const posModule = {
     },
 
     async addToCart(productId) {
-        const product = this.allProducts.find(p => p.id === productId);
+        // Fix #18: Use == (loose equality) — API returns string IDs, onclick passes integers
+        const product = this.allProducts.find(p => p.id == productId);
         if (!product) return;
 
-        const cartItem = this.cart.find(item => item.id === productId);
+        const cartItem = this.cart.find(item => item.id == productId);
         const newQty = cartItem ? cartItem.qty + 1 : 1;
 
         if (newQty > product.stock_qty) {

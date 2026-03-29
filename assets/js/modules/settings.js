@@ -137,7 +137,7 @@ const settingsModule = {
             confirmButtonColor: '#d33',
             cancelButtonColor: '#3085d6',
             confirmButtonText: App.t('settings.js.btn_restore') || 'Yes, restore it!',
-            cancelButtonText: App.t('btn_cancel') || 'Cancel'
+            cancelButtonText: App.t('users.js.btn_cancel') || 'Cancel'
         });
 
         if (!isConfirmed) {
@@ -184,7 +184,7 @@ const settingsModule = {
             showCancelButton: true,
             confirmButtonColor: '#00BFA6',
             confirmButtonText: App.t('settings.js.btn_clear') || 'Yes, clear it',
-            cancelButtonText: App.t('btn_cancel') || 'Cancel'
+            cancelButtonText: App.t('users.js.btn_cancel') || 'Cancel'
         }).then((result) => {
             if (result.isConfirmed) {
                 localStorage.clear();

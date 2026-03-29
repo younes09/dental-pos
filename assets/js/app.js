@@ -453,11 +453,12 @@ const App = {
 
         } catch (error) {
             console.error('Routing Error:', error);
+            // Fix #14: Escape error.message to prevent XSS
             viewport.innerHTML = `
                 <div class="text-center py-5 fade-in">
                     <i class="fas fa-exclamation-circle text-danger display-1 mb-3"></i>
                     <h3 class="fw-bold">Oops! Module Error</h3>
-                    <p class="text-muted">${error.message}</p>
+                    <p class="text-muted">${this.escapeHtml(error.message)}</p>
                     <a href="#dashboard" class="btn btn-teal mt-3 px-4">
                         <i class="fas fa-home me-2"></i>Return to Dashboard
                     </a>

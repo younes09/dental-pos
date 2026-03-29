@@ -20,11 +20,17 @@ CREATE TABLE categories (
     name VARCHAR(100) NOT NULL UNIQUE
 );
 
+INSERT INTO categories (name) VALUES
+('Hygiene & Prevention');
+
 -- Brands table
 CREATE TABLE brands (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL UNIQUE
 );
+
+INSERT INTO brands (name) VALUES
+('3M Oral Care');
 
 -- Products table
 CREATE TABLE products (
@@ -44,6 +50,9 @@ CREATE TABLE products (
     FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL,
     FOREIGN KEY (brand_id) REFERENCES brands(id) ON DELETE SET NULL
 );
+
+insert into products (name, category_id, brand_id, barcode, purchase_price, selling_price, stock_qty, min_stock, expiry_date, image, status) values
+('Product 1', 1, 1, '1234567890123', 10.00, 20.00, 5, 5, '2027-12-31', 'product1.png', 'Active');
 
 -- Stock Batches table
 CREATE TABLE stock_batches (
@@ -68,6 +77,9 @@ CREATE TABLE customers (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+INSERT INTO customers (name, phone, email, balance, loyalty_points) VALUES
+('Dr. Abigail Thompson', '555-0101', 'abigail@clinic.com', 0.00, 0);
+
 -- Suppliers table
 CREATE TABLE suppliers (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -79,6 +91,9 @@ CREATE TABLE suppliers (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+INSERT INTO suppliers (name, company, phone, email) VALUES
+('Sam Dental Supplies', 'Sam Medical Corp', '888-001', 'orders@samdent.com');
+
 -- Vault Accounts table
 CREATE TABLE vault_accounts (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -88,6 +103,11 @@ CREATE TABLE vault_accounts (
     is_default BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+INSERT INTO vault_accounts (name, type, balance, is_default) VALUES
+('Principal Safe', 'Safe', 100.00, TRUE),
+('Cash Drawer 1', 'Cash', 0.00, FALSE),
+('Bank Account (BNA)', 'Bank', 0.00, FALSE);
 
 -- Vault Transactions table
 CREATE TABLE vault_transactions (
@@ -131,6 +151,9 @@ CREATE TABLE purchase_orders (
     FOREIGN KEY (supplier_id) REFERENCES suppliers(id)
 );
 
+INSERT INTO `purchase_orders` (`id`, `supplier_id`, `date`, `status`, `total`, `paid_amount`, `payment_status`, `created_at`) VALUES
+(1, 1, '2026-03-24', 'Received', 50.00, 50.00, 'Paid', '2026-03-24 09:36:59');
+
 -- Purchase Order Items table
 CREATE TABLE purchase_order_items (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -145,6 +168,9 @@ CREATE TABLE purchase_order_items (
     FOREIGN KEY (po_id) REFERENCES purchase_orders(id) ON DELETE CASCADE,
     FOREIGN KEY (product_id) REFERENCES products(id)
 );
+
+INSERT INTO `purchase_order_items` (`id`, `po_id`, `product_id`, `qty`, `received_qty`, `returned_qty`, `unit_cost`, `old_unit_cost`) VALUES
+(1, 1, 1, 5, 5, 0, 10.00, 10.00);
 
 -- Purchase Returns table
 CREATE TABLE purchase_returns (
@@ -266,10 +292,10 @@ CREATE TABLE settings (
 
 -- Initialize default settings
 INSERT IGNORE INTO settings (setting_key, setting_value) VALUES
-('store_name', ''),
-('tax_number', ''),
+('store_name', 'DentalPOS Premium'),
+('tax_number', 'VAT-12345678'),
 ('currency', 'DZD'),
-('address', ''),
+('address', '123 Clinical Way, Medical District'),
 ('vat_rate', '0'),
 ('loyalty_earning_rate', '100'),
 ('loyalty_point_value', '1');
@@ -345,3 +371,9 @@ CREATE TABLE notifications (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+
+-- ============================================================
+-- Fix #14: ALTER for existing databases (run if DB already exists)
+-- ============================================================
+-- ALTER TABLE purchase_orders
+--   MODIFY COLUMN status ENUM('Pending', 'Partial', 'Received', 'Cancelled') DEFAULT 'Pending';

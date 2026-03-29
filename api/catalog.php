@@ -53,7 +53,8 @@ try {
                 echo json_encode(['error' => 'Only Admins can delete catalog items.']);
                 exit;
             }
-            $id = $_GET['id'] ?? null;
+            // Fix #10: Cast id to int for consistency
+            $id = isset($_GET['id']) ? (int)$_GET['id'] : null;
             if (!$id) {
                 echo json_encode(['error' => 'ID is required']);
                 exit;

@@ -18,7 +18,7 @@ try {
             if (!in_array($_SESSION['user_role'] ?? '', ['Admin', 'Stock Manager'])) {
                 throw new Exception('Access denied.');
             }
-            
+
             $id = $_POST['id'] ?? null;
             $name = $_POST['name'];
             $purchase_price = (float)$_POST['purchase_price'];
@@ -26,30 +26,41 @@ try {
             $quantity = (int)$_POST['quantity'];
 
             if ($id) {
+                // Fix #7: Wrap update + notification in a transaction for atomicity
+                $pdo->beginTransaction();
                 $stmt = $pdo->prepare("
-                    UPDATE equipment SET 
+                    UPDATE equipment SET
                     name = ?, purchase_price = ?, condition_status = ?, quantity = ?
                     WHERE id = ?
                 ");
                 $stmt->execute([$name, $purchase_price, $condition_status, $quantity, $id]);
+
+                // Notification inside transaction so it rolls back on failure
+                if (in_array($condition_status, ['Poor', 'Needs Repair'])) {
+                    $ins_notif = $pdo->prepare("INSERT INTO notifications (role, title, message, type, link) VALUES (?, ?, ?, ?, ?)");
+                    $eq_msg = "Equipment '$name' status changed to '$condition_status' by " . ($_SESSION['user_name'] ?? 'User') . ".";
+                    $notif_type = ($condition_status === 'Needs Repair') ? 'danger' : 'warning';
+                    $ins_notif->execute(['Admin', 'Equipment Alert: ' . $name, $eq_msg, $notif_type, '#equipment']);
+                }
+
+                $pdo->commit();
                 echo json_encode(['success' => 'Equipment updated successfully']);
             } else {
                 $pdo->beginTransaction();
                 // F10.1: Insert New Equipment
                 $stmt = $pdo->prepare("
-                    INSERT INTO equipment (name, purchase_price, condition_status, quantity) 
+                    INSERT INTO equipment (name, purchase_price, condition_status, quantity)
                     VALUES (?, ?, ?, ?)
                 ");
                 $stmt->execute([$name, $purchase_price, $condition_status, $quantity]);
-                $id = $pdo->lastInsertId(); // Get ID for new items
-                
+                $id = $pdo->lastInsertId();
+
                 // F10.2: Vault Integration - Record Expense for NEW equipment
                 $account_id = $_POST['account_id'] ?? null;
                 $total_cost = $purchase_price * $quantity;
                 if ($account_id && $total_cost > 0) {
                     $user_id = $_SESSION['user_id'] ?? 1;
 
-                    // Fetch and lock account balance
                     $balStmt = $pdo->prepare("SELECT balance FROM vault_accounts WHERE id = ? FOR UPDATE");
                     $balStmt->execute([$account_id]);
                     $balance = (float)($balStmt->fetchColumn() ?? 0);
@@ -66,25 +77,20 @@ try {
                         $id,
                         $user_id
                     ]);
-                    // F10.3: Update Account Balance
                     $pdo->prepare("UPDATE vault_accounts SET balance = balance - ? WHERE id = ?")->execute([$total_cost, $account_id]);
                 }
-                
-                // Bug #8 Fix: Commit before responding to client
+
+                // Fix #7: Notification inside transaction for atomicity
+                if (in_array($condition_status, ['Poor', 'Needs Repair'])) {
+                    $ins_notif = $pdo->prepare("INSERT INTO notifications (role, title, message, type, link) VALUES (?, ?, ?, ?, ?)");
+                    $eq_msg = "Equipment '$name' status changed to '$condition_status' by " . ($_SESSION['user_name'] ?? 'User') . ".";
+                    $notif_type = ($condition_status === 'Needs Repair') ? 'danger' : 'warning';
+                    $ins_notif->execute(['Admin', 'Equipment Alert: ' . $name, $eq_msg, $notif_type, '#equipment']);
+                }
+
                 $pdo->commit();
                 echo json_encode(['success' => 'Equipment added successfully']);
             }
-            
-            // M11: Notification Trigger - Equipment Damage
-            if (in_array($condition_status, ['Poor', 'Needs Repair'])) {
-                $ins_notif = $pdo->prepare("INSERT INTO notifications (role, title, message, type, link) VALUES (?, ?, ?, ?, ?)");
-                $eq_msg = "Equipment '$name' status changed to '$condition_status' by " . ($_SESSION['user_name'] ?? 'User') . ".";
-                $type = ($condition_status === 'Needs Repair') ? 'danger' : 'warning';
-                
-                // Avoid spamming if already reported recently (optional enhancement, simple version for now)
-                $ins_notif->execute(['Admin', 'Equipment Alert: ' . $name, $eq_msg, $type, '#equipment']);
-            }
-            
             break;
 
         case 'delete':

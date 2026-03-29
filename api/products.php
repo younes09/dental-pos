@@ -361,7 +361,9 @@ try {
             exit;
             
         case 'get_details':
-            $id = $_GET['id'];
+            // Fix #9: Cast id to int for consistency and defense-in-depth
+            $id = isset($_GET['id']) ? (int)$_GET['id'] : null;
+            if (!$id) throw new Exception('Product ID is required.');
             
             // Basic Product Info
             $stmt = $pdo->prepare("
