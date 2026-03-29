@@ -25,6 +25,11 @@ try {
             $condition_status = $_POST['condition_status'] ?? 'New';
             $quantity = (int)$_POST['quantity'];
 
+            // Ajouter cette validation pour empêcher l'enregistrement d'équipements négatifs :
+            if ($purchase_price < 0 || $quantity <= 0) {
+                throw new Exception("Le prix et la quantité doivent être strictement positifs.");
+            }
+
             if ($id) {
                 // Fix #7: Wrap update + notification in a transaction for atomicity
                 $pdo->beginTransaction();
