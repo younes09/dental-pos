@@ -476,14 +476,18 @@ const posModule = {
 
             if (!alreadyHitBL) {
                 const blConfirm = await Swal.fire({
-                    title: 'Attention! (BL)',
-                    text: `The requested quantity for "${product.name}" requires using stock from a "Delivery Note" (BL). Do you really want to add it to the cart?`,
+                    // title: 'Attention! (BL)',
+                    title: App.t('pos.msg.bl_warning_title') || 'Attention! (BL)',
+                    // text: `The requested quantity for "${product.name}" requires using stock from a "Delivery Note" (BL). Do you really want to add it to the cart?`,
+                    text: App.t('pos.msg.bl_warning_text') || `The requested quantity for "${product.name}" requires using stock from a "Delivery Note" (BL). Do you really want to add it to the cart?`,
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#ffc107',
                     cancelButtonColor: '#6c757d',
-                    confirmButtonText: 'Yes, add to cart',
-                    cancelButtonText: 'Cancel',
+                    // confirmButtonText: 'Yes, add to cart',
+                    confirmButtonText: App.t('pos.msg.bl_warning_confirm') || 'Yes, add to cart',
+                    // cancelButtonText: 'Cancel',
+                    cancelButtonText: App.t('pos.msg.bl_warning_cancel') || 'Cancel',
                     reverseButtons: true
                 });
 

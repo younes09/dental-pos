@@ -29,11 +29,15 @@ try {
                 $returns_stmt->execute([$session['id']]);
                 $cash_returns = (float) $returns_stmt->fetchColumn() ?: 0;
 
+                // Fetch current Caisse vault balance
+                $caisse_stmt = $pdo->query("SELECT balance FROM vault_accounts WHERE name = 'Caisse' OR type = 'Cash' LIMIT 1");
+                $caisse_balance = (float) $caisse_stmt->fetchColumn();
+
                 $net_sales = $cash_sales - $cash_returns;
 
                 $session['current_total_sales'] = $cash_sales;
                 $session['current_total_returns'] = $cash_returns;
-                $session['expected_balance'] = (float) $session['opening_balance'] + $net_sales;
+                $session['expected_balance'] = $caisse_balance + $net_sales;
 
                 echo json_encode(['status' => 'open', 'session' => $session]);
             } else {
@@ -140,7 +144,21 @@ try {
             $cash_returns = (float) $returns_stmt->fetchColumn() ?: 0;
 
             $net_sales = $cash_sales - $cash_returns;
-            $expected = (float) $session['opening_balance'] + $net_sales;
+            
+            // Find the "Caisse" account first
+            $caisse_stmt = $pdo->query("SELECT id FROM vault_accounts WHERE name = 'Caisse' OR type = 'Cash' LIMIT 1");
+            $caisse_acc = $caisse_stmt->fetch();
+            $caisse_id = $caisse_acc ? $caisse_acc['id'] : null;
+
+            $caisse_balance = 0;
+            if ($caisse_id) {
+                // Fetch and lock Caisse balance
+                $caisseBalStmt = $pdo->prepare("SELECT balance FROM vault_accounts WHERE id = ? FOR UPDATE");
+                $caisseBalStmt->execute([$caisse_id]);
+                $caisse_balance = (float) $caisseBalStmt->fetchColumn();
+            }
+
+            $expected = $caisse_balance + $net_sales;
 
             $difference = $closing_balance - $expected;
 
@@ -160,17 +178,8 @@ try {
             $vault_id = $data['account_id'] ?? null;
             $total_cash_to_vault = $closing_balance;
 
-            // Find the "Caisse" account first
-            $caisse_stmt = $pdo->query("SELECT id FROM vault_accounts WHERE name = 'Caisse' OR type = 'Cash' LIMIT 1");
-            $caisse_acc = $caisse_stmt->fetch();
-
-            if ($caisse_acc) {
-                $caisse_id = $caisse_acc['id'];
-
-                // Fetch and lock Caisse balance for validation
-                $caisseBalStmt = $pdo->prepare("SELECT balance FROM vault_accounts WHERE id = ? FOR UPDATE");
-                $caisseBalStmt->execute([$caisse_id]);
-                $caisseBalance = (float) $caisseBalStmt->fetchColumn();
+            if ($caisse_id) {
+                $caisseBalance = $caisse_balance;
 
                 // 1. Record Net Sales into Caisse
                 if ($net_sales > 0) {
@@ -221,7 +230,7 @@ try {
                     // Fix #2: Validate Caisse balance before closing transfer
                     $finalCaisseStmt = $pdo->prepare("SELECT balance FROM vault_accounts WHERE id = ? FOR UPDATE");
                     $finalCaisseStmt->execute([$caisse_id]);
-                    $finalCaisseBalance = (float)$finalCaisseStmt->fetchColumn();
+                    $finalCaisseBalance = (float) $finalCaisseStmt->fetchColumn();
                     if ($finalCaisseBalance < $total_cash_to_vault) {
                         throw new Exception("Insufficient Caisse balance (" . number_format($finalCaisseBalance, 2) . ") to transfer closing amount (" . number_format($total_cash_to_vault, 2) . ").");
                     }

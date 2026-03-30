@@ -161,6 +161,10 @@ const locales = {
         "pos.msg.debt_not_allowed": "Debt is only allowed for registered customers.",
         "pos.msg.debt_not_allowed": "Debt is only allowed for registered customers.",
         "pos.msg.processing": "Processing...",
+        "pos.msg.bl_warning_title": "Attention! (BL)",
+        "pos.msg.bl_warning_text": "The requested quantity for this product requires using stock from a \"Delivery Note\" (BL). Do you really want to add it to the cart?",
+        "pos.msg.bl_warning_confirm": "Yes, add to cart",
+        "pos.msg.bl_warning_cancel": "Cancel",
 
         // Catalog
         "catalog.page_title": "Catalog Management",
@@ -1238,6 +1242,10 @@ const locales = {
         "pos.msg.debt_not_allowed": "La dette n'est autorisée que pour les clients inscrits.",
         "pos.msg.debt_not_allowed": "La dette n'est autorisée que pour les clients inscrits.",
         "pos.msg.processing": "Traitement...",
+        "pos.msg.bl_warning_title": "Alerte! (BL)",
+        "pos.msg.bl_warning_text": "La quantité demandée pour ce produit nécessite l'utilisation de stock provenant d'un \"Bon de Livraison\" (BL). Voulez-vous vraiment l'ajouter au panier?",
+        "pos.msg.bl_warning_confirm": "Oui, ajouter au panier",
+        "pos.msg.bl_warning_cancel": "Annuler",
 
         // Catalog
         "catalog.page_title": "Gestion du Catalogue",
