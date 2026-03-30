@@ -44,6 +44,18 @@ const cash_registerModule = {
             this.closeSession(new FormData(e.target));
         };
 
+        const closeForm = document.getElementById('formCloseSession');
+        if (closeForm) {
+            const closingInput = closeForm.querySelector('input[name="closing_balance"]');
+            const transferInput = closeForm.querySelector('input[name="transfer_amount"]');
+            
+            if (closingInput && transferInput) {
+                closingInput.addEventListener('input', (e) => {
+                    transferInput.value = e.target.value;
+                });
+            }
+        }
+
         // Real-time update: Refresh accounts when modals are opened
         const modalOpen = document.getElementById('modalOpenSession');
         if (modalOpen) {
@@ -105,6 +117,7 @@ const cash_registerModule = {
     async closeSession(formData) {
         const data = {
             closing_balance: formData.get('closing_balance'),
+            transfer_amount: formData.get('transfer_amount'),
             account_id: formData.get('account_id'),
             notes: formData.get('notes')
         };

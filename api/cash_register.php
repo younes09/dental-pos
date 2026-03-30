@@ -117,6 +117,7 @@ try {
 
             $data = json_decode(file_get_contents('php://input'), true);
             $closing_balance = (float) ($data['closing_balance'] ?? 0);
+            $transfer_amount = isset($data['transfer_amount']) && $data['transfer_amount'] !== '' ? (float) $data['transfer_amount'] : $closing_balance;
             $notes = $data['notes'] ?? '';
 
             $pdo->beginTransaction();
@@ -127,6 +128,13 @@ try {
 
             if (!$session) {
                 throw new Exception('No open session found.');
+            }
+
+            if ($transfer_amount > $closing_balance) {
+                throw new Exception('Transfer amount cannot exceed the counted closing balance.');
+            }
+            if ($transfer_amount < 0) {
+                throw new Exception('Transfer amount cannot be negative.');
             }
 
             // Calculate final expected balance
@@ -176,7 +184,7 @@ try {
 
             // F10.1: Vault Integration - Ensure accurate Caisse balance before transfer
             $vault_id = $data['account_id'] ?? null;
-            $total_cash_to_vault = $closing_balance;
+            $total_cash_to_vault = $transfer_amount;
 
             if ($caisse_id) {
                 $caisseBalance = $caisse_balance;

@@ -170,6 +170,16 @@
                     </div>
 
                     <div class="mb-3">
+                        <label class="form-label fw-medium" data-i18n="cr.modal.transfer_amount">Amount to Transfer (DZD)</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-0"><i class="fas fa-exchange-alt"></i></span>
+                            <input type="number" step="0.01" class="form-control bg-light border-0"
+                                name="transfer_amount" placeholder="0.00" data-i18n="cr.modal.transfer_placeholder" data-i18n-target="placeholder">
+                        </div>
+                        <small class="text-muted mt-2 d-block" data-i18n="cr.modal.transfer_help">Leave blank to transfer the exact counted amount.</small>
+                    </div>
+
+                    <div class="mb-3">
                         <label class="form-label fw-medium" data-i18n="cr.modal.dest_account">Destination Account (Treasury)</label>
                         <select name="account_id" id="close-session-account-id"
                             class="form-select bg-light border-0 rounded-3" required>
