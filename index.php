@@ -67,12 +67,14 @@ if (!isset($_SESSION['user_id'])) {
             <ul class="list-unstyled components">
             <!-- Main Section -->
             <li class="sidebar-label" data-i18n="sidebar.main">Main</li>
+            <?php if (in_array($_SESSION['user_role'] ?? '', ['Admin'])): ?>
             <li class="active">
                 <a href="#dashboard" class="nav-link">
                     <i class="fas fa-chart-pie"></i>
                     <span data-i18n="sidebar.dashboard">Dashboard</span>
                 </a>
             </li>
+            <?php endif; ?>
 
             <?php if (in_array($_SESSION['user_role'] ?? '', ['Admin', 'Cashier'])): ?>
             <li>
@@ -159,6 +161,7 @@ if (!isset($_SESSION['user_id'])) {
             </li>
 
             <!-- Finance Section -->
+            <?php if (($_SESSION['user_role'] ?? '') === 'Admin'): ?>
             <li class="sidebar-label" data-i18n="sidebar.finance">Finance</li>
             <li>
                 <a href="#vault" class="nav-link">
@@ -166,7 +169,6 @@ if (!isset($_SESSION['user_id'])) {
                     <span data-i18n="sidebar.treasury">Treasury</span>
                 </a>
             </li>
-            <?php if (($_SESSION['user_role'] ?? '') === 'Admin'): ?>
             <li>
                 <a href="#balance" class="nav-link">
                     <i class="fas fa-scale-balanced"></i>
