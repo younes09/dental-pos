@@ -18,7 +18,7 @@ const App = {
             vat_rate: 0
         },
         permissions: {
-            'dashboard': ['Admin', 'Cashier', 'Stock Manager'],
+            'dashboard': ['Admin', 'Stock Manager'],
             'pos': ['Admin', 'Cashier'],
             'cash_register': ['Admin', 'Cashier'],
             'sales_history': ['Admin', 'Cashier'],
@@ -599,13 +599,13 @@ const App = {
         const updateClock = () => {
             const now = new Date();
             const lang = localStorage.getItem('app_language') || 'fr';
-            
+
             const timeOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit' };
             const dateOptions = { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' };
-            
+
             const timeStr = now.toLocaleTimeString(lang, timeOptions);
             const dateStr = now.toLocaleDateString(lang, dateOptions);
-            
+
             clockEl.innerHTML = `
                 <div class="d-flex align-items-center">
                     <i class="far fa-calendar-alt text-muted me-2"></i>
@@ -615,7 +615,7 @@ const App = {
                 </div>
             `;
         };
-        
+
         updateClock();
         setInterval(updateClock, 1000);
     },

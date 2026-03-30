@@ -158,6 +158,10 @@ try {
                 $payment_status = ($paid_amount > 0) ? 'Partial' : 'Unpaid';
             }
 
+            if ($payment_status !== 'Paid' && empty($customer_id)) {
+                throw new Exception('Debt is only allowed for registered customers. Please select a customer or pay the full amount.');
+            }
+
             $points_earned = ($earning_rate > 0) ? floor($total / $earning_rate) : 0;
 
             // 1. Insert into sales table (F2.4: store points for reversal)

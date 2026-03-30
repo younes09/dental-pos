@@ -805,6 +805,12 @@ const posModule = {
 
         try {
             const totals = this.calculateTotals();
+
+            if (totals.paidAmount < totals.total && !this.selectedCustomer) {
+                App.toast('error', App.t('pos.msg.debt_not_allowed') || 'Debt is only allowed for registered customers.');
+                return;
+            }
+
             const paymentMethod = document.querySelector('input[name="payment-method"]:checked').value;
             const invoiceType = document.querySelector('input[name="invoice-type"]:checked')?.value || 'BV';
 
