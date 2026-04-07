@@ -24,16 +24,16 @@ try {
         case 'get_stats':
             $stmt = $pdo->query("SELECT COUNT(*) as total FROM products");
             $total = $stmt->fetch()['total'];
-            
+
             $stmt = $pdo->query("SELECT COUNT(*) as low FROM products WHERE stock_qty <= min_stock");
             $low = $stmt->fetch()['low'];
-            
+
             $stmt = $pdo->query("SELECT COUNT(DISTINCT product_id) as expired FROM stock_batches WHERE expiry_date <= DATE_ADD(CURDATE(), INTERVAL 1 MONTH) AND expiry_date IS NOT NULL AND remaining_qty > 0");
             $expired = $stmt->fetch()['expired'];
-            
+
             $stmt = $pdo->query("SELECT SUM(stock_qty * purchase_price) as value FROM products");
             $value = $stmt->fetch()['value'] ?? 0;
-            
+
             echo json_encode([
                 'total' => $total,
                 'low' => $low,
@@ -59,17 +59,19 @@ try {
             $brand_id = $_POST['brand_id'];
             $barcode = $_POST['barcode'];
             $purchase_type = $_POST['purchase_type'] ?? 'BA';
-            $purchase_price = (float)$_POST['purchase_price'];
-            $selling_price = (float)$_POST['selling_price'];
-            $stock_qty = (int)$_POST['stock_qty'];
+            $purchase_price = (float) $_POST['purchase_price'];
+            $selling_price = (float) $_POST['selling_price'];
+            $stock_qty = (int) $_POST['stock_qty'];
             $min_stock = $_POST['min_stock'];
             $expiry_date = $_POST['expiry_date'] ?: null;
             $status = $_POST['status'] ?? 'Active';
-            
+
             // F4.2: Validate prices
-            if ($purchase_price < 0) throw new Exception('Purchase price cannot be negative');
-            if ($selling_price <= 0) throw new Exception('Selling price must be greater than zero');
-            
+            if ($purchase_price < 0)
+                throw new Exception('Purchase price cannot be negative');
+            if ($selling_price <= 0)
+                throw new Exception('Selling price must be greater than zero');
+
             // Image handling (simplified)
             $image = $_POST['existing_image'] ?? 'default.jpg';
             if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
@@ -84,9 +86,10 @@ try {
                 if (!str_starts_with($mime, 'image/')) {
                     throw new Exception('Uploaded file is not a valid image');
                 }
-                
+
                 $target_dir = "../assets/img/products/";
-                if (!is_dir($target_dir)) mkdir($target_dir, 0755, true); // Fix #18: 0755 instead of 0777
+                if (!is_dir($target_dir))
+                    mkdir($target_dir, 0755, true); // Fix #18: 0755 instead of 0777
                 $file_name = time() . "_" . bin2hex(random_bytes(4)) . "." . $ext;
                 if (move_uploaded_file($_FILES["image"]["tmp_name"], $target_dir . $file_name)) {
                     // If this is an update, delete the old image
@@ -94,7 +97,7 @@ try {
                         $old_img_stmt = $pdo->prepare("SELECT image FROM products WHERE id = ?");
                         $old_img_stmt->execute([$id]);
                         $old_image = $old_img_stmt->fetchColumn();
-                        
+
                         if ($old_image && !empty($old_image) && !in_array($old_image, ['default.jpg', 'default.png'])) {
                             $old_image_path = $target_dir . $old_image;
                             if (file_exists($old_image_path)) {
@@ -115,6 +118,11 @@ try {
                     WHERE id=?
                 ");
                 $stmt->execute([$name, $category_id, $brand_id, $barcode, $purchase_price, $selling_price, $min_stock, $expiry_date, $image, $status, $id]);
+                
+                // Sync expiry date to active stock batches to ensure consistency
+                $sync_batches = $pdo->prepare("UPDATE stock_batches SET expiry_date = ? WHERE product_id = ? AND remaining_qty > 0");
+                $sync_batches->execute([$expiry_date, $id]);
+                
                 echo json_encode(['success' => 'Product updated successfully']);
             } else {
                 $pdo->beginTransaction();
@@ -124,13 +132,13 @@ try {
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ");
                 $stmt->execute([$name, $category_id, $brand_id, $barcode, $purchase_price, $selling_price, $stock_qty, $min_stock, $expiry_date, $image, $status]);
-                
+
                 $product_id = $pdo->lastInsertId();
                 if ($stock_qty > 0) {
                     $batch_stmt = $pdo->prepare("INSERT INTO stock_batches (product_id, purchase_type, initial_qty, remaining_qty, expiry_date) VALUES (?, ?, ?, ?, ?)");
                     $batch_stmt->execute([$product_id, $purchase_type, $stock_qty, $stock_qty, $expiry_date]);
                 }
-                
+
                 $pdo->commit();
                 echo json_encode(['success' => 'Product added successfully']);
             }
@@ -142,21 +150,22 @@ try {
                 throw new Exception('Only Admins can delete products.');
             }
             // Fix #10: Validate id is present and cast to int
-            $id = isset($_GET['id']) ? (int)$_GET['id'] : null;
-            if (!$id) throw new Exception('Product ID is required.');
-            
+            $id = isset($_GET['id']) ? (int) $_GET['id'] : null;
+            if (!$id)
+                throw new Exception('Product ID is required.');
+
             // Get product image to delete it from disk
             $stmt = $pdo->prepare("SELECT image FROM products WHERE id = ?");
             $stmt->execute([$id]);
             $product = $stmt->fetch();
-            
+
             if ($product && !empty($product['image']) && !in_array($product['image'], ['default.jpg', 'default.png'])) {
                 $image_path = "../assets/img/products/" . $product['image'];
                 if (file_exists($image_path)) {
                     unlink($image_path);
                 }
             }
-            
+
             $stmt = $pdo->prepare("DELETE FROM products WHERE id = ?");
             $stmt->execute([$id]);
             echo json_encode(['success' => 'Product deleted successfully']);
@@ -172,61 +181,65 @@ try {
             if (!in_array($user_role, ['Admin', 'Stock Manager'])) {
                 throw new Exception('Only Admins or Stock Managers can adjust stock.');
             }
-            
+
             // Read from JSON body instead of $_GET
             $input = json_decode(file_get_contents('php://input'), true);
             if (!$input) {
                 throw new Exception('Invalid request body.');
             }
-            
-            $id = isset($input['id']) ? (int)$input['id'] : null;
-            if (!$id) throw new Exception('Product ID is required.');
+
+            $id = isset($input['id']) ? (int) $input['id'] : null;
+            if (!$id)
+                throw new Exception('Product ID is required.');
             $type = $input['type'] ?? '';
-            $qty = (int)($input['qty'] ?? 0);
+            $qty = (int) ($input['qty'] ?? 0);
             $expiry_date = !empty($input['expiry_date']) ? $input['expiry_date'] : null;
             $purchase_type = $input['purchase_type'] ?? 'BA';
-            
-            if (!in_array($type, ['add', 'subtract'])) throw new Exception('Invalid adjustment type.');
-            if ($qty <= 0) throw new Exception('Adjustment quantity must be positive');
-            
+
+            if (!in_array($type, ['add', 'subtract']))
+                throw new Exception('Invalid adjustment type.');
+            if ($qty <= 0)
+                throw new Exception('Adjustment quantity must be positive');
+
             $pdo->beginTransaction();
-            
+
             try {
                 if ($type === 'add') {
-                    // 1. Add to products table stock_qty
-                    $stmt = $pdo->prepare("UPDATE products SET stock_qty = stock_qty + ? WHERE id = ?");
-                    $stmt->execute([$qty, $id]);
-                    
+                    // 1. Add to products table stock_qty and update its expiry date if a new one is provided
+                    $stmt = $pdo->prepare("UPDATE products SET stock_qty = stock_qty + ?, expiry_date = COALESCE(?, expiry_date) WHERE id = ?");
+                    $stmt->execute([$qty, $expiry_date, $id]);
+
                     // 2. Create new stock batch
                     $batch_stmt = $pdo->prepare("INSERT INTO stock_batches (product_id, purchase_type, initial_qty, remaining_qty, expiry_date) VALUES (?, ?, ?, ?, ?)");
                     $batch_stmt->execute([$id, $purchase_type, $qty, $qty, $expiry_date]);
-                    
+
                 } else if ($type === 'subtract') {
                     // F2.1 + F2.2: Lock row and validate stock before subtract
                     $check_stmt = $pdo->prepare("SELECT stock_qty FROM products WHERE id = ? FOR UPDATE");
                     $check_stmt->execute([$id]);
-                    $current_stock = (int)$check_stmt->fetchColumn();
-                    
+                    $current_stock = (int) $check_stmt->fetchColumn();
+
                     if ($current_stock < $qty) {
                         throw new Exception("Cannot subtract $qty units. Current stock is only $current_stock.");
                     }
-                    
+
                     // 1. Subtract from products table
                     $stmt = $pdo->prepare("UPDATE products SET stock_qty = stock_qty - ? WHERE id = ?");
                     $stmt->execute([$qty, $id]);
-                    
+
                     // 2. Subtract from oldest active batches (FIFO) with FOR UPDATE
                     $remaining_to_deduct = $qty;
                     $batches_stmt = $pdo->prepare("SELECT id, remaining_qty FROM stock_batches WHERE product_id = ? AND remaining_qty > 0 ORDER BY created_at ASC FOR UPDATE");
                     $batches_stmt->execute([$id]);
                     $batches = $batches_stmt->fetchAll();
-                    
+
                     $update_batch_stmt = $pdo->prepare("UPDATE stock_batches SET remaining_qty = ? WHERE id = ?");
-                    
+
                     foreach ($batches as $batch) {
-                        if ($remaining_to_deduct <= 0) break;
-                        
-                        $available = (int)$batch['remaining_qty'];
+                        if ($remaining_to_deduct <= 0)
+                            break;
+
+                        $available = (int) $batch['remaining_qty'];
                         if ($available >= $remaining_to_deduct) {
                             $new_qty = $available - $remaining_to_deduct;
                             $update_batch_stmt->execute([$new_qty, $batch['id']]);
@@ -237,14 +250,14 @@ try {
                         }
                     }
                 }
-                
+
                 // F5.3: Write to stock_adjustments audit trail
                 $user_id = $_SESSION['user_id'] ?? null;
                 $adj_type = ($type === 'add') ? 'Add Stock' : 'Write-off';
                 $reason = $input['reason'] ?? 'Manual adjustment';
                 $adj_stmt = $pdo->prepare("INSERT INTO stock_adjustments (product_id, type, qty, reason, user_id) VALUES (?, ?, ?, ?, ?)");
                 $adj_stmt->execute([$id, $adj_type, $qty, $reason, $user_id]);
-                
+
                 $pdo->commit();
                 echo json_encode(['success' => 'Stock adjusted successfully']);
             } catch (Exception $e) {
@@ -253,10 +266,67 @@ try {
             }
             break;
 
+        case 'update_batch':
+            if (!in_array($_SESSION['user_role'] ?? '', ['Admin', 'Stock Manager'])) {
+                throw new Exception('Access denied. Only Admins or Stock Managers can update batches.');
+            }
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                throw new Exception('Update requires POST method.');
+            }
+            $input = json_decode(file_get_contents('php://input'), true);
+            $batch_id = $input['batch_id'] ?? null;
+            $purchase_type = $input['purchase_type'] ?? 'BA';
+            $initial_qty = (int)($input['initial_qty'] ?? 0);
+            $remaining_qty = (int)($input['remaining_qty'] ?? 0);
+            $expiry_date = !empty($input['expiry_date']) ? $input['expiry_date'] : null;
+            
+            if (!$batch_id) throw new Exception('Batch ID is required.');
+            if ($initial_qty < 0 || $remaining_qty < 0) throw new Exception('Quantities cannot be negative.');
+
+            $pdo->beginTransaction();
+            try {
+                // Get the product_id of this batch
+                $stmt = $pdo->prepare("SELECT product_id FROM stock_batches WHERE id = ?");
+                $stmt->execute([$batch_id]);
+                $product_id = $stmt->fetchColumn();
+
+                if (!$product_id) throw new Exception('Batch not found');
+
+                $update_query = "UPDATE stock_batches SET purchase_type = ?, initial_qty = ?, remaining_qty = ?, expiry_date = ?";
+                $params = [$purchase_type, $initial_qty, $remaining_qty, $expiry_date];
+
+                if (!empty($input['created_at'])) {
+                    $update_query .= ", created_at = CONCAT(?, ' ', IFNULL(TIME(created_at), '00:00:00'))";
+                    $params[] = $input['created_at']; 
+                }
+
+                $update_query .= " WHERE id = ?";
+                $params[] = $batch_id;
+
+                $stmt = $pdo->prepare($update_query);
+                $stmt->execute($params);
+
+                // Recalculate the overall product stock_qty based on all batches
+                $sum_stmt = $pdo->prepare("SELECT SUM(remaining_qty) as total FROM stock_batches WHERE product_id = ? AND remaining_qty > 0");
+                $sum_stmt->execute([$product_id]);
+                $total_stock = (int)$sum_stmt->fetchColumn();
+
+                $update_prod_stmt = $pdo->prepare("UPDATE products SET stock_qty = ? WHERE id = ?");
+                $update_prod_stmt->execute([$total_stock, $product_id]);
+
+                $pdo->commit();
+                echo json_encode(['success' => 'Batch updated successfully']);
+                
+            } catch (Exception $e) {
+                $pdo->rollBack();
+                throw $e;
+            }
+            break;
+
         case 'download_template':
             header('Content-Type: text/csv');
             header('Content-Disposition: attachment; filename="product_template.csv"');
-            
+
             $output = fopen('php://output', 'w');
             fputcsv($output, ['Name', 'Category', 'Brand', 'Barcode', 'Purchase Price', 'Selling Price', 'Stock Qty', 'Min Stock', 'Expiry Date (YYYY-MM-DD)']);
             fputcsv($output, ['Composite Resin A2', 'Consumables', '3M', '123456789', '45.00', '65.00', '10', '5', '2025-12-31']);
@@ -274,31 +344,32 @@ try {
 
             $file = $_FILES['csv_file']['tmp_name'];
             $handle = fopen($file, 'r');
-            
+
             // Skip header
             fgetcsv($handle);
-            
+
             $success_count = 0;
             $error_count = 0;
-            
+
             $pdo->beginTransaction();
-            
+
             try {
                 // Get all categories and brands for mapping
                 $categories = $pdo->query("SELECT id, name FROM categories")->fetchAll(PDO::FETCH_KEY_PAIR);
                 $brands = $pdo->query("SELECT id, name FROM brands")->fetchAll(PDO::FETCH_KEY_PAIR);
-                
+
                 while (($data = fgetcsv($handle)) !== FALSE) {
-                    if (count($data) < 6) continue; // Basic validation
-                    
+                    if (count($data) < 6)
+                        continue; // Basic validation
+
                     $name = trim($data[0]);
                     $cat_name = trim($data[1]);
                     $brand_name = trim($data[2]);
                     $barcode = trim($data[3]);
-                    $purchase_price = (float)$data[4];
-                    $selling_price = (float)$data[5];
-                    $stock_qty = (int)($data[6] ?? 0);
-                    $min_stock = (int)($data[7] ?? 5);
+                    $purchase_price = (float) $data[4];
+                    $selling_price = (float) $data[5];
+                    $stock_qty = (int) ($data[6] ?? 0);
+                    $min_stock = (int) ($data[7] ?? 5);
                     $expiry_date = !empty($data[8]) ? trim($data[8]) : null;
 
                     if (empty($name)) {
@@ -339,32 +410,33 @@ try {
                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     ");
                     $stmt->execute([$name, $category_id, $brand_id, $barcode, $purchase_price, $selling_price, $stock_qty, $min_stock, $expiry_date, 'default.png']);
-                    
+
                     $product_id = $pdo->lastInsertId();
                     if ($stock_qty > 0) {
                         $batch_stmt = $pdo->prepare("INSERT INTO stock_batches (product_id, purchase_type, initial_qty, remaining_qty, expiry_date) VALUES (?, 'BA', ?, ?, ?)");
                         $batch_stmt->execute([$product_id, $stock_qty, $stock_qty, $expiry_date]);
                     }
-                    
+
                     $success_count++;
                 }
-                
+
                 $pdo->commit();
                 fclose($handle);
                 echo json_encode(['success' => "Imported $success_count products successfully. Errors: $error_count"]);
-                
+
             } catch (Exception $e) {
                 $pdo->rollBack();
                 fclose($handle);
                 echo json_encode(['error' => 'Import failed. Please check your CSV file.']);
             }
             exit;
-            
+
         case 'get_details':
             // Fix #9: Cast id to int for consistency and defense-in-depth
-            $id = isset($_GET['id']) ? (int)$_GET['id'] : null;
-            if (!$id) throw new Exception('Product ID is required.');
-            
+            $id = isset($_GET['id']) ? (int) $_GET['id'] : null;
+            if (!$id)
+                throw new Exception('Product ID is required.');
+
             // Basic Product Info
             $stmt = $pdo->prepare("
                 SELECT p.*, c.name as category_name, b.name as brand_name
@@ -375,22 +447,22 @@ try {
             ");
             $stmt->execute([$id]);
             $product = $stmt->fetch();
-            
+
             if (!$product) {
                 echo json_encode(['error' => 'Product not found']);
                 exit;
             }
-            
+
             // Batches
             $batch_stmt = $pdo->prepare("
-                SELECT purchase_type, initial_qty, remaining_qty, expiry_date, created_at
+                SELECT id, purchase_type, initial_qty, remaining_qty, expiry_date, created_at
                 FROM stock_batches 
                 WHERE product_id = ? AND remaining_qty > 0
                 ORDER BY IFNULL(expiry_date, '9999-12-31') ASC, created_at ASC
             ");
             $batch_stmt->execute([$id]);
             $batches = $batch_stmt->fetchAll();
-            
+
             // Purchase History
             $history_stmt = $pdo->prepare("
                 SELECT po.id as po_id, po.date as po_date, s.name as supplier_name, 
@@ -403,7 +475,7 @@ try {
             ");
             $history_stmt->execute([$id]);
             $history = $history_stmt->fetchAll();
-            
+
             // Adjustments History
             $adj_stmt = $pdo->prepare("
                 SELECT type, qty, reason, date, u.name as user_name
@@ -414,7 +486,7 @@ try {
             ");
             $adj_stmt->execute([$id]);
             $adjustments = $adj_stmt->fetchAll();
-            
+
             echo json_encode([
                 'product' => $product,
                 'batches' => $batches,
