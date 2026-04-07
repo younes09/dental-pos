@@ -277,7 +277,7 @@ INSERT IGNORE INTO settings (setting_key, setting_value) VALUES
 ('address', ''),
 ('vat_rate', '0'),
 ('loyalty_earning_rate', '100'),
-('store_phone', '0698766626'),
+('store_phone', '05 5648 4421'),
 ('loyalty_point_value', '1');
 
 -- Insert a default admin user (password: admin123)
