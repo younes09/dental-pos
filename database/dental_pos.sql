@@ -89,6 +89,11 @@ CREATE TABLE vault_accounts (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+INSERT INTO vault_accounts (name, type, balance, is_default) VALUES
+('Coffre', 'Safe', 0.00, TRUE),
+('Caisse', 'Cash', 0.00, FALSE),
+('Banque', 'Bank', 0.00, FALSE);
+
 -- Vault Transactions table
 CREATE TABLE vault_transactions (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -272,11 +277,12 @@ INSERT IGNORE INTO settings (setting_key, setting_value) VALUES
 ('address', ''),
 ('vat_rate', '0'),
 ('loyalty_earning_rate', '100'),
+('store_phone', '0698766626'),
 ('loyalty_point_value', '1');
 
 -- Insert a default admin user (password: admin123)
 -- In a real app, use password_hash()
-INSERT INTO users (name, email, password, role) VALUES ('Admin User', 'admin@dentalpos.com', '$2y$10$CPUky3MhUBcUBUdgz15sq.OHl2pOAhYiN9TC24tE/8A92vh5DUFym', 'Admin');
+INSERT INTO users (name, email, password, role, phone) VALUES ('Admin User', 'admin@dentalpos.com', '$2y$10$CPUky3MhUBcUBUdgz15sq.OHl2pOAhYiN9TC24tE/8A92vh5DUFym', 'Admin', '0770456789');
 
 -- Equipment table
 CREATE TABLE IF NOT EXISTS equipment (
