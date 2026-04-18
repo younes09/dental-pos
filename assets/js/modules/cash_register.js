@@ -22,7 +22,7 @@ const cash_registerModule = {
         if (result && result.data) {
             // Filter out 'Caisse' or 'Cash' type account to prevent choosing it as source/destination
             const filteredAccounts = result.data.filter(acc => acc.name !== 'Caisse' && acc.type !== 'Cash');
-            
+
             const options = filteredAccounts.map(acc => `<option value="${acc.id}">${acc.name} (${App.formatCurrency(acc.balance)})</option>`).join('');
             if (selectOpen) {
                 selectOpen.innerHTML = `<option value="">${App.t('cr.js.select_source') || '-- Select source --'}</option>` + options;
@@ -48,7 +48,7 @@ const cash_registerModule = {
         if (closeForm) {
             const closingInput = closeForm.querySelector('input[name="closing_balance"]');
             const transferInput = closeForm.querySelector('input[name="transfer_amount"]');
-            
+
             if (closingInput && transferInput) {
                 closingInput.addEventListener('input', (e) => {
                     transferInput.value = e.target.value;
