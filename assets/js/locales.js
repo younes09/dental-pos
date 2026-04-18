@@ -284,6 +284,7 @@ const locales = {
         "stock.msg.import_failed": "Import failed",
         "stock.msg.import_error": "Error occurred",
         "stock.msg.import_network": "Network error occurred",
+        "stock.batch.update_title": "Update Stock Batch",
         "error.save_product": "Failed to save product",
         
         // Product Details
@@ -1368,6 +1369,7 @@ const locales = {
         "stock.msg.import_failed": "L'importation a échoué",
         "stock.msg.import_error": "Une erreur est survenue",
         "stock.msg.import_network": "Erreur réseau",
+        "stock.batch.update_title": "Mettre à jour le lot de stock",
         "error.save_product": "Impossible d'enregistrer le produit",
         
         // Product Details

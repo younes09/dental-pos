@@ -18,7 +18,7 @@ const stockModule = {
         const importBtn = document.getElementById('btn-import-csv');
         if (importBtn) {
             importBtn.onclick = () => {
-                new bootstrap.Modal(document.getElementById('importModal')).show();
+                bootstrap.Modal.getOrCreateInstance(document.getElementById('importModal')).show();
             };
         }
 
@@ -340,7 +340,7 @@ const stockModule = {
 
         document.getElementById('productModalLabel').textContent = App.t('stock.modal.title.edit_product') || 'Edit Product';
 
-        new bootstrap.Modal(document.getElementById('productModal')).show();
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('productModal')).show();
     },
 
     async deleteProduct(id) {
@@ -389,7 +389,7 @@ const stockModule = {
         };
         adjType.dispatchEvent(new Event('change'));
 
-        new bootstrap.Modal(document.getElementById('adjustmentModal')).show();
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('adjustmentModal')).show();
     },
 
     async viewDetails(id) {
@@ -399,28 +399,28 @@ const stockModule = {
                 App.toast('error', response.error);
                 return;
             }
-            
+
             const product = response.product || {};
             const batches = response.batches || [];
             const history = response.history || [];
-            
+
             // Populate Overview
             document.getElementById('detail-product-name').textContent = product.name;
             document.getElementById('detail-product-barcode').innerHTML = `<i class="fas fa-barcode me-1"></i>${product.barcode || 'N/A'}`;
             document.getElementById('detail-product-image').src = product.image ? `assets/img/products/${product.image}` : `assets/img/img_holder.png`;
-            
+
             document.getElementById('detail-category').textContent = product.category_name || '-';
             document.getElementById('detail-brand').textContent = product.brand_name || '-';
             document.getElementById('detail-stock-qty').textContent = product.stock_qty;
-            
+
             const statusColor = product.status === 'Active' ? 'success' : 'secondary';
             document.getElementById('detail-status').innerHTML = `<span class="badge bg-${statusColor}-subtle text-${statusColor} px-3">${product.status || 'Active'}</span>`;
-            
+
             document.getElementById('detail-purchase-price').textContent = App.formatCurrency(product.purchase_price);
             document.getElementById('detail-selling-price').textContent = App.formatCurrency(product.selling_price);
             document.getElementById('detail-min-stock').textContent = product.min_stock;
             document.getElementById('detail-stock-value').textContent = App.formatCurrency(parseFloat(product.stock_qty) * parseFloat(product.purchase_price));
-            
+
             const pp = parseFloat(product.purchase_price) || 0;
             const sp = parseFloat(product.selling_price) || 0;
             const margin = pp > 0 ? ((sp - pp) / pp * 100).toFixed(1) : 100;
@@ -449,16 +449,21 @@ const stockModule = {
                         if (expiry <= oneMonth) expClass = 'text-warning fw-bold';
                     }
                 }
-                
+
                 const addedDate = new Date(b.created_at).toLocaleDateString() || '-';
                 
+                const expDisplay = b.expiry_date || '<span class="text-muted">N/A</span>';
+                
+                const batchJson = JSON.stringify(b).replace(/'/g, "&apos;").replace(/"/g, "&quot;");
+                const editBtn = `<button class="btn btn-sm btn-light py-0 px-2 ms-2 edit-batch-btn" onclick="stockModule.editBatch(${product.id}, '${batchJson}')" title="Edit Batch"><i class="fas fa-edit text-primary" style="font-size: 0.8rem;"></i></button>`;
+
                 batchesBody.innerHTML += `
                     <tr>
                         <td>${addedDate}</td>
                         <td><span class="badge bg-secondary-subtle border border-secondary-subtle">${b.purchase_type || 'BA'}</span></td>
                         <td>${b.initial_qty}</td>
                         <td class="fw-bold text-primary">${b.remaining_qty}</td>
-                        <td class="${expClass}">${b.expiry_date || '<span class="text-muted">N/A</span>'}</td>
+                        <td class="${expClass} d-flex align-items-center">${expDisplay} ${editBtn}</td>
                     </tr>
                 `;
             });
@@ -480,7 +485,7 @@ const stockModule = {
             });
 
             // Re-initialize translations for potentially dynamic content
-            if(typeof App.initI18n === 'function') {
+            if (typeof App.initI18n === 'function') {
                 App.initI18n(document.getElementById('productDetailsModal'));
             }
 
@@ -505,15 +510,85 @@ const stockModule = {
 
             // Reset tabs to first tab
             const firstTabEl = document.querySelector('#productDetailsModal .nav-link');
-            if(firstTabEl) {
+            if (firstTabEl) {
                 const firstTab = new bootstrap.Tab(firstTabEl);
                 firstTab.show();
             }
 
-            new bootstrap.Modal(document.getElementById('productDetailsModal')).show();
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('productDetailsModal')).show();
         } catch (error) {
             console.error(error);
             App.toast('error', App.t('error.generic') || 'An error occurred fetching details');
+        }
+    },
+
+    async editBatch(productId, batchStr) {
+        const b = JSON.parse(batchStr.replace(/&quot;/g, '"').replace(/&apos;/g, "'"));
+        
+        const createdDate = b.created_at ? b.created_at.split(' ')[0] : '';
+        const expiryDate = b.expiry_date ? b.expiry_date.split(' ')[0] : '';
+
+        const formHtml = `
+            <form id="editBatchForm" class="text-start">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Date d'ajout</label>
+                    <input type="date" id="swal-batch-created" class="form-control" value="${createdDate}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Type d'achat</label>
+                    <select id="swal-batch-type" class="form-select">
+                        <option value="BA" ${b.purchase_type === 'BA' ? 'selected' : ''}>Bon d'Achat (BA)</option>
+                        <option value="BL" ${b.purchase_type === 'BL' ? 'selected' : ''}>Bon de Livraison (BL)</option>
+                    </select>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <label class="form-label fw-bold">Qté Initiale</label>
+                        <input type="number" id="swal-batch-initial" class="form-control" value="${b.initial_qty}">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label fw-bold">Qté Restante</label>
+                        <input type="number" id="swal-batch-remain" class="form-control" value="${b.remaining_qty}">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Date d'expiration</label>
+                    <input type="date" id="swal-batch-expiry" class="form-control" value="${expiryDate}">
+                </div>
+            </form>
+        `;
+
+        const { value: formValues } = await Swal.fire({
+            title: App.t('stock.batch.update_title') || 'Modifier le Lot',
+            html: formHtml,
+            showCancelButton: true,
+            confirmButtonText: App.t('btn.save') || 'Enregistrer',
+            cancelButtonText: App.t('btn.cancel') || 'Annuler',
+            confirmButtonColor: '#00BFA6',
+            preConfirm: () => {
+                return {
+                    batch_id: b.id,
+                    created_at: document.getElementById('swal-batch-created').value,
+                    purchase_type: document.getElementById('swal-batch-type').value,
+                    initial_qty: document.getElementById('swal-batch-initial').value,
+                    remaining_qty: document.getElementById('swal-batch-remain').value,
+                    expiry_date: document.getElementById('swal-batch-expiry').value,
+                }
+            }
+        });
+
+        if (formValues) {
+            const result = await App.api('products.php?action=update_batch', 'POST', formValues);
+
+            if (result && result.success) {
+                App.toast('success', result.success);
+                this.table.ajax.reload(null, false);
+                this.fetchStats();
+                
+                this.viewDetails(productId);
+            } else if (result && result.error) {
+                App.toast('error', result.error);
+            }
         }
     },
 
