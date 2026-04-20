@@ -192,6 +192,25 @@ try {
             $stmt->execute([$from, $to]);
             echo json_encode(['data' => $stmt->fetchAll()]);
             break;
+            
+        // ---------------------------------------------------------------
+        // 7. Sales by Wilaya
+        // ---------------------------------------------------------------
+        case 'sales_by_wilaya':
+            $stmt = $pdo->prepare("
+                SELECT 
+                    COALESCE(c.wilaya, 'N/A') as wilaya,
+                    SUM(s.total) as revenue,
+                    COUNT(s.id) as sales_count
+                FROM sales s
+                LEFT JOIN customers c ON s.customer_id = c.id
+                WHERE DATE(s.date) BETWEEN ? AND ? AND s.status = 'Completed'
+                GROUP BY c.wilaya
+                ORDER BY revenue DESC
+            ");
+            $stmt->execute([$from, $to]);
+            echo json_encode(['data' => $stmt->fetchAll()]);
+            break;
 
         default:
             echo json_encode(['error' => 'Invalid action']);

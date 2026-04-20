@@ -6,6 +6,28 @@
 const analyticsModule = {
     charts: {},
     state: { period: 'daily', from: '', to: '' },
+    wilayas: [
+        { id: '01', name: '01 - Adrar' }, { id: '02', name: '02 - Chlef' }, { id: '03', name: '03 - Laghouat' },
+        { id: '04', name: '04 - Oum El Bouaghi' }, { id: '05', name: '05 - Batna' }, { id: '06', name: '06 - Béjaïa' },
+        { id: '07', name: '07 - Biskra' }, { id: '08', name: '08 - Béchar' }, { id: '09', name: '09 - Blida' },
+        { id: '10', name: '10 - Bouira' }, { id: '11', name: '11 - Tamanrasset' }, { id: '12', name: '12 - Tébessa' },
+        { id: '13', name: '13 - Tlemcen' }, { id: '14', name: '14 - Tiaret' }, { id: '15', name: '15 - Tizi Ouzou' },
+        { id: '16', name: '16 - Alger' }, { id: '17', name: '17 - Djelfa' }, { id: '18', name: '18 - Jijel' },
+        { id: '19', name: '19 - Sétif' }, { id: '20', name: '20 - Saïda' }, { id: '21', name: '21 - Skikda' },
+        { id: '22', name: '22 - Sidi Bel Abbès' }, { id: '23', name: '23 - Annaba' }, { id: '24', name: '24 - Guelma' },
+        { id: '25', name: '25 - Constantine' }, { id: '26', name: '26 - Médéa' }, { id: '27', name: '27 - Mostaganem' },
+        { id: '28', name: '28 - M\'Sila' }, { id: '29', name: '29 - Mascara' }, { id: '30', name: '30 - Ouargla' },
+        { id: '31', name: '31 - Oran' }, { id: '32', name: '32 - El Bayadh' }, { id: '33', name: '33 - Illizi' },
+        { id: '34', name: '34 - Bordj Bou Arreridj' }, { id: '35', name: '35 - Boumerdès' }, { id: '36', name: '36 - El Tarf' },
+        { id: '37', name: '37 - Tindouf' }, { id: '38', name: '38 - Tissemsilt' }, { id: '39', name: '39 - El Oued' },
+        { id: '40', name: '40 - Khenchela' }, { id: '41', name: '41 - Souk Ahras' }, { id: '42', name: '42 - Tipaza' },
+        { id: '43', name: '43 - Mila' }, { id: '44', name: '44 - Aïn Defla' }, { id: '45', name: '45 - Naâma' },
+        { id: '46', name: '46 - Aïn Témouchent' }, { id: '47', name: '47 - Ghardaïa' }, { id: '48', name: '48 - Relizane' },
+        { id: '49', name: '49 - El M\'Ghair' }, { id: '50', name: '50 - El Meniaa' }, { id: '51', name: '51 - Ouled Djellal' },
+        { id: '52', name: '52 - Bordj Baji Mokhtar' }, { id: '53', name: '53 - Béni Abbès' }, { id: '54', name: '54 - Timimoun' },
+        { id: '55', name: '55 - Touggourt' }, { id: '56', name: '56 - Djanet' }, { id: '57', name: '57 - In Salah' },
+        { id: '58', name: '58 - In Guezzam' }
+    ],
 
     // ─── Entry Point ────────────────────────────────────────────────────────
     init() {
@@ -65,13 +87,14 @@ const analyticsModule = {
         const { from, to, period } = this.state;
         const base = `analytics.php?from=${from}&to=${to}&period=${period}`;
 
-        const [summary, trend, products, payments, customers, heatmap] = await Promise.all([
+        const [summary, trend, products, payments, customers, heatmap, wilaya] = await Promise.all([
             App.api(`${base}&action=summary`),
             App.api(`${base}&action=revenue_trend`),
             App.api(`${base}&action=product_performance`),
             App.api(`${base}&action=payment_methods`),
             App.api(`${base}&action=customer_insights`),
             App.api(`${base}&action=hourly_heatmap`),
+            App.api(`${base}&action=sales_by_wilaya`),
         ]);
 
         if (summary)   this._renderKPI(summary);
@@ -80,6 +103,7 @@ const analyticsModule = {
         if (payments)  this._renderPaymentMethods(payments.data);
         if (customers) this._renderCustomerInsights(customers.data);
         if (heatmap)   this._renderHeatmap(heatmap.data);
+        if (wilaya)    this._renderWilayaSales(wilaya.data);
     },
 
     // ─── KPI Cards ───────────────────────────────────────────────────────────
@@ -308,6 +332,48 @@ const analyticsModule = {
         container.innerHTML = html;
     },
 
+    // ─── Sales by Wilaya Bar Chart ────────────────────────────────────────────
+    _renderWilayaSales(rows) {
+        const labels = rows.map(r => {
+            const w = this.wilayas.find(x => x.id === r.wilaya);
+            return w ? w.name : (r.wilaya === 'N/A' ? 'Non spécifiée' : r.wilaya);
+        });
+        const revenue = rows.map(r => parseFloat(r.revenue));
+
+        const cfg = {
+            type: 'bar',
+            data: {
+                labels,
+                datasets: [
+                    {
+                        label: 'Revenue',
+                        data: revenue,
+                        backgroundColor: 'rgba(14,165,233,0.7)',
+                        borderRadius: 6,
+                    }
+                ]
+            },
+            options: {
+                ...this._commonOptions({ x: true }),
+                indexAxis: 'y', // Horizontal bars
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: ctx => `Ventes: ${App.formatCurrency(ctx.parsed.x)}`
+                        }
+                    }
+                }
+            }
+        };
+
+        this._destroyChart('chartWilayaSales');
+        const canvas = document.getElementById('chartWilayaSales');
+        if (canvas) {
+            this.charts['chartWilayaSales'] = new Chart(canvas, cfg);
+        }
+    },
+
     // ─── Export Helpers ───────────────────────────────────────────────────────
     _exportPDF() {
         App.toast('info', 'Generating PDF…');
@@ -325,7 +391,7 @@ const analyticsModule = {
         let y = 90;
 
         // Screenshot each chart as image
-        const chartIds = ['chartRevenueTrend','chartTopProducts','chartPaymentMethods','chartCustomerInsights'];
+        const chartIds = ['chartRevenueTrend','chartTopProducts','chartPaymentMethods','chartCustomerInsights','chartWilayaSales'];
         chartIds.forEach((id) => {
             const canvas = document.getElementById(id);
             if (!canvas) return;

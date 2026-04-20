@@ -293,6 +293,10 @@
                 <h1 id="receipt-brand-name">Dental<span>POS</span></h1>
                 <div id="receipt-brand-sub" class="brand-sub">Premium Dental store Management</div>
                 <div id="receipt-brand-phone" class="brand-sub"></div>
+                <div id="receipt-brand-tax" class="brand-sub" style="display: none;"></div>
+                <div id="receipt-brand-nif" class="brand-sub" style="display: none;"></div>
+                <div id="receipt-brand-nis" class="brand-sub" style="display: none;"></div>
+                <div id="receipt-brand-rc" class="brand-sub" style="display: none;"></div>
             </div>
             <div class="invoice-meta">
                 <h2 id="receipt-title" data-i18n="bc.title">Purchase Order</h2>
@@ -405,6 +409,26 @@
                 document.getElementById('receipt-brand-sub').textContent = settings.address || 'Premium Dental store Management';
                 if (settings.store_phone) {
                     document.getElementById('receipt-brand-phone').textContent = 'Tel: ' + settings.store_phone;
+                }
+                if (settings.tax_number) {
+                    const elTax = document.getElementById('receipt-brand-tax');
+                    elTax.textContent = 'Tax: ' + settings.tax_number;
+                    elTax.style.display = 'block';
+                }
+                if (settings.nif) {
+                    const elNif = document.getElementById('receipt-brand-nif');
+                    elNif.textContent = 'NIF: ' + settings.nif;
+                    elNif.style.display = 'block';
+                }
+                if (settings.nis) {
+                    const elNis = document.getElementById('receipt-brand-nis');
+                    elNis.textContent = 'NIS: ' + settings.nis;
+                    elNis.style.display = 'block';
+                }
+                if (settings.rc) {
+                    const elRc = document.getElementById('receipt-brand-rc');
+                    elRc.textContent = 'RC: ' + settings.rc;
+                    elRc.style.display = 'block';
                 }
             }
 

@@ -72,13 +72,14 @@ CREATE TABLE customers (
     name VARCHAR(100) NOT NULL,
     phone VARCHAR(20),
     email VARCHAR(100),
+    wilaya VARCHAR(5) DEFAULT NULL,
     balance DECIMAL(10, 2) DEFAULT 0.00,
     loyalty_points INT DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-INSERT INTO customers (name, phone, email, balance, loyalty_points) VALUES
-('Dr. Abigail Thompson', '555-0101', 'abigail@clinic.com', 0.00, 0);
+INSERT INTO customers (name, phone, email, wilaya, balance, loyalty_points) VALUES
+('Dr. Abigail Thompson', '555-0101', 'abigail@clinic.com', '16-Alger', 0.00, 0);
 
 -- Suppliers table
 CREATE TABLE suppliers (
@@ -292,7 +293,10 @@ INSERT IGNORE INTO settings (setting_key, setting_value) VALUES
 ('address', '123 Clinical Way, Medical District'),
 ('vat_rate', '0'),
 ('loyalty_earning_rate', '100'),
-('loyalty_point_value', '1');
+('loyalty_point_value', '1'),
+('nif', '0'),
+('nis', '0'),
+('rc', '0');
 
 -- Insert a default admin user (password: admin123)
 -- In a real app, use password_hash()

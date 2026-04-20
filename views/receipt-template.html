@@ -315,6 +315,9 @@
                     <div id="shop-address">123 Clinical Way, Medical District</div>
                     <div id="shop-phone">Tel: +213 555 1234</div>
                     <div id="shop-tax">VAT-12345678</div>
+                    <div id="shop-nif" style="display: none;"></div>
+                    <div id="shop-nis" style="display: none;"></div>
+                    <div id="shop-rc" style="display: none;"></div>
                 </div>
             </div>
             <div class="info-section">
@@ -419,6 +422,22 @@
                     document.getElementById('shop-phone').textContent = 'Tel: ' + settings.store_phone;
                 }
                 document.getElementById('shop-tax').textContent = settings.tax_number || '';
+                
+                if (settings.nif) {
+                    const elNif = document.getElementById('shop-nif');
+                    elNif.textContent = 'NIF: ' + settings.nif;
+                    elNif.style.display = 'block';
+                }
+                if (settings.nis) {
+                    const elNis = document.getElementById('shop-nis');
+                    elNis.textContent = 'NIS: ' + settings.nis;
+                    elNis.style.display = 'block';
+                }
+                if (settings.rc) {
+                    const elRc = document.getElementById('shop-rc');
+                    elRc.textContent = 'RC: ' + settings.rc;
+                    elRc.style.display = 'block';
+                }
 
                 // Set dynamic VAT label if exists
                 const taxLabel = document.getElementById('receipt-tax-label');

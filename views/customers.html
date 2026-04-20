@@ -16,6 +16,7 @@
                             <th data-i18n="customers.table.name">Customer Name</th>
                             <th data-i18n="customers.table.phone">Phone</th>
                             <th data-i18n="customers.table.email">Email</th>
+                            <th data-i18n="customers.table.wilaya">Wilaya</th>
                             <th data-i18n="customers.table.total_purchases">Total Purchases</th>
                             <th data-i18n="customers.table.balance">Outstanding Balance</th>
                             <th data-i18n="customers.table.points">Loyalty Points</th>
@@ -55,6 +56,12 @@
                         <div class="col-md-6">
                             <label class="form-label fw-semibold" data-i18n="customers.modal.email">Email Address</label>
                             <input type="email" name="email" class="form-control" placeholder="e.g. john@example.com" data-i18n="customers.modal.email_placeholder" data-i18n-target="placeholder">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold" data-i18n="customers.modal.wilaya">Wilaya</label>
+                            <select name="wilaya" id="customer-wilaya" class="form-select">
+                                <option value="" data-i18n="customers.modal.select_wilaya">Select Wilaya</option>
+                            </select>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-semibold" data-i18n="customers.modal.initial_balance">Initial Balance</label>

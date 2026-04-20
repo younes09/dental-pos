@@ -144,7 +144,7 @@ switch ($method) {
             // Bug #3 Fix: Include all settings keys used across the application
             $allowed_keys = [
                 'store_name', 'store_phone', 'clinic_name', 'clinic_phone', 'clinic_email', 'clinic_address',
-                'currency', 'tax_rate', 'vat_rate', 'tax_number', 'address',
+                'currency', 'tax_rate', 'vat_rate', 'tax_number', 'nif', 'nis', 'rc', 'address',
                 'low_stock_threshold', 'receipt_footer',
                 'language', 'timezone', 'date_format', 'theme',
                 'loyalty_earning_rate', 'loyalty_point_value'
