@@ -186,15 +186,21 @@
                     </button>
 
                     <div class="row g-2 mt-2">
-                        <div class="col-6">
-                            <button class="btn btn-light w-100 py-2 small" id="btn-hold-sale">
-                                <i class="fas fa-pause me-2"></i><span data-i18n="pos.btn.hold">Hold Sale</span>
+                        <div class="col-4">
+                            <button class="btn btn-light w-100 py-2 px-1 small text-truncate" id="btn-hold-sale">
+                                <i class="fas fa-pause me-1"></i><span data-i18n="pos.btn.hold">Hold Sale</span>
                             </button>
                         </div>
-                        <div class="col-6">
-                            <button class="btn btn-light w-100 py-2 small" id="btn-recent-sales" data-bs-toggle="modal"
+                        <div class="col-4">
+                            <button class="btn btn-light w-100 py-2 px-1 small text-truncate" id="btn-recent-sales" data-bs-toggle="modal"
                                 data-bs-target="#posHeldSalesModal">
-                                <i class="fas fa-receipt me-2"></i><span data-i18n="pos.btn.recent">Recent</span>
+                                <i class="fas fa-receipt me-1"></i><span data-i18n="pos.btn.recent">Recent</span>
+                            </button>
+                        </div>
+                        <div class="col-4">
+                            <button class="btn btn-light w-100 py-2 px-1 small text-truncate" id="btn-load-quote" data-bs-toggle="modal"
+                                data-bs-target="#posQuotationsModal">
+                                <i class="fas fa-file-invoice me-1"></i><span data-i18n="pos.btn.load_quote">Load Quote</span>
                             </button>
                         </div>
                     </div>
@@ -300,6 +306,34 @@
                             data-bs-dismiss="modal" data-i18n="btn.cancel">Cancel</button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Load Quotations Modal -->
+<div class="modal fade" id="posQuotationsModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 rounded-4">
+            <div class="modal-header border-0 p-4">
+                <h5 class="modal-title fw-bold" data-i18n="pos.modal.quote.title">Load Quotation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 pt-0">
+                <p class="text-muted small" data-i18n="pos.modal.quote.desc">Select a pending quotation to load into the cart.</p>
+                
+                <div class="search-box mb-4 w-100">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="pos-quote-search" class="form-control"
+                        placeholder="Search quotations by ID or Customer..." data-i18n="pos.modal.quote.search" data-i18n-target="placeholder">
+                </div>
+
+                <div id="pos-quotations-list" class="row overflow-auto g-3" style="max-height: 400px;">
+                    <!-- Quotations list items will be injected here -->
+                    <div class="col-12 text-center py-4 text-muted small" data-i18n="pos.modal.quote.empty">
+                        No pending quotations found.
+                    </div>
+                </div>
             </div>
         </div>
     </div>

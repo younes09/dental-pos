@@ -276,6 +276,13 @@ try {
                 }
             }
 
+            // 4. Update quotation status if generated from a quotation
+            if (!empty($data['quotation_id'])) {
+                $quotation_id = (int)$data['quotation_id'];
+                $q_stmt = $pdo->prepare("UPDATE quotations SET status = 'Converted' WHERE id = ?");
+                $q_stmt->execute([$quotation_id]);
+            }
+
             $pdo->commit();
             echo json_encode(['success' => 'Sale completed successfully', 'sale_id' => $sale_id, 'total' => $total]);
             break;

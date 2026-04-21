@@ -278,6 +278,34 @@ CREATE TABLE stock_adjustments (
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
+-- Quotations table
+CREATE TABLE quotations (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    customer_id INT,
+    user_id INT,
+    date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    subtotal DECIMAL(10, 2) NOT NULL,
+    discount DECIMAL(10, 2) DEFAULT 0.00,
+    tax DECIMAL(10, 2) DEFAULT 0.00,
+    total DECIMAL(10, 2) NOT NULL,
+    status ENUM('Pending', 'Converted', 'Cancelled') DEFAULT 'Pending',
+    notes TEXT,
+    FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE SET NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+-- Quotation Items table
+CREATE TABLE quotation_items (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    quotation_id INT,
+    product_id INT,
+    qty INT NOT NULL,
+    unit_price DECIMAL(10, 2) NOT NULL,
+    total DECIMAL(10, 2) NOT NULL,
+    FOREIGN KEY (quotation_id) REFERENCES quotations(id) ON DELETE CASCADE,
+    FOREIGN KEY (product_id) REFERENCES products(id)
+);
+
 -- Settings table
 CREATE TABLE settings (
     setting_key VARCHAR(50) PRIMARY KEY,

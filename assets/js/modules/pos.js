@@ -8,6 +8,8 @@ const posModule = {
     selectedCustomer: null,
     cart: [],
     taxRate: 0, // F1.5: Default to 0, will be loaded from settings
+    currentQuotationId: null,
+    allQuotations: [],
     _debtWarningShown: false,
 
     async init() {
@@ -69,6 +71,12 @@ const posModule = {
 
         const btnRecent = document.getElementById('btn-recent-sales');
         if (btnRecent) btnRecent.onclick = () => this.renderHeldSales();
+
+        const btnLoadQuote = document.getElementById('btn-load-quote');
+        if (btnLoadQuote) btnLoadQuote.onclick = () => this.loadPendingQuotations();
+
+        const quoteSearch = document.getElementById('pos-quote-search');
+        if (quoteSearch) quoteSearch.oninput = (e) => this.filterQuotations(e.target.value);
 
         // Customer search
         document.getElementById('pos-customer-search').oninput = (e) => this.searchCustomers(e.target.value);
@@ -318,6 +326,104 @@ const posModule = {
                 </div>
             </div>
         `).join('');
+    },
+
+    async loadPendingQuotations() {
+        const listContainer = document.getElementById('pos-quotations-list');
+        listContainer.innerHTML = `<div class="col-12 text-center py-4"><i class="fas fa-spinner fa-spin text-teal fs-4"></i></div>`;
+        
+        const res = await App.api('quotations.php?action=list');
+        if (res && res.data) {
+            this.allQuotations = res.data.filter(q => q.status === 'Pending');
+            this.renderQuotations(this.allQuotations);
+        } else {
+            listContainer.innerHTML = `<div class="col-12 text-center py-4 text-muted small">${App.t('pos.modal.quote.empty') || 'No pending quotations found.'}</div>`;
+        }
+    },
+
+    filterQuotations(query) {
+        if (!query) {
+            this.renderQuotations(this.allQuotations);
+            return;
+        }
+        const filtered = this.allQuotations.filter(q => 
+            q.id.toString().includes(query) || 
+            (q.customer_name && q.customer_name.toLowerCase().includes(query.toLowerCase()))
+        );
+        this.renderQuotations(filtered);
+    },
+
+    renderQuotations(quotations) {
+        const listContainer = document.getElementById('pos-quotations-list');
+        if (quotations.length === 0) {
+            listContainer.innerHTML = `<div class="col-12 text-center py-4 text-muted small">${App.t('pos.modal.quote.empty') || 'No pending quotations found.'}</div>`;
+            return;
+        }
+
+        listContainer.innerHTML = quotations.map(q => `
+            <div class="col-12">
+                <div class="p-3 mb-1 bg-light rounded-4 border hover-bg-light pointer d-flex justify-content-between align-items-center" onclick="posModule.resumeQuotation(${q.id})">
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <span class="badge bg-teal fw-bold">#DEV-${q.id.toString().padStart(4, '0')}</span>
+                            <small class="text-muted">${q.date}</small>
+                        </div>
+                        <h6 class="fw-bold mb-0">${q.customer_name ? App.escapeHtml(q.customer_name) : 'Walking Customer'}</h6>
+                    </div>
+                    <div class="text-end">
+                        <div class="text-teal fw-bold fs-5">${App.formatCurrency(q.total)}</div>
+                        <button class="btn btn-sm btn-outline-teal rounded-pill mt-1 px-3">
+                            <i class="fas fa-download me-1"></i>Load
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    },
+
+    async resumeQuotation(id) {
+        if (this.cart.length > 0) {
+            const confirmed = await App.confirm(
+                App.t('pos.msg.resume_title') || 'Resume Sale?',
+                App.t('pos.msg.resume_desc') || 'This will replace your current cart. Continue?'
+            );
+            if (!confirmed) return;
+        }
+
+        const res = await App.api(`quotations.php?action=get&id=${id}`);
+        if (!res || !res.success) return;
+
+        const { quotation, items } = res;
+
+        this.cart = [];
+        this.currentQuotationId = quotation.id;
+
+        items.forEach(item => {
+            this.cart.push({
+                id: item.product_id,
+                name: item.product_name,
+                price: parseFloat(item.unit_price),
+                qty: parseFloat(item.qty),
+                image: item.image || 'default.jpg'
+            });
+        });
+
+        this.selectCustomer(quotation.customer_id);
+
+        let subtotal = quotation.subtotal;
+        let discountPercent = 0;
+        if (subtotal > 0 && quotation.discount > 0) {
+            discountPercent = (quotation.discount / subtotal) * 100;
+        }
+        document.getElementById('cart-discount').value = parseFloat(discountPercent).toFixed(2);
+
+        this.renderCart();
+        this.calculateTotals();
+
+        const modal = bootstrap.Modal.getInstance(document.getElementById('posQuotationsModal'));
+        if (modal) modal.hide();
+
+        App.toast('success', 'Quotation loaded successfully!');
     },
 
     selectCustomer(customerId) {
@@ -591,6 +697,7 @@ const posModule = {
 
     clearCart() {
         this.cart = [];
+        this.currentQuotationId = null;
         document.getElementById('cart-paid-amount').value = '';
         this.renderCart();
         this.calculateTotals();
@@ -734,7 +841,8 @@ const posModule = {
             discount: document.getElementById('cart-discount')?.value || 0,
             points_redeemed: document.getElementById('cart-points-redeem')?.value || 0,
             invoice_type: document.querySelector('input[name="invoice-type"]:checked')?.value || 'BV',
-            paid_amount: document.getElementById('cart-paid-amount')?.value || ''
+            paid_amount: document.getElementById('cart-paid-amount')?.value || '',
+            quotation_id: this.currentQuotationId
         };
         try {
             localStorage.setItem('pos_current_state', JSON.stringify(state));
@@ -785,6 +893,10 @@ const posModule = {
                     const paidEl = document.getElementById('cart-paid-amount');
                     if (paidEl) paidEl.value = state.paid_amount;
                 }
+                
+                if (state.quotation_id) {
+                    this.currentQuotationId = state.quotation_id;
+                }
             }
         } catch (e) {
             console.error('Failed to restore POS state', e);
@@ -816,6 +928,7 @@ const posModule = {
 
             const saleData = {
                 customer_id: this.selectedCustomer ? this.selectedCustomer.id : null,
+                quotation_id: this.currentQuotationId,
                 subtotal: totals.subtotal,
                 discount_amount: totals.discountAmount,
                 tax: totals.tax,

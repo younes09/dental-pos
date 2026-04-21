@@ -89,6 +89,11 @@ if (!isset($_SESSION['user_id'])) {
                         </a>
                     </li>
                     <li>
+                        <a href="#quotations">
+                            <i class="fas fa-file-invoice"></i> <span data-i18n="sidebar.quotations">Quotations</span>
+                        </a>
+                    </li>
+                    <li>
                         <a href="#cash_register">
                             <i class="fas fa-money-bill-transfer"></i> <span data-i18n="sidebar.cash_register">Cash Register</span>
                         </a>
