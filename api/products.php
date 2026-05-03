@@ -55,9 +55,9 @@ try {
             }
             $id = $_POST['id'] ?? null;
             $name = $_POST['name'];
-            $category_id = $_POST['category_id'];
-            $brand_id = $_POST['brand_id'];
-            $barcode = $_POST['barcode'];
+            $category_id = !empty($_POST['category_id']) ? $_POST['category_id'] : null;
+            $brand_id = !empty($_POST['brand_id']) ? $_POST['brand_id'] : null;
+            $barcode = !empty($_POST['barcode']) ? $_POST['barcode'] : null;
             $purchase_type = $_POST['purchase_type'] ?? 'BA';
             $purchase_price = (float) $_POST['purchase_price'];
             $selling_price = (float) $_POST['selling_price'];
@@ -71,6 +71,16 @@ try {
                 throw new Exception('Purchase price cannot be negative');
             if ($selling_price <= 0)
                 throw new Exception('Selling price must be greater than zero');
+
+            // Check if barcode already exists
+            if ($barcode !== null) {
+                $barcode_check_stmt = $pdo->prepare("SELECT id FROM products WHERE barcode = ? AND id != ?");
+                $barcode_check_stmt->execute([$barcode, $id ?? 0]);
+                if ($barcode_check_stmt->fetch()) {
+                    throw new Exception('This barcode already exists for another product.');
+                }
+            }
+
 
             // Image handling (simplified)
             $image = $_POST['existing_image'] ?? 'default.jpg';
@@ -365,7 +375,7 @@ try {
                     $name = trim($data[0]);
                     $cat_name = trim($data[1]);
                     $brand_name = trim($data[2]);
-                    $barcode = trim($data[3]);
+                    $barcode = !empty(trim($data[3])) ? trim($data[3]) : null;
                     $purchase_price = (float) $data[4];
                     $selling_price = (float) $data[5];
                     $stock_qty = (int) ($data[6] ?? 0);
