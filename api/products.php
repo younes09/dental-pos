@@ -48,6 +48,60 @@ try {
             echo json_encode(['categories' => $categories, 'brands' => $brands]);
             break;
 
+        case 'add_category':
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                throw new Exception('Add category requires POST method.');
+            }
+            if (!in_array($_SESSION['user_role'] ?? '', ['Admin', 'Stock Manager'])) {
+                throw new Exception('Access denied. Only Admins or Stock Managers can add categories.');
+            }
+            $input = json_decode(file_get_contents('php://input'), true) ?? $_POST;
+            $name = trim($input['name'] ?? '');
+            if (empty($name)) {
+                throw new Exception('Category name is required.');
+            }
+            
+            // Check if exists
+            $stmt = $pdo->prepare("SELECT id FROM categories WHERE name = ?");
+            $stmt->execute([$name]);
+            if ($row = $stmt->fetch()) {
+                throw new Exception('A category with this name already exists.');
+            }
+            
+            $stmt = $pdo->prepare("INSERT INTO categories (name) VALUES (?)");
+            $stmt->execute([$name]);
+            $id = $pdo->lastInsertId();
+            
+            echo json_encode(['success' => 'Category added successfully', 'data' => ['id' => $id, 'name' => $name]]);
+            break;
+
+        case 'add_brand':
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                throw new Exception('Add brand requires POST method.');
+            }
+            if (!in_array($_SESSION['user_role'] ?? '', ['Admin', 'Stock Manager'])) {
+                throw new Exception('Access denied. Only Admins or Stock Managers can add brands.');
+            }
+            $input = json_decode(file_get_contents('php://input'), true) ?? $_POST;
+            $name = trim($input['name'] ?? '');
+            if (empty($name)) {
+                throw new Exception('Brand name is required.');
+            }
+            
+            // Check if exists
+            $stmt = $pdo->prepare("SELECT id FROM brands WHERE name = ?");
+            $stmt->execute([$name]);
+            if ($row = $stmt->fetch()) {
+                throw new Exception('A brand with this name already exists.');
+            }
+            
+            $stmt = $pdo->prepare("INSERT INTO brands (name) VALUES (?)");
+            $stmt->execute([$name]);
+            $id = $pdo->lastInsertId();
+            
+            echo json_encode(['success' => 'Brand added successfully', 'data' => ['id' => $id, 'name' => $name]]);
+            break;
+
         case 'save':
             // F4.1: Only Admin or Stock Manager can save/update products
             if (!in_array($_SESSION['user_role'] ?? '', ['Admin', 'Stock Manager'])) {
@@ -150,7 +204,7 @@ try {
                 }
 
                 $pdo->commit();
-                echo json_encode(['success' => 'Product added successfully']);
+                echo json_encode(['success' => 'Product added successfully', 'product_id' => $product_id]);
             }
             break;
 

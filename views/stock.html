@@ -112,7 +112,7 @@
 </div>
 
 <!-- Add/Edit Product Modal -->
-<div class="modal fade" id="productModal" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="productModal" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4">
             <div class="modal-header border-bottom-0 p-4">
@@ -136,18 +136,28 @@
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold"
                                         data-i18n="stock.modal.category">Category</label>
-                                    <select name="category_id" id="product-category" class="form-select"
-                                        style="cursor: pointer;" required>
-                                        <option value="" data-i18n="stock.modal.category_select">Select Category
-                                        </option>
-                                    </select>
+                                    <div class="input-group">
+                                        <select name="category_id" id="product-category" class="form-select"
+                                            style="cursor: pointer;" required>
+                                            <option value="" data-i18n="stock.modal.category_select">Select Category
+                                            </option>
+                                        </select>
+                                        <button class="btn btn-outline-secondary" type="button" id="btn-add-category" title="Add New Category">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                    </div>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold" data-i18n="stock.modal.brand">Brand</label>
-                                    <select name="brand_id" id="product-brand" class="form-select"
-                                        style="cursor: pointer;" required>
-                                        <option value="" data-i18n="stock.modal.brand_select">Select Brand</option>
-                                    </select>
+                                    <div class="input-group">
+                                        <select name="brand_id" id="product-brand" class="form-select"
+                                            style="cursor: pointer;" required>
+                                            <option value="" data-i18n="stock.modal.brand_select">Select Brand</option>
+                                        </select>
+                                        <button class="btn btn-outline-secondary" type="button" id="btn-add-brand" title="Add New Brand">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                    </div>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold"

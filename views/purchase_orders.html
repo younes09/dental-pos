@@ -93,7 +93,7 @@
 </div>
 
 <!-- Purchase Order Modal -->
-<div class="modal fade" id="poModal" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="poModal" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4">
             <div class="modal-header border-bottom-0 p-4">
@@ -162,10 +162,14 @@
                         <div class="col-lg-8">
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <h6 class="fw-bold mb-0" data-i18n="po.modal.items_title">Order Items</h6>
-                                <button type="button" class="btn btn-sm btn-teal-outline" id="btn-add-item">
-                                    <i class="fas fa-plus me-1"></i><span data-i18n="po.modal.btn_add_product">Add
-                                        Product</span>
-                                </button>
+                                <div>
+                                    <button type="button" class="btn btn-sm btn-primary me-2" id="btn-create-product-po" title="Create New Product">
+                                        <i class="fas fa-box-open me-1"></i><span data-i18n="po.modal.btn_create_product">New Product</span>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-teal-outline" id="btn-add-item">
+                                        <i class="fas fa-plus me-1"></i><span data-i18n="po.modal.btn_add_product">Add Product</span>
+                                    </button>
+                                </div>
                             </div>
 
                             <div class="table-responsive" style="max-height: 400px;">
@@ -415,6 +419,147 @@
                 <button type="button" class="btn btn-teal px-4" id="btn-confirm-purchase-return">
                     <i class="fas fa-undo me-2"></i><span data-i18n="po.return.btn_confirm">Confirm Return</span>
                 </button>
+            </div>
+    </div>
+</div>
+
+<!-- Add/Edit Product Modal (Inline Creation from PO) -->
+<div class="modal fade" id="productModal" aria-hidden="true" style="z-index: 1060;">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-bottom-0 p-4">
+                <h5 class="modal-title fw-bold" id="productModalLabel" data-i18n="stock.modal.title.add_product">Add New
+                    Product</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4 pt-0">
+                <form id="productForm">
+                    <input type="hidden" name="id" id="product-id">
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <label class="form-label fw-semibold" data-i18n="stock.modal.product_name">Product
+                                        Name</label>
+                                    <input type="text" name="name" class="form-control" required
+                                        placeholder="e.g. Composite Resin A2"
+                                        data-i18n="stock.modal.product_name_placeholder" data-i18n-target="placeholder">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold"
+                                        data-i18n="stock.modal.category">Category</label>
+                                    <div class="input-group">
+                                        <select name="category_id" id="product-category" class="form-select"
+                                            style="cursor: pointer;" required>
+                                            <option value="" data-i18n="stock.modal.category_select">Select Category
+                                            </option>
+                                        </select>
+                                        <button class="btn btn-outline-secondary" type="button" id="btn-add-category" title="Add New Category">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold" data-i18n="stock.modal.brand">Brand</label>
+                                    <div class="input-group">
+                                        <select name="brand_id" id="product-brand" class="form-select"
+                                            style="cursor: pointer;" required>
+                                            <option value="" data-i18n="stock.modal.brand_select">Select Brand</option>
+                                        </select>
+                                        <button class="btn btn-outline-secondary" type="button" id="btn-add-brand" title="Add New Brand">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold"
+                                        data-i18n="stock.modal.barcode">Barcode</label>
+                                    <input type="text" name="barcode" class="form-control"
+                                        placeholder="Scan or enter barcode" data-i18n="stock.modal.barcode_placeholder"
+                                        data-i18n-target="placeholder">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold" data-i18n="stock.modal.expiry_date">Expiry
+                                        Date</label>
+                                    <input type="date" name="expiry_date" class="form-control">
+                                </div>
+                                <div class="col-md-6" id="product-purchase-type-container">
+                                    <label class="form-label fw-semibold" data-i18n="stock.modal.purchase_type">Purchase
+                                        Type (Initial Only)</label>
+                                    <select name="purchase_type" class="form-select" id="product-purchase-type">
+                                        <option value="BA" selected data-i18n="stock.modal.type_ba">Purchase Order (BA)
+                                        </option>
+                                        <option value="BL" data-i18n="stock.modal.type_bl">Delivery Note (BL)</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold" data-i18n="stock.modal.status">Status (POS
+                                        Visibility)</label>
+                                    <select name="status" id="product-status" class="form-select" required>
+                                        <option value="Active" selected data-i18n="stock.modal.status_active">Active
+                                            (Show in POS)</option>
+                                        <option value="Inactive" data-i18n="stock.modal.status_inactive">Disabled (Hide
+                                            from POS)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold" data-i18n="stock.modal.product_image">Product
+                                Image</label>
+                            <input type="hidden" name="existing_image" id="existing-image">
+                            <div class="image-upload-wrapper text-center border rounded-4 p-3 mb-3 bg-light position-relative"
+                                id="imageUploadBtn">
+                                <img id="product-img-preview" src="assets/img/img_holder.png"
+                                    class="img-fluid rounded mb-2"
+                                    style="width: 150px; height: 150px; object-fit: cover; cursor: pointer;">
+                                <button type="button" id="btn-remove-image"
+                                    class="btn btn-sm btn-danger rounded-circle position-absolute top-0 end-0 m-2 d-none"
+                                    title="Remove image"
+                                    style="width: 25px; height: 25px; padding: 0; line-height: 25px;">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                                <p class="small text-muted mb-0" data-i18n="stock.modal.upload_image">Click to upload
+                                    image</p>
+                                <input type="file" name="image" id="product-image-input" hidden accept="image/*">
+                            </div>
+                        </div>
+                        <hr class="my-3">
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold" data-i18n="stock.modal.purchase_price">Purchase
+                                Price</label>
+                            <div class="input-group">
+                                <input type="number" step="0.01" name="purchase_price" class="form-control" required>
+                                <span class="input-group-text currency-symbol">$</span>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold" data-i18n="stock.modal.selling_price">Selling
+                                Price</label>
+                            <div class="input-group">
+                                <input type="number" step="0.01" name="selling_price" class="form-control" required>
+                                <span class="input-group-text currency-symbol">$</span>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold" data-i18n="stock.modal.current_stock">Current
+                                Stock</label>
+                            <input type="number" name="stock_qty" id="product-stock-qty" class="form-control" value="0"
+                                required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold" data-i18n="stock.modal.min_stock">Min. Stock
+                                Level</label>
+                            <input type="number" name="min_stock" class="form-control" value="5" required>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-top-0 p-4">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal"
+                    data-i18n="catalog.modal.btn.cancel">Cancel</button>
+                <button type="submit" form="productForm" class="btn btn-teal px-4"
+                    data-i18n="stock.modal.btn.save_product">Save Product</button>
             </div>
         </div>
     </div>

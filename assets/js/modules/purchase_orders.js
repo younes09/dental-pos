@@ -77,6 +77,122 @@ const purchase_ordersModule = {
         document.getElementById('btn-confirm-purchase-return').onclick = () => {
             this.confirmPurchaseReturn();
         };
+
+        // Inline Product Creation from PO
+        const btnCreateProductPo = document.getElementById('btn-create-product-po');
+        if (btnCreateProductPo) {
+            btnCreateProductPo.onclick = () => {
+                document.getElementById('productForm').reset();
+                document.getElementById('product-id').value = '';
+                document.getElementById('existing-image').value = '';
+                document.getElementById('product-img-preview').src = 'assets/img/img_holder.png';
+                const removeImageBtn = document.getElementById('btn-remove-image');
+                if(removeImageBtn) removeImageBtn.classList.add('d-none');
+                bootstrap.Modal.getOrCreateInstance(document.getElementById('productModal')).show();
+            };
+        }
+
+        // Inline Create Category (in PO Modal)
+        const btnAddCat = document.getElementById('btn-add-category');
+        if (btnAddCat) {
+            btnAddCat.onclick = async () => {
+                const { value: name } = await Swal.fire({
+                    target: document.getElementById('productModal'),
+                    title: 'New Category',
+                    input: 'text',
+                    inputPlaceholder: 'Enter category name',
+                    showCancelButton: true,
+                    confirmButtonText: 'Add',
+                    confirmButtonColor: '#00BFA6',
+                    inputValidator: (value) => {
+                        if (!value) return 'You need to write something!';
+                    }
+                });
+                if (name) {
+                    const res = await App.api('products.php?action=add_category', 'POST', { name });
+                    if (res && res.success) {
+                        App.toast('success', res.success);
+                        const newOption = new Option(res.data.name, res.data.id, true, true);
+                        document.getElementById('product-category').appendChild(newOption);
+                    } else if (res && res.error) {
+                        App.toast('error', res.error);
+                    }
+                }
+            };
+        }
+
+        // Inline Create Brand (in PO Modal)
+        const btnAddBrand = document.getElementById('btn-add-brand');
+        if (btnAddBrand) {
+            btnAddBrand.onclick = async () => {
+                const { value: name } = await Swal.fire({
+                    target: document.getElementById('productModal'),
+                    title: 'New Brand',
+                    input: 'text',
+                    inputPlaceholder: 'Enter brand name',
+                    showCancelButton: true,
+                    confirmButtonText: 'Add',
+                    confirmButtonColor: '#00BFA6',
+                    inputValidator: (value) => {
+                        if (!value) return 'You need to write something!';
+                    }
+                });
+                if (name) {
+                    const res = await App.api('products.php?action=add_brand', 'POST', { name });
+                    if (res && res.success) {
+                        App.toast('success', res.success);
+                        const newOption = new Option(res.data.name, res.data.id, true, true);
+                        document.getElementById('product-brand').appendChild(newOption);
+                    } else if (res && res.error) {
+                        App.toast('error', res.error);
+                    }
+                }
+            };
+        }
+
+        // Handle inline product form submission
+        const productForm = document.getElementById('productForm');
+        if (productForm) {
+            productForm.onsubmit = async (e) => {
+                e.preventDefault();
+                const formData = new FormData(productForm);
+                try {
+                    const response = await fetch('api/products.php?action=save', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const result = await response.json();
+
+                    if (result.success) {
+                        App.toast('success', result.success);
+                        bootstrap.Modal.getInstance(document.getElementById('productModal')).hide();
+                        
+                        // Reload products
+                        await this.loadMeta();
+                        
+                        // Automatically add the new item row if we have the ID
+                        if (result.product_id) {
+                            this.addItemRow();
+                            
+                            // Get the last added row and select the new product
+                            const rows = document.querySelectorAll('#po-items-table tbody tr');
+                            if (rows.length > 0) {
+                                const lastRow = rows[rows.length - 1];
+                                const productSelect = lastRow.querySelector('.item-product');
+                                productSelect.value = result.product_id;
+                                
+                                // Trigger change event to update cost
+                                productSelect.dispatchEvent(new Event('change'));
+                            }
+                        }
+                    } else {
+                        App.toast('error', result.error);
+                    }
+                } catch (error) {
+                    App.toast('error', App.t('error.save_product') || 'Failed to save product');
+                }
+            };
+        }
     },
 
     initDataTable() {
@@ -220,6 +336,22 @@ const purchase_ordersModule = {
 
             const receiveSelect = document.getElementById('receive-po-account-id');
             if (receiveSelect) receiveSelect.innerHTML = options;
+        }
+
+        // Load product metadata (categories/brands) for the inline product creator
+        const prodMetaRes = await App.api('products.php?action=get_meta');
+        if (prodMetaRes) {
+            const catSelect = document.getElementById('product-category');
+            const brandSelect = document.getElementById('product-brand');
+            
+            if (catSelect) {
+                catSelect.innerHTML = `<option value="">${App.t('stock.modal.category_select') || 'Select Category'}</option>` +
+                    prodMetaRes.categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+            }
+            if (brandSelect) {
+                brandSelect.innerHTML = `<option value="">${App.t('stock.modal.brand_select') || 'Select Brand'}</option>` +
+                    prodMetaRes.brands.map(b => `<option value="${b.id}">${b.name}</option>`).join('');
+            }
         }
     },
 

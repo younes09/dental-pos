@@ -115,6 +115,64 @@ const stockModule = {
             document.getElementById('btn-remove-image').classList.add('d-none');
         };
 
+        // Inline Create Category
+        const btnAddCat = document.getElementById('btn-add-category');
+        if (btnAddCat) {
+            btnAddCat.onclick = async () => {
+                const { value: name } = await Swal.fire({
+                    target: document.getElementById('productModal'),
+                    title: 'Nouvelle Catégorie',
+                    input: 'text',
+                    inputPlaceholder: 'Entrez le nom de la catégorie',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ajouter',
+                    confirmButtonColor: '#00BFA6',
+                    inputValidator: (value) => {
+                        if (!value) return 'Vous devez écrire quelque chose!';
+                    }
+                });
+                if (name) {
+                    const res = await App.api('products.php?action=add_category', 'POST', { name });
+                    if (res && res.success) {
+                        App.toast('success', res.success);
+                        const newOption = new Option(res.data.name, res.data.id, true, true);
+                        document.getElementById('product-category').appendChild(newOption);
+                    } else if (res && res.error) {
+                        App.toast('error', res.error);
+                    }
+                }
+            };
+        }
+
+        // Inline Create Brand
+        const btnAddBrand = document.getElementById('btn-add-brand');
+        if (btnAddBrand) {
+            btnAddBrand.onclick = async () => {
+                const { value: name } = await Swal.fire({
+                    target: document.getElementById('productModal'),
+                    title: 'Nouvelle Marque',
+                    input: 'text',
+                    inputPlaceholder: 'Entrez le nom de la marque',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ajouter',
+                    confirmButtonColor: '#00BFA6',
+                    inputValidator: (value) => {
+                        if (!value) return 'Vous devez écrire quelque chose!';
+                    }
+                });
+                if (name) {
+                    const res = await App.api('products.php?action=add_brand', 'POST', { name });
+                    if (res && res.success) {
+                        App.toast('success', res.success);
+                        const newOption = new Option(res.data.name, res.data.id, true, true);
+                        document.getElementById('product-brand').appendChild(newOption);
+                    } else if (res && res.error) {
+                        App.toast('error', res.error);
+                    }
+                }
+            };
+        }
+
         // Stock Adjustment Form
         const adjForm = document.getElementById('adjustmentForm');
         if (adjForm) {
