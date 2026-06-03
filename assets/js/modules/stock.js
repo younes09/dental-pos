@@ -67,6 +67,9 @@ const stockModule = {
         // Table Filters
         const filterCat = document.getElementById('filter-category');
         const filterBrand = document.getElementById('filter-brand');
+        const filterStock = document.getElementById('filter-stock-status');
+        const filterExpiry = document.getElementById('filter-expiry-status');
+        const filterPos = document.getElementById('filter-pos-status');
 
         if (filterCat) {
             filterCat.onchange = (e) => {
@@ -77,6 +80,42 @@ const stockModule = {
         if (filterBrand) {
             filterBrand.onchange = (e) => {
                 this.table.column(3).search(e.target.value).draw();
+            };
+        }
+
+        if (filterStock) {
+            filterStock.onchange = () => {
+                this.table.draw();
+            };
+        }
+
+        if (filterExpiry) {
+            filterExpiry.onchange = () => {
+                this.table.draw();
+            };
+        }
+
+        if (filterPos) {
+            filterPos.onchange = () => {
+                this.table.draw();
+            };
+        }
+
+        const btnReset = document.getElementById('btn-reset-filters');
+        if (btnReset) {
+            btnReset.onclick = () => {
+                if (filterCat) filterCat.value = '';
+                if (filterBrand) filterBrand.value = '';
+                if (filterStock) filterStock.value = '';
+                if (filterExpiry) filterExpiry.value = '';
+                if (filterPos) filterPos.value = '';
+
+                // Clear Datatables column searches
+                this.table.column(2).search('');
+                this.table.column(3).search('');
+
+                // Redraw table
+                this.table.draw();
             };
         }
 
@@ -202,6 +241,58 @@ const stockModule = {
     },
 
     initDataTable() {
+        if (!$.fn.dataTable.ext.search.some(fn => fn.name === 'stockTableFilter')) {
+            $.fn.dataTable.ext.search.push(function stockTableFilter(settings, data, dataIndex) {
+                if (settings.nTable.id !== 'productsTable') {
+                    return true;
+                }
+                const rowData = settings.aoData[dataIndex]._aData;
+                if (!rowData) return true;
+
+                // 1. Stock Status Filter
+                const stockFilterVal = document.getElementById('filter-stock-status')?.value;
+                if (stockFilterVal) {
+                    const qty = parseInt(rowData.stock_qty || 0);
+                    const minStock = parseInt(rowData.min_stock || 5);
+                    if (stockFilterVal === 'outofstock' && qty > 0) return false;
+                    if (stockFilterVal === 'lowstock' && (qty <= 0 || qty > minStock)) return false;
+                    if (stockFilterVal === 'instock' && qty <= minStock) return false;
+                }
+
+                // 2. Expiry Status Filter
+                const expiryFilterVal = document.getElementById('filter-expiry-status')?.value;
+                if (expiryFilterVal) {
+                    const dateToUse = rowData.batch_expiry_date || rowData.expiry_date;
+                    if (!dateToUse) {
+                        if (expiryFilterVal !== 'valid') return false;
+                    } else {
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        
+                        const expiry = new Date(dateToUse);
+                        expiry.setHours(0, 0, 0, 0);
+
+                        const oneMonthFromNow = new Date();
+                        oneMonthFromNow.setMonth(today.getMonth() + 1);
+                        oneMonthFromNow.setHours(0, 0, 0, 0);
+
+                        if (expiryFilterVal === 'expired' && expiry > today) return false;
+                        if (expiryFilterVal === 'near' && (expiry <= today || expiry > oneMonthFromNow)) return false;
+                        if (expiryFilterVal === 'valid' && expiry <= oneMonthFromNow) return false;
+                    }
+                }
+
+                // 3. POS Status Filter
+                const posFilterVal = document.getElementById('filter-pos-status')?.value;
+                if (posFilterVal) {
+                    const status = rowData.status || 'Active';
+                    if (status !== posFilterVal) return false;
+                }
+
+                return true;
+            });
+        }
+
         this.table = $('#productsTable').DataTable({
             destroy: true,
             ajax: 'api/products.php?action=list',

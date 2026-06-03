@@ -13,17 +13,58 @@
 
     <!-- Filters Row -->
     <div class="row g-3 mb-4 p-3 filter-row-bg rounded-4 shadow-sm mx-0">
-        <div class="col-md-3">
-            <label class="form-label small fw-bold text-muted" data-i18n="stock.filter.category">Filter Category</label>
+        <div class="col-md-4 col-lg-2">
+            <label class="form-label small fw-bold text-muted">
+                <i class="fas fa-tags me-1 text-teal"></i><span data-i18n="stock.filter.category">Filter Category</span>
+            </label>
             <select id="filter-category" class="form-select border-0" style="cursor: pointer;">
                 <option value="" data-i18n="stock.filter.all_categories">All Categories</option>
             </select>
         </div>
-        <div class="col-md-3">
-            <label class="form-label small fw-bold text-muted" data-i18n="stock.filter.brand">Filter Brand</label>
+        <div class="col-md-4 col-lg-2">
+            <label class="form-label small fw-bold text-muted">
+                <i class="fas fa-copyright me-1 text-teal"></i><span data-i18n="stock.filter.brand">Filter Brand</span>
+            </label>
             <select id="filter-brand" class="form-select border-0" style="cursor: pointer;">
                 <option value="" data-i18n="stock.filter.all_brands">All Brands</option>
             </select>
+        </div>
+        <div class="col-md-4 col-lg-2">
+            <label class="form-label small fw-bold text-muted">
+                <i class="fas fa-boxes me-1 text-teal"></i><span data-i18n="stock.filter.stock_status">Filter Stock</span>
+            </label>
+            <select id="filter-stock-status" class="form-select border-0" style="cursor: pointer;">
+                <option value="" data-i18n="stock.filter.all_stocks">All Stocks</option>
+                <option value="instock" data-i18n="stock.filter.instock">In Stock</option>
+                <option value="lowstock" data-i18n="stock.filter.lowstock">Low Stock</option>
+                <option value="outofstock" data-i18n="stock.filter.outofstock">Out of Stock</option>
+            </select>
+        </div>
+        <div class="col-md-6 col-lg-2">
+            <label class="form-label small fw-bold text-muted">
+                <i class="fas fa-calendar-alt me-1 text-teal"></i><span data-i18n="stock.filter.expiry_status">Filter Expiration</span>
+            </label>
+            <select id="filter-expiry-status" class="form-select border-0" style="cursor: pointer;">
+                <option value="" data-i18n="stock.filter.all_expiry">All Expirations</option>
+                <option value="valid" data-i18n="stock.filter.expiry_valid">Valid</option>
+                <option value="near" data-i18n="stock.filter.expiry_near">Near Expiry</option>
+                <option value="expired" data-i18n="stock.filter.expiry_expired">Expired</option>
+            </select>
+        </div>
+        <div class="col-md-6 col-lg-2">
+            <label class="form-label small fw-bold text-muted">
+                <i class="fas fa-eye me-1 text-teal"></i><span data-i18n="stock.filter.pos_status">Filter Status (POS)</span>
+            </label>
+            <select id="filter-pos-status" class="form-select border-0" style="cursor: pointer;">
+                <option value="" data-i18n="stock.filter.all_pos">All Statuses</option>
+                <option value="Active" data-i18n="stock.filter.pos_active">Active</option>
+                <option value="Inactive" data-i18n="stock.filter.pos_inactive">Inactive</option>
+            </select>
+        </div>
+        <div class="col-md-12 col-lg-2 d-flex align-items-end">
+            <button id="btn-reset-filters" class="btn btn-outline-danger w-100 border-dashed d-flex align-items-center justify-content-center" style="height: 38px;">
+                <i class="fas fa-rotate me-2"></i><span data-i18n="stock.filter.reset">Reset Filters</span>
+            </button>
         </div>
     </div>
 
