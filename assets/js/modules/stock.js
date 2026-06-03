@@ -250,8 +250,8 @@ const stockModule = {
                 {
                     data: 'batch_expiry_date',
                     render: (data, type, row) => {
+                        const dateToUse = data || row.expiry_date;
                         if (type === 'display') {
-                            const dateToUse = data || row.expiry_date;
                             if (!dateToUse) return '<small class="text-muted">N/A</small>';
                             const today = new Date();
                             const expiry = new Date(dateToUse);
@@ -271,7 +271,7 @@ const stockModule = {
 
                             return `<span class="small">${dateToUse}</span>`;
                         }
-                        return data;
+                        return dateToUse;
                     }
                 },
                 {
