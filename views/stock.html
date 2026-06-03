@@ -344,7 +344,7 @@
                     </div>
                     <div class="mt-3">
                         <label class="form-label fw-semibold" data-i18n="stock.adj.reason">Reason / Notes</label>
-                        <textarea name="notes" class="form-control" rows="2" placeholder="Optional adjustment reason"
+                        <textarea name="reason" class="form-control" rows="2" placeholder="Optional adjustment reason"
                             data-i18n="stock.adj.reason_placeholder" data-i18n-target="placeholder"></textarea>
                     </div>
                 </form>
@@ -470,6 +470,12 @@
                                 History</span>
                         </button>
                     </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link rounded-3 fw-semibold" data-bs-toggle="pill"
+                            data-bs-target="#tab-adjustments" type="button" role="tab">
+                            <i class="fas fa-arrows-rotate me-2"></i><span data-i18n="stock.details.tab_adjustments">Stock Adjustments</span>
+                        </button>
+                    </li>
                 </ul>
 
                 <div class="tab-content">
@@ -577,6 +583,26 @@
                                 </thead>
                                 <tbody id="detail-history-body">
                                     <!-- History rows generated via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Adjustments Tab -->
+                    <div class="tab-pane fade" id="tab-adjustments" role="tabpanel">
+                        <div class="table-responsive rounded-4 border border-secondary-subtle p-2">
+                            <table class="table table-hover align-middle mb-0 w-100" id="detailAdjustmentsTable">
+                                <thead>
+                                    <tr>
+                                        <th data-i18n="stock.details.adj_date">Date</th>
+                                        <th data-i18n="stock.details.adj_type">Type</th>
+                                        <th class="text-center" data-i18n="stock.details.adj_qty">Qty Change</th>
+                                        <th data-i18n="stock.details.adj_reason">Reason</th>
+                                        <th data-i18n="stock.details.adj_user">User</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="detail-adjustments-body">
+                                    <!-- Adjustments rows generated via JS -->
                                 </tbody>
                             </table>
                         </div>

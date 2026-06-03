@@ -552,6 +552,7 @@ const stockModule = {
             const product = response.product || {};
             const batches = response.batches || [];
             const history = response.history || [];
+            const adjustments = response.adjustments || [];
 
             // Populate Overview
             document.getElementById('detail-product-name').textContent = product.name;
@@ -581,6 +582,9 @@ const stockModule = {
             }
             if ($.fn.DataTable.isDataTable('#detailHistoryTable')) {
                 $('#detailHistoryTable').DataTable().destroy();
+            }
+            if ($.fn.DataTable.isDataTable('#detailAdjustmentsTable')) {
+                $('#detailAdjustmentsTable').DataTable().destroy();
             }
 
             // Populate Batches
@@ -633,6 +637,42 @@ const stockModule = {
                 `;
             });
 
+            // Populate Adjustments
+            const adjustmentsBody = document.getElementById('detail-adjustments-body');
+            adjustmentsBody.innerHTML = '';
+            adjustments.forEach(a => {
+                const adjDate = new Date(a.date).toLocaleString() || '-';
+                
+                // Color formatting for adjustment types
+                let badgeClass = 'bg-secondary';
+                let typeLabel = a.type || 'Adjustment';
+                
+                if (a.type === 'Add Stock') {
+                    badgeClass = 'bg-success-subtle text-success border border-success';
+                    typeLabel = App.t('stock.adj.add') || 'Add (+)';
+                } else if (a.type === 'Write-off') {
+                    badgeClass = 'bg-danger-subtle text-danger border border-danger';
+                    typeLabel = App.t('stock.adj.subtract') || 'Subtract (-)';
+                } else if (a.type === 'Return Stock') {
+                    badgeClass = 'bg-warning-subtle text-warning border border-warning';
+                    typeLabel = App.t('stock.details.tab_adjustments') || 'Return';
+                }
+                
+                const isAddition = a.type === 'Add Stock' || a.type === 'Return Stock';
+                const qtyChangeSign = isAddition ? `+${a.qty}` : `-${a.qty}`;
+                const qtyClass = isAddition ? 'text-success fw-bold' : 'text-danger fw-bold';
+                
+                adjustmentsBody.innerHTML += `
+                    <tr>
+                        <td>${adjDate}</td>
+                        <td><span class="badge ${badgeClass} px-2 py-1">${typeLabel}</span></td>
+                        <td class="text-center ${qtyClass}">${qtyChangeSign}</td>
+                        <td>${a.reason || '-'}</td>
+                        <td><small class="fw-medium">${a.user_name || '-'}</small></td>
+                    </tr>
+                `;
+            });
+
             // Re-initialize translations for potentially dynamic content
             if (typeof App.initI18n === 'function') {
                 App.initI18n(document.getElementById('productDetailsModal'));
@@ -649,6 +689,15 @@ const stockModule = {
             });
 
             $('#detailHistoryTable').DataTable({
+                language: App.getDataTableLanguage(),
+                order: [[0, 'desc']], // Date sort
+                pageLength: 5,
+                lengthMenu: [5, 10, 25],
+                info: false,
+                autoWidth: false
+            });
+
+            $('#detailAdjustmentsTable').DataTable({
                 language: App.getDataTableLanguage(),
                 order: [[0, 'desc']], // Date sort
                 pageLength: 5,
