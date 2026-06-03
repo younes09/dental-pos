@@ -511,7 +511,7 @@ const posModule = {
                         </div>
                     </div>
                     <div class="card-body pt-0 text-center">
-                        <h6 class="fw-bold mb-1 text-truncate">${App.escapeHtml(p.name)}</h6>
+                        <h6 class="fw-bold mb-1 product-title-wrap" title="${App.escapeHtml(p.name)}">${App.escapeHtml(p.name)}</h6>
                         <span class="text-teal fw-bold">${App.formatCurrency(p.selling_price)}</span>
                     </div>
                 </div>
@@ -719,7 +719,7 @@ const posModule = {
             <div class="cart-item d-flex align-items-center mb-3 p-2 bg-light rounded-4">
                 <img src="assets/img/products/${App.escapeHtml(item.image) || 'default.jpg'}" class="rounded-3 me-3" width="50" height="50" onerror="this.src='assets/img/img_holder.png'">
                 <div class="flex-grow-1">
-                    <h6 class="mb-0 fw-bold small text-truncate" style="max-width: 140px;">${App.escapeHtml(item.name)}</h6>
+                    <h6 class="mb-0 fw-bold small text-wrap" title="${App.escapeHtml(item.name)}">${App.escapeHtml(item.name)}</h6>
                     <span class="text-teal fw-bold">${App.formatCurrency(item.price)}</span>
                 </div>
                 <div class="d-flex align-items-center me-3">

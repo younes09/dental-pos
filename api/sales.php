@@ -138,7 +138,7 @@ try {
             $payment_method = $data['payment_method'] ?? 'Cash';
             
             // M10: Validate ENUM values server-side
-            $valid_methods = ['Cash', 'Card', 'Insurance'];
+            $valid_methods = ['Cash', 'Card'];
             $valid_types = ['BV', 'BL'];
             if (!in_array($payment_method, $valid_methods)) throw new Exception('Invalid payment method');
             if (!in_array($invoice_type, $valid_types)) throw new Exception('Invalid invoice type');
