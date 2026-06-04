@@ -489,6 +489,12 @@ const purchase_ordersModule = {
             if (!this.validatePayment(data.paid_amount, total, data.account_id)) return;
         }
 
+        const confirmed = await App.confirm(
+            App.t('po.js.save_confirm_title') || 'Save Purchase Order?',
+            App.t('po.js.save_confirm_text') || 'Are you sure you want to save this purchase order?'
+        );
+        if (!confirmed) return;
+
         const result = await App.api('purchase_orders.php?action=save', 'POST', data);
         if (result && result.success) {
             App.toast('success', result.success);

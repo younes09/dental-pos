@@ -35,7 +35,9 @@ const sales_historyModule = {
                     render: (data, type, row) => {
                         if (type === 'display') {
                             const returnBadge = row.has_returns > 0 ? `<span class="badge bg-danger-subtle text-danger ms-2 small" title="Contains Returned Items"><i class="fas fa-undo me-1"></i>Returned</span>` : '';
-                            return `<span class="fw-bold">#INV-${data}</span>${returnBadge}`;
+                            const cancelledBadge = row.status === 'Cancelled' ? `<span class="badge bg-danger-subtle text-danger ms-2 small" title="Cancelled Sale"><i class="fas fa-ban me-1"></i>Cancelled</span>` : '';
+                            const textStyle = row.status === 'Cancelled' ? 'style="text-decoration: line-through; opacity: 0.6;"' : '';
+                            return `<span class="fw-bold" ${textStyle}>#INV-${data}</span>${returnBadge}${cancelledBadge}`;
                         }
                         return data;
                     }
@@ -75,10 +77,11 @@ const sales_historyModule = {
                 {
                     data: 'total',
                     type: 'num',
-                    render: (data, type) => {
+                    render: (data, type, row) => {
                         const val = parseFloat(data || 0);
                         if (type === 'display') {
-                            return `<span class="fw-bold text-navy">${App.formatCurrency(val)}</span>`;
+                            const textStyle = row.status === 'Cancelled' ? 'style="text-decoration: line-through; opacity: 0.6;"' : '';
+                            return `<span class="fw-bold text-navy" ${textStyle}>${App.formatCurrency(val)}</span>`;
                         }
                         return val;
                     }
@@ -86,17 +89,35 @@ const sales_historyModule = {
                 {
                     data: null,
                     orderable: false,
-                    render: (data) => `
-                        <div class="dropdown">
-                            <button class="btn btn-sm btn-light" data-bs-toggle="dropdown"><i class="fas fa-ellipsis-v"></i></button>
-                            <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
-                                <li><a class="dropdown-item" href="javascript:void(0)" onclick="sales_historyModule.viewDetails(${data.id})"><i class="fas fa-eye me-2 text-info"></i>${App.t('sh.action.view_details') || 'View Details'}</a></li>
-                                <li><a class="dropdown-item" href="javascript:void(0)" onclick="sales_historyModule.directPrint(${data.id})"><i class="fas fa-print me-2 text-teal"></i>${App.t('sh.action.print_receipt') || 'Print Receipt'}</a></li>
+                    render: (data) => {
+                        const isAdmin = App.state.user?.role === 'Admin';
+                        const isCancelled = data.status === 'Cancelled';
+                        
+                        let cancelItem = '';
+                        if (isAdmin && !isCancelled) {
+                            cancelItem = `
                                 <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="javascript:void(0)" onclick="sales_historyModule.openReturnModal(${data.id})"><i class="fas fa-undo me-2 text-warning"></i>${App.t('sh.action.return_items') || 'Return Items'}</a></li>
-                            </ul>
-                        </div>
-                    `
+                                <li><a class="dropdown-item text-danger" href="javascript:void(0)" onclick="sales_historyModule.cancelSale(${data.id})">
+                                    <i class="fas fa-ban me-2 text-danger"></i>${App.t('sh.action.cancel_sale') || 'Cancel Sale'}
+                                </a></li>
+                            `;
+                        }
+                        
+                        return `
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-light" data-bs-toggle="dropdown"><i class="fas fa-ellipsis-v"></i></button>
+                                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+                                    <li><a class="dropdown-item" href="javascript:void(0)" onclick="sales_historyModule.viewDetails(${data.id})"><i class="fas fa-eye me-2 text-info"></i>${App.t('sh.action.view_details') || 'View Details'}</a></li>
+                                    <li><a class="dropdown-item" href="javascript:void(0)" onclick="sales_historyModule.directPrint(${data.id})"><i class="fas fa-print me-2 text-teal"></i>${App.t('sh.action.print_receipt') || 'Print Receipt'}</a></li>
+                                    ${!isCancelled ? `
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item" href="javascript:void(0)" onclick="sales_historyModule.openReturnModal(${data.id})"><i class="fas fa-undo me-2 text-warning"></i>${App.t('sh.action.return_items') || 'Return Items'}</a></li>
+                                    ` : ''}
+                                    ${cancelItem}
+                                </ul>
+                            </div>
+                        `;
+                    }
                 }
             ],
             language: App.getDataTableLanguage(),
@@ -201,7 +222,7 @@ const sales_historyModule = {
             </div>
             <div class="d-flex justify-content-between mb-2">
                 <span>${App.t('sh.text.status') || 'Status'}:</span>
-                <span class="badge bg-success px-2">${App.t('sh.text.completed') || 'Completed'}</span>
+                <span class="badge ${sale.status === 'Cancelled' ? 'bg-danger' : 'bg-success'} px-2">${sale.status === 'Cancelled' ? (App.t('sh.status.cancelled') || 'Cancelled') : (App.t('sh.text.completed') || 'Completed')}</span>
             </div>
             <div class="d-flex justify-content-between mb-2">
                 <span>${App.t('sh.text.doc_type') || 'Doc Type'}:</span>
@@ -341,6 +362,23 @@ const sales_historyModule = {
         if (result && result.success) {
             App.toast('success', result.success);
             bootstrap.Modal.getInstance(document.getElementById('saleReturnModal')).hide();
+            this.table.ajax.reload(null, false);
+        }
+    },
+
+    async cancelSale(id) {
+        const confirmed = await App.confirm(
+            App.t('sh.confirm.cancel_title') || 'Cancel Sale?',
+            App.t('sh.confirm.cancel_desc') || 'Are you sure you want to cancel this sale? Stock levels and customer balance will be reversed.'
+        );
+        if (!confirmed) return;
+
+        const result = await App.api('sales.php?action=cancel_sale', 'POST', {
+            sale_id: id
+        });
+
+        if (result && result.success) {
+            App.toast('success', result.success);
             this.table.ajax.reload(null, false);
         }
     }

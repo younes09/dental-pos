@@ -114,8 +114,17 @@ const App = {
                 el.innerHTML = translation;
             } else if (target === 'placeholder') {
                 el.setAttribute('placeholder', translation);
+            } else if (target === 'title') {
+                el.setAttribute('title', translation);
             }
         });
+
+        // Auto-initialize tooltips for elements in this container
+        if (typeof $ !== 'undefined' && $.fn && typeof $.fn.tooltip === 'function') {
+            $(container).find('[data-toggle="tooltip"]').tooltip({
+                trigger: 'hover'
+            });
+        }
     },
 
     applyTheme() {
