@@ -22,13 +22,18 @@ try {
         // 1. KPI Summary
         // ---------------------------------------------------------------
         case 'summary':
-            // Revenue & profit in range
+            // Revenue & profit in range (deducting returns)
             $stmt = $pdo->prepare("
                 SELECT
-                    COALESCE(SUM(s.total), 0) as revenue,
+                    COALESCE(SUM(s.total - COALESCE(sr.refunded, 0)), 0) as revenue,
                     COUNT(s.id)               as sales_count,
-                    COALESCE(AVG(s.total), 0) as avg_order
+                    COALESCE(AVG(s.total - COALESCE(sr.refunded, 0)), 0) as avg_order
                 FROM sales s
+                LEFT JOIN (
+                    SELECT sale_id, SUM(total_amount) as refunded
+                    FROM sale_returns
+                    GROUP BY sale_id
+                ) sr ON sr.sale_id = s.id
                 WHERE DATE(s.date) BETWEEN ? AND ? AND s.status = 'Completed'
             ");
             $stmt->execute([$from, $to]);
@@ -95,10 +100,19 @@ try {
             $stmt = $pdo->prepare("
                 SELECT
                     $labelExpr as label,
-                    COALESCE(SUM(s.total), 0) as revenue,
-                    COALESCE(SUM(s.total) - SUM((si.qty - si.returned_qty) * si.cost_price), 0) as profit
+                    COALESCE(SUM(s.total - COALESCE(sr.refunded, 0)), 0) as revenue,
+                    COALESCE(SUM(s.total - COALESCE(sr.refunded, 0) - COALESCE(si.cogs, 0)), 0) as profit
                 FROM sales s
-                LEFT JOIN sale_items si ON si.sale_id = s.id
+                LEFT JOIN (
+                    SELECT sale_id, SUM(total_amount) as refunded
+                    FROM sale_returns
+                    GROUP BY sale_id
+                ) sr ON sr.sale_id = s.id
+                LEFT JOIN (
+                    SELECT sale_id, SUM((qty - returned_qty) * cost_price) as cogs
+                    FROM sale_items
+                    GROUP BY sale_id
+                ) si ON si.sale_id = s.id
                 WHERE DATE(s.date) BETWEEN ? AND ? AND s.status = 'Completed'
                 GROUP BY $groupExpr
                 ORDER BY MIN(s.date) ASC

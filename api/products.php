@@ -326,7 +326,7 @@ try {
                 echo json_encode(['success' => 'Stock adjusted successfully']);
             } catch (Exception $e) {
                 $pdo->rollBack();
-                echo json_encode(['error' => 'Failed to adjust stock. Please try again.']);
+                echo json_encode(['error' => $e->getMessage()]);
             }
             break;
 

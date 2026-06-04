@@ -5,38 +5,51 @@ header('Content-Type: application/json');
 
 try {
     // 1. KPI Data
-    // Today's Revenue & Profit
-    $stmt = $pdo->prepare("SELECT SUM(total) as revenue FROM sales WHERE DATE(date) = CURDATE() AND status = 'Completed'");
-    $stmt->execute();
-    $today_revenue = $stmt->fetch()['revenue'] ?? 0;
-
-    // Yesterday's Revenue
-    $stmt = $pdo->prepare("SELECT SUM(total) as revenue FROM sales WHERE DATE(date) = DATE_SUB(CURDATE(), INTERVAL 1 DAY) AND status = 'Completed'");
-    $stmt->execute();
-    $yesterday_revenue = $stmt->fetch()['revenue'] ?? 0;
-
+    // Today's Revenue & Profit (with returns/refunds deducted)
     $stmt = $pdo->prepare("
-        SELECT SUM((si.qty - si.returned_qty) * si.cost_price) as cogs
-        FROM sale_items si
-        JOIN sales s ON si.sale_id = s.id
+        SELECT 
+            COALESCE(SUM(s.total - COALESCE(sr.refunded, 0)), 0) as revenue,
+            COALESCE(SUM(s.total - COALESCE(sr.refunded, 0) - COALESCE(si.cogs, 0)), 0) as profit
+        FROM sales s
+        LEFT JOIN (
+            SELECT sale_id, SUM(total_amount) as refunded
+            FROM sale_returns
+            GROUP BY sale_id
+        ) sr ON sr.sale_id = s.id
+        LEFT JOIN (
+            SELECT sale_id, SUM((qty - returned_qty) * cost_price) as cogs
+            FROM sale_items
+            GROUP BY sale_id
+        ) si ON si.sale_id = s.id
         WHERE DATE(s.date) = CURDATE() AND s.status = 'Completed'
     ");
     $stmt->execute();
-    $today_cogs = $stmt->fetch()['cogs'] ?? 0;
-    
-    $today_profit = $today_revenue - $today_cogs;
+    $today_data = $stmt->fetch();
+    $today_revenue = (float)($today_data['revenue'] ?? 0);
+    $today_profit = (float)($today_data['profit'] ?? 0);
 
-    // Yesterday's Profit
+    // Yesterday's Revenue & Profit (with returns/refunds deducted)
     $stmt = $pdo->prepare("
-        SELECT SUM((si.qty - si.returned_qty) * si.cost_price) as cogs
-        FROM sale_items si
-        JOIN sales s ON si.sale_id = s.id
+        SELECT 
+            COALESCE(SUM(s.total - COALESCE(sr.refunded, 0)), 0) as revenue,
+            COALESCE(SUM(s.total - COALESCE(sr.refunded, 0) - COALESCE(si.cogs, 0)), 0) as profit
+        FROM sales s
+        LEFT JOIN (
+            SELECT sale_id, SUM(total_amount) as refunded
+            FROM sale_returns
+            GROUP BY sale_id
+        ) sr ON sr.sale_id = s.id
+        LEFT JOIN (
+            SELECT sale_id, SUM((qty - returned_qty) * cost_price) as cogs
+            FROM sale_items
+            GROUP BY sale_id
+        ) si ON si.sale_id = s.id
         WHERE DATE(s.date) = DATE_SUB(CURDATE(), INTERVAL 1 DAY) AND s.status = 'Completed'
     ");
     $stmt->execute();
-    $yesterday_cogs = $stmt->fetch()['cogs'] ?? 0;
-    
-    $yesterday_profit = $yesterday_revenue - $yesterday_cogs;
+    $yesterday_data = $stmt->fetch();
+    $yesterday_revenue = (float)($yesterday_data['revenue'] ?? 0);
+    $yesterday_profit = (float)($yesterday_data['profit'] ?? 0);
 
     // Monthly Sales Count (This Month)
     $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM sales WHERE MONTH(date) = MONTH(CURDATE()) AND YEAR(date) = YEAR(CURDATE()) AND status = 'Completed'");
@@ -90,32 +103,47 @@ try {
         case 'weekly':
             // Bug #10 Fix: Group by YEARWEEK to avoid cross-year week merging
             $stmt = $pdo->prepare("
-                SELECT DATE_FORMAT(MIN(date), 'Week %u %Y') as day, SUM(total) as total 
-                FROM sales 
-                WHERE date >= DATE_SUB(CURDATE(), INTERVAL 4 WEEK) AND status = 'Completed'
-                GROUP BY YEARWEEK(date, 1)
-                ORDER BY MIN(date) ASC
+                SELECT DATE_FORMAT(MIN(s.date), 'Week %u %Y') as day, COALESCE(SUM(s.total - COALESCE(sr.refunded, 0)), 0) as total 
+                FROM sales s
+                LEFT JOIN (
+                    SELECT sale_id, SUM(total_amount) as refunded
+                    FROM sale_returns
+                    GROUP BY sale_id
+                ) sr ON sr.sale_id = s.id
+                WHERE s.date >= DATE_SUB(CURDATE(), INTERVAL 4 WEEK) AND s.status = 'Completed'
+                GROUP BY YEARWEEK(s.date, 1)
+                ORDER BY MIN(s.date) ASC
             ");
             break;
         case 'monthly':
             // Last 6 months, grouped by month
             $stmt = $pdo->prepare("
-                SELECT DATE_FORMAT(date, '%b %Y') as day, SUM(total) as total 
-                FROM sales 
-                WHERE date >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH) AND status = 'Completed'
-                GROUP BY YEAR(date), MONTH(date)
-                ORDER BY YEAR(date) ASC, MONTH(date) ASC
+                SELECT DATE_FORMAT(s.date, '%b %Y') as day, COALESCE(SUM(s.total - COALESCE(sr.refunded, 0)), 0) as total 
+                FROM sales s
+                LEFT JOIN (
+                    SELECT sale_id, SUM(total_amount) as refunded
+                    FROM sale_returns
+                    GROUP BY sale_id
+                ) sr ON sr.sale_id = s.id
+                WHERE s.date >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH) AND s.status = 'Completed'
+                GROUP BY YEAR(s.date), MONTH(s.date)
+                ORDER BY YEAR(s.date) ASC, MONTH(s.date) ASC
             ");
             break;
         case 'daily':
         default:
             // Last 7 days, grouped by day (original behavior)
             $stmt = $pdo->prepare("
-                SELECT DATE_FORMAT(date, '%b %d') as day, SUM(total) as total 
-                FROM sales 
-                WHERE date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY) AND status = 'Completed'
-                GROUP BY DATE(date)
-                ORDER BY date ASC
+                SELECT DATE_FORMAT(s.date, '%b %d') as day, COALESCE(SUM(s.total - COALESCE(sr.refunded, 0)), 0) as total 
+                FROM sales s
+                LEFT JOIN (
+                    SELECT sale_id, SUM(total_amount) as refunded
+                    FROM sale_returns
+                    GROUP BY sale_id
+                ) sr ON sr.sale_id = s.id
+                WHERE s.date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY) AND s.status = 'Completed'
+                GROUP BY DATE(s.date)
+                ORDER BY s.date ASC
             ");
             break;
     }
