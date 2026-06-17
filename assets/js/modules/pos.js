@@ -62,7 +62,10 @@ const posModule = {
 
     bindEvents() {
         // Search filter
-        document.getElementById('pos-search').oninput = (e) => this.filterProducts(e.target.value);
+        document.getElementById('pos-search').oninput = (e) => {
+            const category = document.getElementById('pos-category-filter')?.value || '';
+            this.filterProducts(e.target.value, category);
+        };
 
         // View toggler
         const btnGrid = document.getElementById('btn-view-grid');
@@ -554,6 +557,9 @@ const posModule = {
                         </div>
                         <div class="d-flex align-items-center gap-2">
                             ${badges}
+                            <button class="btn btn-sm btn-light rounded-circle" title="Details" onclick="event.stopPropagation(); posModule.showProductDetails(${p.id})" style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-circle-info text-muted"></i>
+                            </button>
                             <button class="btn btn-sm btn-light-primary rounded-circle" style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center;">
                                 <i class="fas fa-plus"></i>
                             </button>
@@ -571,6 +577,9 @@ const posModule = {
                         <div class="position-absolute top-0 end-0 m-3 d-flex flex-column gap-1 align-items-end">
                             ${badges}
                         </div>
+                        <button class="btn btn-sm btn-light rounded-circle position-absolute top-0 start-0 m-2" title="Details" onclick="event.stopPropagation(); posModule.showProductDetails(${p.id})" style="width: 28px; height: 28px; padding: 0; display: flex; align-items: center; justify-content: center; opacity: 0.85;">
+                            <i class="fas fa-circle-info text-muted" style="font-size:0.75rem;"></i>
+                        </button>
                     </div>
                     <div class="card-body pt-0 text-center">
                         <h6 class="fw-bold mb-1 product-title-wrap" title="${App.escapeHtml(p.name)}">${App.escapeHtml(p.name)}</h6>
@@ -583,12 +592,118 @@ const posModule = {
     },
 
     filterProducts(query, category) {
+        const q = (query || '').trim().toLowerCase();
+        // Detect price search: prefix with "$" or ">"/"<" or pure number
+        const priceNum = parseFloat(q.replace(/[^0-9.]/g, ''));
+        const isPriceSearch = /^[><=]?\s*[0-9]+/.test(q) || q.startsWith('$');
+
         const filtered = this.allProducts.filter(p => {
-            const matchesSearch = p.name.toLowerCase().includes(query.toLowerCase());
-            const matchesCategory = category ? p.category_id == category : true;
-            return matchesSearch && matchesCategory;
+            const catFilter = category ? p.category_id == category : true;
+            if (!q) return catFilter;
+
+            const matchesName    = p.name.toLowerCase().includes(q);
+            const matchesBarcode = p.barcode && p.barcode.toLowerCase().includes(q);
+            const matchesPrice   = isPriceSearch && !isNaN(priceNum) && parseFloat(p.selling_price) === priceNum;
+            const matchesSearch  = matchesName || matchesBarcode || matchesPrice;
+
+            return matchesSearch && catFilter;
         });
         this.renderProducts(filtered);
+    },
+
+    async showProductDetails(productId) {
+        const p = this.allProducts.find(pr => pr.id == productId);
+        if (!p) return;
+
+        // Determine if current user is admin
+        const isAdmin = App.state.user && (App.state.user.role === 'Admin' || App.state.user.role === 'Stock Manager');
+
+        // --- Populate static fields ---
+        document.getElementById('pdm-name').textContent         = p.name;
+        document.getElementById('pdm-image').src                = p.image ? `assets/img/products/${p.image}` : 'assets/img/img_holder.png';
+        document.getElementById('pdm-barcode').textContent      = p.barcode  || '—';
+        document.getElementById('pdm-category').textContent     = p.category_name || '—';
+        document.getElementById('pdm-brand').textContent        = p.brand_name    || '—';
+        document.getElementById('pdm-selling-price').textContent = App.formatCurrency(p.selling_price);
+        document.getElementById('pdm-stock').textContent        = p.stock_qty;
+        document.getElementById('pdm-min-stock').textContent    = p.min_stock ?? '—';
+        document.getElementById('pdm-expiry').textContent       = p.expiry_date || '—';
+
+        // Admin-only fields
+        const adminEls = document.querySelectorAll('.pdm-admin-only');
+        if (isAdmin && p.purchase_price != null) {
+            const margin = p.purchase_price > 0
+                ? (((p.selling_price - p.purchase_price) / p.purchase_price) * 100).toFixed(1) + '%'
+                : '—';
+            document.getElementById('pdm-purchase-price').textContent = App.formatCurrency(p.purchase_price);
+            document.getElementById('pdm-margin').textContent = margin;
+            adminEls.forEach(el => el.classList.remove('d-none'));
+        } else {
+            adminEls.forEach(el => el.classList.add('d-none'));
+        }
+
+        // --- Status badges ---
+        let badgeHtml = '';
+        if (p.stock_qty <= 0) {
+            badgeHtml += `<span class="badge bg-danger">${App.t('pos.badge.out_of_stock') || 'Out of Stock'}</span>`;
+        } else if (p.min_stock && p.stock_qty <= p.min_stock) {
+            badgeHtml += `<span class="badge bg-warning text-dark">${App.t('pos.badge.low_stock') || 'Low Stock'}</span>`;
+        } else {
+            badgeHtml += `<span class="badge bg-success">${App.t('pos.badge.in_stock') || 'In Stock'}</span>`;
+        }
+        if (p.expiry_date) {
+            const expDate = new Date(p.expiry_date);
+            const today = new Date(); today.setHours(0,0,0,0);
+            const nextMonth = new Date(today); nextMonth.setMonth(nextMonth.getMonth()+1);
+            if (expDate < today)     badgeHtml += `<span class="badge bg-danger">Expired</span>`;
+            else if (expDate <= nextMonth) badgeHtml += `<span class="badge bg-warning text-dark">Expiring Soon</span>`;
+        }
+        document.getElementById('pdm-badges').innerHTML = badgeHtml;
+
+        // --- Wire Add to Cart button ---
+        const addBtn = document.getElementById('pdm-add-to-cart-btn');
+        addBtn.onclick = () => {
+            bootstrap.Modal.getInstance(document.getElementById('posProductDetailsModal')).hide();
+            this.addToCart(productId);
+        };
+        addBtn.disabled = p.stock_qty <= 0;
+
+        // --- Show modal (getOrCreateInstance prevents crash if already initialised) ---
+        const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('posProductDetailsModal'));
+        modal.show();
+
+        // --- Load batches ---
+        document.getElementById('pdm-batches-loading').classList.remove('d-none');
+        document.getElementById('pdm-batches-table').classList.add('d-none');
+        document.getElementById('pdm-batches-empty').classList.add('d-none');
+        document.getElementById('pdm-batch-count').textContent = '';
+
+        try {
+            const res = await App.api(`sales.php?action=get_batches&product_id=${productId}`);
+            const batches = res && res.batches ? res.batches : [];
+
+            document.getElementById('pdm-batches-loading').classList.add('d-none');
+            document.getElementById('pdm-batch-count').textContent = batches.length + ' batch' + (batches.length !== 1 ? 'es' : '');
+
+            if (batches.length === 0) {
+                document.getElementById('pdm-batches-empty').classList.remove('d-none');
+            } else {
+                document.getElementById('pdm-batches-table').classList.remove('d-none');
+                document.getElementById('pdm-batches-body').innerHTML = batches.map(b => `
+                    <tr>
+                        <td class="fw-bold">${App.escapeHtml(b.reference || b.batch_number || '#' + b.id)}</td>
+                        <td><span class="badge ${b.document_type === 'BL' ? 'bg-warning text-dark' : 'bg-info-subtle text-info'}">${App.escapeHtml(b.document_type || '—')}</span></td>
+                        <td class="text-end fw-bold">${b.remaining_qty ?? b.quantity}</td>
+                        <td>${b.expiry_date || '<span class="text-muted">—</span>'}</td>
+                        <td class="text-muted">${b.received_date || b.created_at || '—'}</td>
+                    </tr>
+                `).join('');
+            }
+        } catch (e) {
+            document.getElementById('pdm-batches-loading').classList.add('d-none');
+            document.getElementById('pdm-batches-empty').classList.remove('d-none');
+            document.getElementById('pdm-batches-empty').textContent = 'Could not load batch data.';
+        }
     },
 
     async addToCart(productId) {

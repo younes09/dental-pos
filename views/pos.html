@@ -341,3 +341,107 @@
         </div>
     </div>
 </div>
+
+<!-- Product Details Modal -->
+<div class="modal fade" id="posProductDetailsModal" tabindex="-1" aria-labelledby="posProductDetailsModalLabel">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 rounded-4 shadow-lg">
+            <div class="modal-header border-0 pb-0 px-4 pt-4">
+                <div class="d-flex align-items-center gap-3 flex-grow-1 me-3">
+                    <div style="width:64px;height:64px;flex-shrink:0;">
+                        <img id="pdm-image" src="assets/img/img_holder.png" class="rounded-3 w-100 h-100" style="object-fit:contain;" onerror="this.src='assets/img/img_holder.png'">
+                    </div>
+                    <div>
+                        <h5 class="modal-title fw-bold mb-0" id="posProductDetailsModalLabel"><span id="pdm-name">—</span></h5>
+                        <div class="d-flex gap-2 flex-wrap mt-1" id="pdm-badges"></div>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body px-4 pb-2">
+                <div class="row g-3 mt-0">
+                    <!-- Left column: product info -->
+                    <div class="col-md-6">
+                        <div class="p-3 bg-light rounded-4 h-100">
+                            <p class="text-muted small fw-bold text-uppercase mb-3" data-i18n="pos.details.info">Product Info</p>
+                            <dl class="row mb-0 small">
+                                <dt class="col-5 text-muted fw-normal" data-i18n="pos.details.barcode">Barcode</dt>
+                                <dd class="col-7 fw-bold mb-2" id="pdm-barcode">—</dd>
+
+                                <dt class="col-5 text-muted fw-normal" data-i18n="pos.details.category">Category</dt>
+                                <dd class="col-7 fw-bold mb-2" id="pdm-category">—</dd>
+
+                                <dt class="col-5 text-muted fw-normal" data-i18n="pos.details.brand">Brand</dt>
+                                <dd class="col-7 fw-bold mb-2" id="pdm-brand">—</dd>
+
+                                <dt class="col-5 text-muted fw-normal" data-i18n="pos.details.selling_price">Selling Price</dt>
+                                <dd class="col-7 fw-bold text-teal mb-2" id="pdm-selling-price">—</dd>
+
+                                <dt class="col-5 text-muted fw-normal pdm-admin-only d-none" data-i18n="pos.details.purchase_price">Purchase Price</dt>
+                                <dd class="col-7 fw-bold mb-2 pdm-admin-only d-none" id="pdm-purchase-price">—</dd>
+
+                                <dt class="col-5 text-muted fw-normal pdm-admin-only d-none" data-i18n="pos.details.margin">Margin</dt>
+                                <dd class="col-7 fw-bold mb-2 pdm-admin-only d-none" id="pdm-margin">—</dd>
+                            </dl>
+                        </div>
+                    </div>
+
+                    <!-- Right column: stock info -->
+                    <div class="col-md-6">
+                        <div class="p-3 bg-light rounded-4 h-100">
+                            <p class="text-muted small fw-bold text-uppercase mb-3" data-i18n="pos.details.stock_status">Stock Status</p>
+                            <dl class="row mb-0 small">
+                                <dt class="col-6 text-muted fw-normal" data-i18n="pos.details.current_stock">Current Stock</dt>
+                                <dd class="col-6 fw-bold mb-2" id="pdm-stock">—</dd>
+
+                                <dt class="col-6 text-muted fw-normal" data-i18n="pos.details.min_stock">Min. Stock</dt>
+                                <dd class="col-6 fw-bold mb-2" id="pdm-min-stock">—</dd>
+
+                                <dt class="col-6 text-muted fw-normal" data-i18n="pos.details.expiry">Nearest Expiry</dt>
+                                <dd class="col-6 fw-bold mb-2" id="pdm-expiry">—</dd>
+                            </dl>
+                        </div>
+                    </div>
+
+                    <!-- Batch details -->
+                    <div class="col-12">
+                        <div class="p-3 bg-light rounded-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <p class="text-muted small fw-bold text-uppercase mb-0" data-i18n="pos.details.batches">Stock Batches</p>
+                                <span id="pdm-batch-count" class="badge bg-teal-soft text-teal small rounded-pill"></span>
+                            </div>
+                            <div id="pdm-batches-loading" class="text-center py-3">
+                                <i class="fas fa-spinner fa-spin text-teal"></i>
+                            </div>
+                            <div id="pdm-batches-table" class="d-none">
+                                <div class="table-responsive" style="max-height:180px;overflow-y:auto;">
+                                    <table class="table table-sm table-hover mb-0 small">
+                                        <thead class="table-light sticky-top">
+                                            <tr>
+                                                <th data-i18n="pos.details.batch_ref">Batch Ref.</th>
+                                                <th data-i18n="pos.details.batch_type">Type</th>
+                                                <th class="text-end" data-i18n="pos.details.batch_qty">Qty</th>
+                                                <th data-i18n="pos.details.batch_expiry">Expiry</th>
+                                                <th data-i18n="pos.details.batch_received">Received</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="pdm-batches-body"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div id="pdm-batches-empty" class="text-center py-2 text-muted small d-none" data-i18n="pos.details.no_batches">No batch records found.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer border-0 px-4 pb-4 pt-2 gap-2">
+                <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal" data-i18n="btn.close">Close</button>
+                <button type="button" class="btn btn-teal rounded-pill px-4" id="pdm-add-to-cart-btn">
+                    <i class="fas fa-cart-plus me-2"></i><span data-i18n="pos.btn.add_to_cart">Add to Cart</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

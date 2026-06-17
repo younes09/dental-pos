@@ -9,9 +9,12 @@ try {
     switch ($action) {
         case 'list_products':
             $stmt = $pdo->prepare("
-                SELECT p.id, p.name, p.selling_price, p.stock_qty, p.image, p.category_id,
+                SELECT p.id, p.name, p.selling_price, p.purchase_price, p.stock_qty, p.min_stock, p.barcode, p.image, p.category_id, p.brand_id,
+                       c.name as category_name, b.name as brand_name,
                        (SELECT MIN(expiry_date) FROM stock_batches WHERE product_id = p.id AND remaining_qty > 0) as expiry_date
                 FROM products p
+                LEFT JOIN categories c ON p.category_id = c.id
+                LEFT JOIN brands b ON p.brand_id = b.id
                 WHERE p.status = 'Active' 
                 ORDER BY p.name ASC
             ");
@@ -27,6 +30,32 @@ try {
             }
             
             echo json_encode(['products' => $products]);
+            break;
+
+        case 'get_batches':
+            $product_id = intval($_GET['product_id'] ?? 0);
+            if (!$product_id) throw new Exception('product_id is required');
+
+            $stmt = $pdo->prepare("
+                SELECT id,
+                       purchase_type   AS document_type,
+                       initial_qty     AS quantity,
+                       remaining_qty,
+                       expiry_date,
+                       DATE(created_at) AS received_date
+                FROM stock_batches
+                WHERE product_id = ?
+                ORDER BY created_at ASC
+            ");
+            $stmt->execute([$product_id]);
+            $batches = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Add a human-readable batch reference
+            foreach ($batches as &$b) {
+                $b['batch_number'] = 'BT-' . str_pad($b['id'], 4, '0', STR_PAD_LEFT);
+            }
+
+            echo json_encode(['success' => true, 'batches' => $batches]);
             break;
 
         case 'process_sale':
