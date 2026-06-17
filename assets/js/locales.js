@@ -131,6 +131,8 @@ const locales = {
         "dashboard.modal.tax": "Tax (VAT",
         "dashboard.modal.grand_total": "Grand Total",
         // POS
+        "pos.grid_view": "Grid View",
+        "pos.list_view": "List View",
         "pos.search_placeholder": "Search by name, barcode or category...",
         "pos.all_categories": "All Categories",
         "pos.customer": "Customer",
@@ -1275,6 +1277,8 @@ const locales = {
         "dashboard.modal.tax": "TVA (",
         "dashboard.modal.grand_total": "Total Général",
         // POS
+        "pos.grid_view": "Vue Grille",
+        "pos.list_view": "Vue Liste",
         "pos.search_placeholder": "Chercher par nom, code-barres ou catégorie...",
         "pos.all_categories": "Toutes les Catégories",
         "pos.customer": "Client",

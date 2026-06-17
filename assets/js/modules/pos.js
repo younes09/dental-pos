@@ -11,6 +11,8 @@ const posModule = {
     currentQuotationId: null,
     allQuotations: [],
     _debtWarningShown: false,
+    viewMode: localStorage.getItem('pos_view_mode') || 'grid',
+    currentProducts: null,
 
     async init() {
         this.loadSettings();
@@ -34,6 +36,14 @@ const posModule = {
 
         this.restoreCartState();
 
+        const viewMode = this.viewMode;
+        const btnGrid = document.getElementById('btn-view-grid');
+        const btnList = document.getElementById('btn-view-list');
+        if (btnGrid && btnList) {
+            btnGrid.classList.toggle('active', viewMode === 'grid');
+            btnList.classList.toggle('active', viewMode === 'list');
+        }
+
         this.loadProducts(searchQuery).then(() => {
             this.calculateTotals();
         });
@@ -53,6 +63,30 @@ const posModule = {
     bindEvents() {
         // Search filter
         document.getElementById('pos-search').oninput = (e) => this.filterProducts(e.target.value);
+
+        // View toggler
+        const btnGrid = document.getElementById('btn-view-grid');
+        const btnList = document.getElementById('btn-view-list');
+        if (btnGrid && btnList) {
+            btnGrid.onclick = () => {
+                if (this.viewMode !== 'grid') {
+                    this.viewMode = 'grid';
+                    localStorage.setItem('pos_view_mode', 'grid');
+                    btnGrid.classList.add('active');
+                    btnList.classList.remove('active');
+                    this.renderProducts(this.currentProducts || this.allProducts);
+                }
+            };
+            btnList.onclick = () => {
+                if (this.viewMode !== 'list') {
+                    this.viewMode = 'list';
+                    localStorage.setItem('pos_view_mode', 'list');
+                    btnList.classList.add('active');
+                    btnGrid.classList.remove('active');
+                    this.renderProducts(this.currentProducts || this.allProducts);
+                }
+            };
+        }
 
         // Category filter
         document.getElementById('pos-category-filter').onchange = (e) => this.filterProducts(document.getElementById('pos-search').value, e.target.value);
@@ -472,6 +506,7 @@ const posModule = {
     },
 
     renderProducts(products) {
+        this.currentProducts = products;
         const grid = document.getElementById('pos-product-grid');
         if (products.length === 0) {
             grid.innerHTML = '<div class="col-12 text-center py-5 text-muted">No products found</div>';
@@ -499,6 +534,33 @@ const posModule = {
                 } else if (expDate <= nextMonth) {
                     badges += `<span class="badge bg-warning text-dark px-2">${App.t('pos.badge.expiring_soon') || 'Expiring Soon'}</span>`;
                 }
+            }
+
+            if (this.viewMode === 'list') {
+                return `
+                <div class="col-12">
+                    <div class="card product-list-card border-0 shadow-sm rounded-4 pointer p-3 d-flex flex-row align-items-center justify-content-between" onclick="posModule.addToCart(${p.id})">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="position-relative" style="width: 60px; height: 60px; flex-shrink: 0;">
+                                <img src="assets/img/products/${App.escapeHtml(p.image) || 'default.jpg'}" class="rounded-3 w-100 h-100" style="object-fit: contain;" onerror="this.src='assets/img/img_holder.png'">
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-1" style="font-size: 0.95rem;">${App.escapeHtml(p.name)}</h6>
+                                <div class="d-flex gap-2 align-items-center flex-wrap">
+                                    <span class="text-teal fw-bold">${App.formatCurrency(p.selling_price)}</span>
+                                    <span class="text-muted small">| Stock: ${p.stock_qty}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            ${badges}
+                            <button class="btn btn-sm btn-light-primary rounded-circle" style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                `;
             }
 
             return `
