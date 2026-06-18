@@ -16,7 +16,7 @@ try {
     $vault_balance = (float)$stmtVault->fetchColumn();
 
     // 2. Inventory Value (Purchase Price * Qty)
-    $stmtStock = $pdo->query("SELECT SUM(purchase_price * stock_qty) FROM products WHERE status = 'Active'");
+    $stmtStock = $pdo->query("SELECT SUM(purchase_price * stock_qty) FROM products");
     $inventory_value = (float)$stmtStock->fetchColumn();
 
     // 3. Accounts Receivable (Customer Balances)

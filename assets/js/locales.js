@@ -895,6 +895,7 @@ const locales = {
         "reports.col.points": "Points",
         "reports.col.company": "Company",
         "reports.col.total_purchases": "Total Purchases",
+        "reports.col.email": "Email",
         "reports.table.walking": "Walking",
         "reports.table.na": "N/A",
 
@@ -2063,6 +2064,7 @@ const locales = {
         "reports.col.points": "Points",
         "reports.col.company": "Société",
         "reports.col.total_purchases": "Achats Totaux",
+        "reports.col.email": "Email",
         "reports.table.walking": "Passant",
         "reports.table.na": "N/A",
 
