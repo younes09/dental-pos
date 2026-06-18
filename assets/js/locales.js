@@ -1059,6 +1059,7 @@ const locales = {
         "po.js.status_cancel": "Cancel Order",
         "po.js.cancel_title": "Cancel Purchase Order?",
         "po.js.cancel_text": "This will mark the order as Cancelled. This action cannot be undone.",
+        "po.js.cancel_received_text": "This order has received stock. Cancelling it will deduct the received quantities from inventory, reverse supplier debt, and refund vault payments. Are you sure you want to continue?",
         "po.js.cancel_confirm": "Yes, Cancel It",
         "po.js.cancel_abort": "Keep Order",
 
@@ -2226,6 +2227,7 @@ const locales = {
         "po.js.status_cancel": "Annuler la Commande",
         "po.js.cancel_title": "Annuler le bon de commande ?",
         "po.js.cancel_text": "Cela marquera la commande comme Annulée. Cette action est irréversible.",
+        "po.js.cancel_received_text": "Cette commande a reçu du stock. L'annuler déduira les quantités reçues de l'inventaire, annulera la dette du fournisseur et remboursera les paiements. Voulez-vous vraiment continuer ?",
         "po.js.cancel_confirm": "Oui, Annuler",
         "po.js.cancel_abort": "Conserver la Commande",
 

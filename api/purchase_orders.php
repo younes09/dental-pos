@@ -456,20 +456,118 @@ try {
             $id = isset($_GET['id']) ? (int)$_GET['id'] : null;
             if (!$id) throw new Exception('Purchase Order ID is required.');
             
-            // F2.3: Prevent deletion of POs that have received stock
-            $status_stmt = $pdo->prepare("SELECT status FROM purchase_orders WHERE id = ?");
-            $status_stmt->execute([$id]);
-            $po_status = $status_stmt->fetchColumn();
-            
-            if ($po_status === 'Received' || $po_status === 'Partial') {
-                echo json_encode(['error' => 'Cannot delete a purchase order that has received stock. Cancel it instead.']);
-                exit;
+            $pdo->beginTransaction();
+
+            $po_stmt = $pdo->prepare("SELECT * FROM purchase_orders WHERE id = ? FOR UPDATE");
+            $po_stmt->execute([$id]);
+            $po = $po_stmt->fetch();
+
+            if (!$po) {
+                throw new Exception('Purchase Order not found.');
             }
-            
-            // purchase_order_items has ON DELETE CASCADE in schema
+
+            // Reverse stock and financials if order has received stock
+            if ($po['status'] === 'Received' || $po['status'] === 'Partial') {
+                $items_stmt = $pdo->prepare("SELECT * FROM purchase_order_items WHERE po_id = ? AND received_qty > 0 FOR UPDATE");
+                $items_stmt->execute([$id]);
+                $received_items = $items_stmt->fetchAll();
+
+                if (!empty($received_items)) {
+                    // Check if enough stock exists to reverse
+                    $stmtGetProductStock = $pdo->prepare("SELECT name, stock_qty FROM products WHERE id = ? FOR UPDATE");
+                    foreach ($received_items as $item) {
+                        $stmtGetProductStock->execute([$item['product_id']]);
+                        $product = $stmtGetProductStock->fetch();
+                        
+                        $net_received = $item['received_qty'] - $item['returned_qty'];
+                        if ($net_received > 0) {
+                            if (!$product || $product['stock_qty'] < $net_received) {
+                                $p_name = $product ? $product['name'] : 'Unknown Product';
+                                $curr_stock = $product ? $product['stock_qty'] : 0;
+                                throw new Exception("Cannot delete purchase order. Product '{$p_name}' has only {$curr_stock} units in stock, but {$net_received} units need to be reversed.");
+                            }
+                        }
+                    }
+
+                    // Process reversals
+                    $stmtUpdateProduct = $pdo->prepare("UPDATE products SET stock_qty = stock_qty - ? WHERE id = ?");
+                    $stmtGetBatches = $pdo->prepare("SELECT id, remaining_qty FROM stock_batches WHERE product_id = ? AND remaining_qty > 0 ORDER BY created_at DESC FOR UPDATE");
+                    $stmtUpdateBatch = $pdo->prepare("UPDATE stock_batches SET remaining_qty = ? WHERE id = ?");
+
+                    $total_received_value = 0;
+                    $total_returned_value = 0;
+
+                    foreach ($received_items as $item) {
+                        $net_received = $item['received_qty'] - $item['returned_qty'];
+                        if ($net_received > 0) {
+                            $stmtUpdateProduct->execute([$net_received, $item['product_id']]);
+
+                            // Deduct from batches using LIFO order
+                            $remaining_to_deduct = $net_received;
+                            $stmtGetBatches->execute([$item['product_id']]);
+                            $batches = $stmtGetBatches->fetchAll();
+
+                            foreach ($batches as $batch) {
+                                if ($remaining_to_deduct <= 0) break;
+                                $available = (int)$batch['remaining_qty'];
+                                if ($available >= $remaining_to_deduct) {
+                                    $stmtUpdateBatch->execute([$available - $remaining_to_deduct, $batch['id']]);
+                                    $remaining_to_deduct = 0;
+                                } else {
+                                    $stmtUpdateBatch->execute([0, $batch['id']]);
+                                    $remaining_to_deduct -= $available;
+                                }
+                            }
+                        }
+                        $total_received_value += ($item['received_qty'] * $item['unit_cost']);
+                        $total_returned_value += ($item['returned_qty'] * $item['unit_cost']);
+                    }
+
+                    // Adjust supplier debt if supplier exists
+                    if ($po['supplier_id']) {
+                        $net_debt = ($total_received_value - $total_returned_value) - (float)$po['paid_amount'];
+                        if ($net_debt > 0) {
+                            $stmtSupplier = $pdo->prepare("UPDATE suppliers SET balance = GREATEST(0, balance - ?) WHERE id = ?");
+                            $stmtSupplier->execute([$net_debt, $po['supplier_id']]);
+                        }
+                    }
+
+                    // Refund vault payments
+                    $stmtTx = $pdo->prepare("SELECT account_id, amount FROM vault_transactions WHERE related_type = 'PurchaseOrder' AND related_id = ? AND type = 'Expense' FOR UPDATE");
+                    $stmtTx->execute([$id]);
+                    $vault_txs = $stmtTx->fetchAll();
+
+                    if (!empty($vault_txs)) {
+                        $user_id = $_SESSION['user_id'] ?? 1;
+                        $stmtRefundTx = $pdo->prepare("INSERT INTO vault_transactions (account_id, type, amount, description, related_type, related_id, user_id) VALUES (?, 'Income', ?, ?, 'PurchaseOrder', ?, ?)");
+                        $stmtUpdateAcct = $pdo->prepare("UPDATE vault_accounts SET balance = balance + ? WHERE id = ?");
+
+                        foreach ($vault_txs as $tx) {
+                            $stmtUpdateAcct->execute([$tx['amount'], $tx['account_id']]);
+                            $stmtRefundTx->execute([
+                                $tx['account_id'],
+                                $tx['amount'],
+                                "Refund for Deleted Purchase Order #$id",
+                                $id,
+                                $user_id
+                            ]);
+                        }
+                    }
+                }
+            }
+
+            // Delete associated returns first (due to foreign key constraint)
+            $pdo->prepare("DELETE FROM purchase_returns WHERE po_id = ?")->execute([$id]);
+
+            // Deleting the PO (cascades to purchase_order_items)
             $stmt = $pdo->prepare("DELETE FROM purchase_orders WHERE id = ?");
             $stmt->execute([$id]);
-            echo json_encode(['success' => 'Purchase order deleted successfully']);
+
+            // Clear references to the deleted PO in vault transactions
+            $pdo->prepare("UPDATE vault_transactions SET related_id = NULL, description = CONCAT(description, ' (PO Deleted)') WHERE related_type = 'PurchaseOrder' AND related_id = ?")->execute([$id]);
+
+            $pdo->commit();
+            echo json_encode(['success' => 'Purchase order and associated returns deleted successfully, calculations adjusted.']);
             break;
 
         case 'cancel':
@@ -480,22 +578,122 @@ try {
             $id = isset($_GET['id']) ? (int)$_GET['id'] : null;
             if (!$id) throw new Exception('Purchase Order ID is required.');
 
-            $status_stmt = $pdo->prepare("SELECT status FROM purchase_orders WHERE id = ?");
-            $status_stmt->execute([$id]);
-            $po_status = $status_stmt->fetchColumn();
+            $pdo->beginTransaction();
 
-            if ($po_status === 'Received') {
-                echo json_encode(['error' => 'Cannot cancel a fully received purchase order. Process a return instead.']);
-                exit;
+            // Fetch PO details FOR UPDATE
+            $po_stmt = $pdo->prepare("SELECT * FROM purchase_orders WHERE id = ? FOR UPDATE");
+            $po_stmt->execute([$id]);
+            $po = $po_stmt->fetch();
+
+            if (!$po) {
+                throw new Exception('Purchase Order not found.');
             }
+
+            $po_status = $po['status'];
 
             if ($po_status === 'Cancelled') {
-                echo json_encode(['error' => 'This purchase order is already cancelled.']);
-                exit;
+                throw new Exception('This purchase order is already cancelled.');
             }
 
-            $stmt = $pdo->prepare("UPDATE purchase_orders SET status = 'Cancelled' WHERE id = ?");
-            $stmt->execute([$id]);
+            // F2.3 / Custom: Block cancel if returns are processed
+            $returns_check = $pdo->prepare("SELECT COUNT(*) FROM purchase_returns WHERE po_id = ?");
+            $returns_check->execute([$id]);
+            if ((int)$returns_check->fetchColumn() > 0) {
+                throw new Exception('Cannot cancel a purchase order that has processed returns. Adjust/delete the returns first.');
+            }
+
+            // Retrieve received items FOR UPDATE
+            $items_stmt = $pdo->prepare("SELECT * FROM purchase_order_items WHERE po_id = ? AND received_qty > 0 FOR UPDATE");
+            $items_stmt->execute([$id]);
+            $received_items = $items_stmt->fetchAll();
+
+            // Guard: Check if we have enough stock to reverse the PO
+            if (!empty($received_items)) {
+                $stmtGetProductStock = $pdo->prepare("SELECT name, stock_qty FROM products WHERE id = ? FOR UPDATE");
+                foreach ($received_items as $item) {
+                    $stmtGetProductStock->execute([$item['product_id']]);
+                    $product = $stmtGetProductStock->fetch();
+                    if (!$product || $product['stock_qty'] < $item['received_qty']) {
+                        $p_name = $product ? $product['name'] : 'Unknown Product';
+                        $curr_stock = $product ? $product['stock_qty'] : 0;
+                        throw new Exception("Cannot cancel purchase order. Product '{$p_name}' has only {$curr_stock} units in stock, but {$item['received_qty']} units need to be reversed.");
+                    }
+                }
+
+                // Process reversals
+                $stmtUpdateProduct = $pdo->prepare("UPDATE products SET stock_qty = stock_qty - ? WHERE id = ?");
+                $stmtGetBatches = $pdo->prepare("SELECT id, remaining_qty FROM stock_batches WHERE product_id = ? AND remaining_qty > 0 ORDER BY created_at DESC FOR UPDATE");
+                $stmtUpdateBatch = $pdo->prepare("UPDATE stock_batches SET remaining_qty = ? WHERE id = ?");
+
+                $total_received_value = 0;
+
+                foreach ($received_items as $item) {
+                    // Update product stock
+                    $stmtUpdateProduct->execute([$item['received_qty'], $item['product_id']]);
+
+                    // Deduct from batches using LIFO order
+                    $remaining_to_deduct = (int)$item['received_qty'];
+                    $stmtGetBatches->execute([$item['product_id']]);
+                    $batches = $stmtGetBatches->fetchAll();
+
+                    foreach ($batches as $batch) {
+                        if ($remaining_to_deduct <= 0) break;
+                        $available = (int)$batch['remaining_qty'];
+                        if ($available >= $remaining_to_deduct) {
+                            $stmtUpdateBatch->execute([$available - $remaining_to_deduct, $batch['id']]);
+                            $remaining_to_deduct = 0;
+                        } else {
+                            $stmtUpdateBatch->execute([0, $batch['id']]);
+                            $remaining_to_deduct -= $available;
+                        }
+                    }
+
+                    $total_received_value += ($item['received_qty'] * $item['unit_cost']);
+                }
+
+                // Adjust supplier debt if supplier exists
+                if ($po['supplier_id']) {
+                    $debt = $total_received_value - (float)$po['paid_amount'];
+                    if ($debt > 0) {
+                        $stmtSupplier = $pdo->prepare("UPDATE suppliers SET balance = GREATEST(0, balance - ?) WHERE id = ?");
+                        $stmtSupplier->execute([$debt, $po['supplier_id']]);
+                    }
+                }
+
+                // Refund vault transactions if any payments were recorded
+                $stmtTx = $pdo->prepare("SELECT account_id, amount FROM vault_transactions WHERE related_type = 'PurchaseOrder' AND related_id = ? AND type = 'Expense' FOR UPDATE");
+                $stmtTx->execute([$id]);
+                $vault_txs = $stmtTx->fetchAll();
+
+                if (!empty($vault_txs)) {
+                    $user_id = $_SESSION['user_id'] ?? 1;
+                    $stmtRefundTx = $pdo->prepare("INSERT INTO vault_transactions (account_id, type, amount, description, related_type, related_id, user_id) VALUES (?, 'Income', ?, ?, 'PurchaseOrder', ?, ?)");
+                    $stmtUpdateAcct = $pdo->prepare("UPDATE vault_accounts SET balance = balance + ? WHERE id = ?");
+
+                    foreach ($vault_txs as $tx) {
+                        $stmtUpdateAcct->execute([$tx['amount'], $tx['account_id']]);
+                        $stmtRefundTx->execute([
+                            $tx['account_id'],
+                            $tx['amount'],
+                            "Refund for Cancelled Purchase Order #$id",
+                            $id,
+                            $user_id
+                        ]);
+                    }
+                }
+            }
+
+            // Update PO status to Cancelled
+            $stmtUpdatePO = $pdo->prepare("UPDATE purchase_orders SET status = 'Cancelled' WHERE id = ?");
+            $stmtUpdatePO->execute([$id]);
+
+            // Notifications
+            $ins_notif = $pdo->prepare("INSERT INTO notifications (role, title, message, type, link) VALUES (?, ?, ?, ?, ?)");
+            $po_msg = "Purchase Order #$id has been Cancelled. Stock and financial balances reversed.";
+            $ins_notif->execute(['Admin', 'PO Cancelled: #' . $id, $po_msg, 'danger', '#purchase_orders']);
+            $ins_notif->execute(['Stock Manager', 'PO Cancelled: #' . $id, $po_msg, 'danger', '#purchase_orders']);
+
+            $pdo->commit();
             echo json_encode(['success' => 'Purchase order has been cancelled successfully.']);
             break;
 

@@ -274,8 +274,8 @@ const purchase_ordersModule = {
                         }
 
                         let cancelBtn = '';
-                        if (data.status === 'Pending' || data.status === 'Partial') {
-                            cancelBtn = `<li><a class="dropdown-item text-warning" href="javascript:void(0)" onclick="purchase_ordersModule.cancelPO(${data.id})"><i class="fas fa-ban me-2"></i>${App.t('po.js.status_cancel')}</a></li>`;
+                        if (data.status !== 'Cancelled') {
+                            cancelBtn = `<li><a class="dropdown-item text-warning" href="javascript:void(0)" onclick="purchase_ordersModule.cancelPO(${data.id}, '${data.status}')"><i class="fas fa-ban me-2"></i>${App.t('po.js.status_cancel')}</a></li>`;
                         }
 
                         return `
@@ -290,7 +290,7 @@ const purchase_ordersModule = {
                                 ` : ''}
                                 ${cancelBtn}
                                 <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item text-danger" href="javascript:void(0)" onclick="purchase_ordersModule.deletePO(${data.id})"><i class="fas fa-trash me-2"></i>${App.t('po.js.status_del')}</a></li>
+                                <li><a class="dropdown-item text-danger" href="javascript:void(0)" onclick="purchase_ordersModule.deletePO(${data.id}, '${data.status}')"><i class="fas fa-trash me-2"></i>${App.t('po.js.status_del')}</a></li>
                             </ul>
                         </div>
                         `;
@@ -516,16 +516,21 @@ const purchase_ordersModule = {
         }
     },
 
-    async deletePO(id) {
+    async deletePO(id, status) {
+        const hasReceivedStock = (status === 'Received' || status === 'Partial');
+        const warningText = hasReceivedStock ? 
+            'This order has received stock or returns. Deleting it will reverse any remaining inventory stock, reverse supplier debt, refund vault payments, and delete all associated returns. Are you sure you want to delete it permanently?' : 
+            (App.t('po.js.del_text') || 'This action cannot be undone!');
+
         const confirm = await Swal.fire({
-            title: App.t('po.js.del_title'),
-            text: App.t('po.js.del_text'),
+            title: App.t('po.js.del_title') || 'Delete Purchase Order?',
+            text: warningText,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#d33',
             cancelButtonColor: '#6c757d',
-            confirmButtonText: App.t('po.js.btn_del'),
-            cancelButtonText: App.t('po.modal.btn_cancel')
+            confirmButtonText: App.t('po.js.btn_del') || 'Delete',
+            cancelButtonText: App.t('po.modal.btn_cancel') || 'Cancel'
         });
 
         if (confirm.isConfirmed) {
@@ -533,6 +538,8 @@ const purchase_ordersModule = {
             if (result && result.success) {
                 App.toast('success', result.success);
                 this.table.ajax.reload();
+            } else if (result && result.error) {
+                App.toast('error', result.error);
             }
         }
     },
@@ -764,16 +771,21 @@ const purchase_ordersModule = {
         new bootstrap.Modal(document.getElementById('poDetailsModal')).show();
     },
 
-    async cancelPO(id) {
+    async cancelPO(id, status) {
+        const hasReceivedStock = (status === 'Received' || status === 'Partial');
+        const warningText = hasReceivedStock ? 
+            (App.t('po.js.cancel_received_text') || 'This order has received stock. Cancelling it will deduct the received quantities from inventory, reverse supplier debt, and refund vault payments. Are you sure you want to continue?') : 
+            (App.t('po.js.cancel_text') || 'This will mark the order as Cancelled. This action cannot be undone.');
+
         const confirmed = await Swal.fire({
-            title: App.t('po.js.cancel_title'),
-            text: App.t('po.js.cancel_text'),
+            title: App.t('po.js.cancel_title') || 'Cancel Purchase Order?',
+            text: warningText,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#f39c12',
             cancelButtonColor: '#6c757d',
-            confirmButtonText: App.t('po.js.cancel_confirm'),
-            cancelButtonText: App.t('po.js.cancel_abort')
+            confirmButtonText: App.t('po.js.cancel_confirm') || 'Yes, Cancel It',
+            cancelButtonText: App.t('po.js.cancel_abort') || 'Keep Order'
         });
 
         if (!confirmed.isConfirmed) return;
