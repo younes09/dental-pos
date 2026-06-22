@@ -354,13 +354,22 @@
                     <span data-i18n="receipt.discount">Discount</span>
                     <span id="receipt-discount">-$0.00</span>
                 </div>
+                <div class="total-row" id="receipt-paid-row" style="display: none;">
+                    <span data-i18n="receipt.paid_amount">Paid Amount</span>
+                    <span id="receipt-paid">$0.00</span>
+                </div>
                 <div class="total-row">
                     <span id="receipt-tax-label">Tax (15%)</span>
                     <span id="receipt-tax">$0.00</span>
                 </div>
+                <div class="total-row" id="receipt-remaining-row" style="display: none; font-weight: 700; color: #dc3545;">
+                    <span data-i18n="receipt.remaining_amount">Remaining to Pay</span>
+                    <span id="receipt-remaining">$0.00</span>
+                </div>
                 <div class="total-row grand-total">
                     <span data-i18n="receipt.grand_total">Grand Total</span>
-                    <span id="receipt-total">$0.00</span>
+                    &emsp;
+                    <span class="flex-grow-1 text-end" id="receipt-total">$0.00</span>
                 </div>
             </div>
         </div>
@@ -481,11 +490,27 @@
             `).join('');
 
             // Set Totals
+            const totalVal = parseFloat(sale.total);
+            const paidVal = parseFloat(sale.paid_amount !== undefined && sale.paid_amount !== null ? sale.paid_amount : totalVal);
+
             document.getElementById('receipt-subtotal').textContent = formatCurrency(parseFloat(sale.subtotal));
             document.getElementById('receipt-discount').textContent = `-${formatCurrency(parseFloat(sale.discount))}`;
             document.getElementById('receipt-tax-label').textContent = `Tax (${vatRate}%)`;
             document.getElementById('receipt-tax').textContent = formatCurrency(parseFloat(sale.tax));
-            document.getElementById('receipt-total').textContent = formatCurrency(parseFloat(sale.total));
+            document.getElementById('receipt-total').textContent = formatCurrency(totalVal);
+
+            const paidRow = document.getElementById('receipt-paid-row');
+            const remainingRow = document.getElementById('receipt-remaining-row');
+
+            if (paidVal < totalVal) {
+                document.getElementById('receipt-paid').textContent = formatCurrency(paidVal);
+                document.getElementById('receipt-remaining').textContent = formatCurrency(totalVal - paidVal);
+                paidRow.style.display = 'flex';
+                remainingRow.style.display = 'flex';
+            } else {
+                paidRow.style.display = 'none';
+                remainingRow.style.display = 'none';
+            }
         }
 
         // Helper to handle population and translation

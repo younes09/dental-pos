@@ -6,10 +6,13 @@
                 <!-- Search & Filters -->
                 <div class="row g-3 mb-4 align-items-center">
                     <div class="col-md-5">
-                        <div class="search-box w-100">
+                        <div class="search-box w-100 position-relative">
                             <i class="fas fa-search"></i>
                             <input type="text" id="pos-search" class="form-control"
                                 placeholder="Search by name, barcode or category..." data-i18n="pos.search_placeholder" data-i18n-target="placeholder">
+                            <button type="button" id="btn-clear-pos-search" class="btn btn-link text-muted position-absolute end-0 top-50 translate-middle-y border-0 p-0 me-3" style="display: none; z-index: 5; text-decoration: none;">
+                                <i class="fas fa-times" style=" left: -15px; " title="vider le champ de recherche"></i>
+                            </button>
                         </div>
                     </div>
                     <div class="col-md-4">

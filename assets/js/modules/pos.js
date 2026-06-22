@@ -33,6 +33,16 @@ const posModule = {
         // Handle search query from URL if any
         const params = new URLSearchParams(window.location.hash.split('?')[1]);
         const searchQuery = params.get('search');
+        if (searchQuery) {
+            const posSearch = document.getElementById('pos-search');
+            if (posSearch) {
+                posSearch.value = searchQuery;
+            }
+            const clearSearchBtn = document.getElementById('btn-clear-pos-search');
+            if (clearSearchBtn) {
+                clearSearchBtn.style.display = 'block';
+            }
+        }
 
         this.restoreCartState();
 
@@ -62,10 +72,23 @@ const posModule = {
 
     bindEvents() {
         // Search filter
-        document.getElementById('pos-search').oninput = (e) => {
-            const category = document.getElementById('pos-category-filter')?.value || '';
-            this.filterProducts(e.target.value, category);
-        };
+        const posSearch = document.getElementById('pos-search');
+        const clearSearchBtn = document.getElementById('btn-clear-pos-search');
+        if (posSearch && clearSearchBtn) {
+            posSearch.oninput = (e) => {
+                const category = document.getElementById('pos-category-filter')?.value || '';
+                this.filterProducts(e.target.value, category);
+                clearSearchBtn.style.display = e.target.value ? 'block' : 'none';
+            };
+
+            clearSearchBtn.onclick = () => {
+                posSearch.value = '';
+                clearSearchBtn.style.display = 'none';
+                const category = document.getElementById('pos-category-filter')?.value || '';
+                this.filterProducts('', category);
+                posSearch.focus();
+            };
+        }
 
         // View toggler
         const btnGrid = document.getElementById('btn-view-grid');
@@ -1121,6 +1144,7 @@ const posModule = {
             const result = await App.api('sales.php?action=process_sale', 'POST', saleData);
             if (result && result.success) {
                 App.toast('success', 'Sale completed!');
+                const completedSaleId = result.sale_id;
                 document.getElementById('cart-points-redeem').value = 0;
                 this.clearCart();
                 await this.loadProducts(); // Refresh stock in local state
@@ -1128,11 +1152,42 @@ const posModule = {
                     await this.loadCustomers(); // Refresh loyalty points
                     this.selectCustomer(this.selectedCustomer.id);
                 }
+
+                if (completedSaleId) {
+                    Swal.fire({
+                        title: App.t('pos.msg.print_confirm_title') || 'Sale Completed!',
+                        text: App.t('pos.msg.print_confirm_text') || 'Do you want to print the receipt?',
+                        icon: 'success',
+                        showCancelButton: true,
+                        confirmButtonColor: '#00bfa6',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: App.t('pos.msg.print_confirm_yes') || 'Yes, Print',
+                        cancelButtonText: App.t('pos.msg.print_confirm_no') || 'No, Close',
+                        reverseButtons: true
+                    }).then(async (swalResult) => {
+                        if (swalResult.isConfirmed) {
+                            const saleDetails = await App.api(`sales.php?action=sale_details&id=${completedSaleId}`);
+                            if (saleDetails) {
+                                this.printReceipt(saleDetails);
+                            }
+                        }
+                    });
+                }
             }
         } finally {
             btn.disabled = false;
             btn.innerHTML = '<i class="fas fa-check-circle me-2"></i>Complete Sale';
         }
+    },
+
+    printReceipt(data) {
+        const printWindow = window.open('views/receipt-template.html', '_blank', 'width=900,height=800');
+        printWindow.onload = function () {
+            printWindow.postMessage({
+                type: 'POPULATE_RECEIPT',
+                payload: { ...data, settings: App.state.settings }
+            }, window.location.origin);
+        };
     }
 };
 
