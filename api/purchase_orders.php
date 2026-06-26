@@ -70,7 +70,7 @@ try {
                 // Guard: sufficient account balance
                 $account_id = $data['account_id'] ?? null;
                 if ($account_id && $paid_amount > 0) {
-                    $balStmt = $pdo->prepare("SELECT balance FROM vault_accounts WHERE id = ?");
+                    $balStmt = $pdo->prepare("SELECT balance FROM vault_accounts WHERE id = ? FOR UPDATE");
                     $balStmt->execute([$account_id]);
                     $acctBalance = (float)($balStmt->fetchColumn() ?? 0);
                     if ($paid_amount > $acctBalance) {
