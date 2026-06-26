@@ -8,16 +8,24 @@ try {
     // Today's Revenue & Profit (with returns/refunds deducted)
     $stmt = $pdo->prepare("
         SELECT 
-            COALESCE(SUM(s.total - COALESCE(sr.refunded, 0)), 0) as revenue,
-            COALESCE(SUM(s.total - COALESCE(sr.refunded, 0) - COALESCE(si.cogs, 0)), 0) as profit
+            COALESCE(SUM(
+                CASE 
+                    WHEN s.subtotal > 0 THEN si.net_subtotal * (1 - (s.discount / s.subtotal))
+                    ELSE 0 
+                END
+            ), 0) as revenue,
+            COALESCE(SUM(
+                CASE 
+                    WHEN s.subtotal > 0 THEN si.net_subtotal * (1 - (s.discount / s.subtotal))
+                    ELSE 0 
+                END - si.net_cogs
+            ), 0) as profit
         FROM sales s
         LEFT JOIN (
-            SELECT sale_id, SUM(total_amount) as refunded
-            FROM sale_returns
-            GROUP BY sale_id
-        ) sr ON sr.sale_id = s.id
-        LEFT JOIN (
-            SELECT sale_id, SUM((qty - returned_qty) * cost_price) as cogs
+            SELECT 
+                sale_id,
+                SUM((qty - returned_qty) * unit_price) as net_subtotal,
+                SUM((qty - returned_qty) * cost_price) as net_cogs
             FROM sale_items
             GROUP BY sale_id
         ) si ON si.sale_id = s.id
@@ -31,16 +39,24 @@ try {
     // Yesterday's Revenue & Profit (with returns/refunds deducted)
     $stmt = $pdo->prepare("
         SELECT 
-            COALESCE(SUM(s.total - COALESCE(sr.refunded, 0)), 0) as revenue,
-            COALESCE(SUM(s.total - COALESCE(sr.refunded, 0) - COALESCE(si.cogs, 0)), 0) as profit
+            COALESCE(SUM(
+                CASE 
+                    WHEN s.subtotal > 0 THEN si.net_subtotal * (1 - (s.discount / s.subtotal))
+                    ELSE 0 
+                END
+            ), 0) as revenue,
+            COALESCE(SUM(
+                CASE 
+                    WHEN s.subtotal > 0 THEN si.net_subtotal * (1 - (s.discount / s.subtotal))
+                    ELSE 0 
+                END - si.net_cogs
+            ), 0) as profit
         FROM sales s
         LEFT JOIN (
-            SELECT sale_id, SUM(total_amount) as refunded
-            FROM sale_returns
-            GROUP BY sale_id
-        ) sr ON sr.sale_id = s.id
-        LEFT JOIN (
-            SELECT sale_id, SUM((qty - returned_qty) * cost_price) as cogs
+            SELECT 
+                sale_id,
+                SUM((qty - returned_qty) * unit_price) as net_subtotal,
+                SUM((qty - returned_qty) * cost_price) as net_cogs
             FROM sale_items
             GROUP BY sale_id
         ) si ON si.sale_id = s.id
@@ -103,13 +119,22 @@ try {
         case 'weekly':
             // Bug #10 Fix: Group by YEARWEEK to avoid cross-year week merging
             $stmt = $pdo->prepare("
-                SELECT DATE_FORMAT(MIN(s.date), 'Week %u %Y') as day, COALESCE(SUM(s.total - COALESCE(sr.refunded, 0)), 0) as total 
+                SELECT 
+                    DATE_FORMAT(MIN(s.date), 'Week %u %Y') as day,
+                    COALESCE(SUM(
+                        CASE 
+                            WHEN s.subtotal > 0 THEN si.net_subtotal * (1 - (s.discount / s.subtotal))
+                            ELSE 0 
+                        END
+                    ), 0) as total 
                 FROM sales s
                 LEFT JOIN (
-                    SELECT sale_id, SUM(total_amount) as refunded
-                    FROM sale_returns
+                    SELECT 
+                        sale_id,
+                        SUM((qty - returned_qty) * unit_price) as net_subtotal
+                    FROM sale_items
                     GROUP BY sale_id
-                ) sr ON sr.sale_id = s.id
+                ) si ON si.sale_id = s.id
                 WHERE s.date >= DATE_SUB(CURDATE(), INTERVAL 4 WEEK) AND s.status = 'Completed'
                 GROUP BY YEARWEEK(s.date, 1)
                 ORDER BY MIN(s.date) ASC
@@ -118,13 +143,22 @@ try {
         case 'monthly':
             // Last 6 months, grouped by month
             $stmt = $pdo->prepare("
-                SELECT DATE_FORMAT(s.date, '%b %Y') as day, COALESCE(SUM(s.total - COALESCE(sr.refunded, 0)), 0) as total 
+                SELECT 
+                    DATE_FORMAT(s.date, '%b %Y') as day,
+                    COALESCE(SUM(
+                        CASE 
+                            WHEN s.subtotal > 0 THEN si.net_subtotal * (1 - (s.discount / s.subtotal))
+                            ELSE 0 
+                        END
+                    ), 0) as total 
                 FROM sales s
                 LEFT JOIN (
-                    SELECT sale_id, SUM(total_amount) as refunded
-                    FROM sale_returns
+                    SELECT 
+                        sale_id,
+                        SUM((qty - returned_qty) * unit_price) as net_subtotal
+                    FROM sale_items
                     GROUP BY sale_id
-                ) sr ON sr.sale_id = s.id
+                ) si ON si.sale_id = s.id
                 WHERE s.date >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH) AND s.status = 'Completed'
                 GROUP BY YEAR(s.date), MONTH(s.date)
                 ORDER BY YEAR(s.date) ASC, MONTH(s.date) ASC
@@ -134,13 +168,22 @@ try {
         default:
             // Last 7 days, grouped by day (original behavior)
             $stmt = $pdo->prepare("
-                SELECT DATE_FORMAT(s.date, '%b %d') as day, COALESCE(SUM(s.total - COALESCE(sr.refunded, 0)), 0) as total 
+                SELECT 
+                    DATE_FORMAT(s.date, '%b %d') as day,
+                    COALESCE(SUM(
+                        CASE 
+                            WHEN s.subtotal > 0 THEN si.net_subtotal * (1 - (s.discount / s.subtotal))
+                            ELSE 0 
+                        END
+                    ), 0) as total 
                 FROM sales s
                 LEFT JOIN (
-                    SELECT sale_id, SUM(total_amount) as refunded
-                    FROM sale_returns
+                    SELECT 
+                        sale_id,
+                        SUM((qty - returned_qty) * unit_price) as net_subtotal
+                    FROM sale_items
                     GROUP BY sale_id
-                ) sr ON sr.sale_id = s.id
+                ) si ON si.sale_id = s.id
                 WHERE s.date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY) AND s.status = 'Completed'
                 GROUP BY DATE(s.date)
                 ORDER BY s.date ASC

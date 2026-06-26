@@ -134,31 +134,33 @@ try {
             }
 
             // Recalculate and validate discount logic
-            // The frontend sends discount_amount which is the TOTAL (manual + points)
-            // But we must ensure it doesn't exceed subtotal and is correctly composed.
-            $received_total_discount = (float)($data['discount_amount'] ?? 0);
+            $manual_discount_percent = max(0, min(100, (float)($data['manual_discount_percent'] ?? 0)));
+            $manual_discount = round($subtotal * ($manual_discount_percent / 100), 2);
+
             $points_redeemed = max(0, (int)($data['points_redeemed'] ?? 0));
-            
-            // Points validation and calculation
             $points_discount = 0;
+
             if ($customer_id && $points_redeemed > 0) {
                 $cust_stmt = $pdo->prepare("SELECT loyalty_points FROM customers WHERE id = ? FOR UPDATE");
                 $cust_stmt->execute([$customer_id]);
-                $customer_pts = $cust_stmt->fetchColumn() ?: 0;
-                
+                $customer_pts = (int)($cust_stmt->fetchColumn() ?: 0);
+
                 if ($points_redeemed > $customer_pts) {
                     $points_redeemed = $customer_pts;
                 }
-                
+
+                // Cap points to prevent total discount from exceeding subtotal
+                $max_allowed_points_discount = max(0, $subtotal - $manual_discount);
+                $max_allowed_points = floor($max_allowed_points_discount / $point_value);
+                if ($points_redeemed > $max_allowed_points) {
+                    $points_redeemed = $max_allowed_points;
+                }
+
                 $points_discount = $points_redeemed * $point_value;
             } else {
                 $points_redeemed = 0;
             }
 
-            // Extract manual discount from the received total and cap it
-            $manual_discount = max(0, $received_total_discount - $points_discount);
-            
-            // Final verified discount amount
             $discount_amount = min($subtotal, $manual_discount + $points_discount);
 
             $taxable = max(0, $subtotal - $discount_amount);
@@ -345,11 +347,48 @@ try {
                     $pts_stmt = $pdo->prepare("UPDATE customers SET loyalty_points = GREATEST(0, loyalty_points - ? + ?) WHERE id = ?");
                     $pts_stmt->execute([$pts_earned, $pts_redeemed, $sale['customer_id']]);
                 }
+                
                 // Reverse debt balance
-                $debt = $sale['total'] - $sale['paid_amount'];
-                if ($debt > 0) {
-                    $bal_stmt = $pdo->prepare("UPDATE customers SET balance = GREATEST(0, balance - ?) WHERE id = ?");
-                    $bal_stmt->execute([$debt, $sale['customer_id']]);
+                $debt_initial = $sale['total'] - $sale['paid_amount'];
+                if ($debt_initial > 0) {
+                    $cust_stmt = $pdo->prepare("SELECT balance FROM customers WHERE id = ? FOR UPDATE");
+                    $cust_stmt->execute([$sale['customer_id']]);
+                    $current_balance = (float)($cust_stmt->fetchColumn() ?: 0);
+                    
+                    $debt_to_reduce = min($current_balance, $debt_initial);
+                    
+                    $bal_stmt = $pdo->prepare("UPDATE customers SET balance = balance - ? WHERE id = ?");
+                    $bal_stmt->execute([$debt_to_reduce, $sale['customer_id']]);
+                    
+                    $net_refund = $sale['paid_amount'] + ($debt_initial - $debt_to_reduce);
+                } else {
+                    $net_refund = $sale['paid_amount'];
+                }
+            } else {
+                $net_refund = $sale['paid_amount'];
+            }
+
+            // Refund logic
+            if ($net_refund > 0) {
+                // Check if the sale's session is still open
+                $session_stmt = $pdo->prepare("SELECT status FROM cash_sessions WHERE id = ?");
+                $session_stmt->execute([$sale['cash_session_id']]);
+                $session_status = $session_stmt->fetchColumn();
+                
+                if ($session_status !== 'Open') {
+                    // Record expense in vault_transactions
+                    $caisse_stmt = $pdo->query("SELECT id FROM vault_accounts WHERE name = 'Caisse' OR type = 'Cash' LIMIT 1");
+                    $caisse_acc = $caisse_stmt->fetch();
+                    $caisse_id = $caisse_acc ? $caisse_acc['id'] : null;
+                    
+                    if ($caisse_id) {
+                        $desc = "Refund for Cancelled Sale #" . $sale['id'] . " (from closed session)";
+                        $tx_stmt = $pdo->prepare("INSERT INTO vault_transactions (account_id, type, amount, description, related_type, related_id, user_id) VALUES (?, 'Expense', ?, ?, 'SaleCancellation', ?, ?)");
+                        $tx_stmt->execute([$caisse_id, $net_refund, $desc, $sale['id'], $_SESSION['user_id'] ?? 1]);
+                        
+                        // Update vault account balance
+                        $pdo->prepare("UPDATE vault_accounts SET balance = balance - ? WHERE id = ?")->execute([$net_refund, $caisse_id]);
+                    }
                 }
             }
             
@@ -398,6 +437,13 @@ try {
             $total_return_amount = 0;
             $return_items = [];
 
+            $original_subtotal = (float)$sale['subtotal'];
+            $total_discount    = (float)$sale['discount'];
+            $discount_ratio    = ($original_subtotal > 0) ? (1 - ($total_discount / $original_subtotal)) : 1;
+            
+            $original_taxable  = max(0, $original_subtotal - $total_discount);
+            $effective_tax_rate = ($original_taxable > 0) ? ((float)$sale['tax'] / $original_taxable) : 0;
+
             foreach ($data['items'] as $item) {
                 $product_id = (int)$item['product_id'];
                 $qty_to_return = (int)$item['qty'];
@@ -416,12 +462,10 @@ try {
                     throw new Exception("Cannot return more than purchased for Product ID $product_id");
                 }
 
-                // Fix #8: Pro-rate discount across returned items so refund = what was actually paid
-                $original_subtotal = (float)$sale['subtotal'];
-                $total_discount    = (float)$sale['discount'];
-                $discount_ratio    = ($original_subtotal > 0) ? (1 - ($total_discount / $original_subtotal)) : 1;
-                $item_return_value = round($qty_to_return * $sale_item['unit_price'] * $discount_ratio, 2);
-                $total_return_amount += $item_return_value;
+                // Compute HT and TTC return value
+                $item_return_value_ht = round($qty_to_return * $sale_item['unit_price'] * $discount_ratio, 2);
+                $item_return_value_ttc = round($item_return_value_ht * (1 + $effective_tax_rate), 2);
+                $total_return_amount += $item_return_value_ttc;
 
                 // Update sale_items
                 $update_item_stmt = $pdo->prepare("UPDATE sale_items SET returned_qty = returned_qty + ? WHERE id = ?");
@@ -454,10 +498,32 @@ try {
                 $stmt->execute([$return_id, $ri['product_id'], $ri['qty'], $ri['unit_price']]);
             }
 
-            // Adjust customer balance (decrease debt)
+            // Adjust customer balance (decrease debt, can become negative representing a store credit)
             if ($sale['customer_id']) {
-                $pdo->prepare("UPDATE customers SET balance = GREATEST(0, balance - ?) WHERE id = ?")
+                $pdo->prepare("UPDATE customers SET balance = balance - ? WHERE id = ?")
                     ->execute([$total_return_amount, $sale['customer_id']]);
+            } else {
+                // Anonymous refund: record expense in vault_transactions if the session is closed
+                if ($total_return_amount > 0) {
+                    $session_stmt = $pdo->prepare("SELECT status FROM cash_sessions WHERE id = ?");
+                    $session_stmt->execute([$sale['cash_session_id']]);
+                    $session_status = $session_stmt->fetchColumn();
+                    
+                    if ($session_status !== 'Open') {
+                        $caisse_stmt = $pdo->query("SELECT id FROM vault_accounts WHERE name = 'Caisse' OR type = 'Cash' LIMIT 1");
+                        $caisse_acc = $caisse_stmt->fetch();
+                        $caisse_id = $caisse_acc ? $caisse_acc['id'] : null;
+                        
+                        if ($caisse_id) {
+                            $desc = "Refund for Return on Sale #" . $sale['id'] . " (from closed session)";
+                            $tx_stmt = $pdo->prepare("INSERT INTO vault_transactions (account_id, type, amount, description, related_type, related_id, user_id) VALUES (?, 'Expense', ?, ?, 'SaleReturn', ?, ?)");
+                            $tx_stmt->execute([$caisse_id, $total_return_amount, $desc, $return_id, $user_id]);
+                            
+                            // Update vault account balance
+                            $pdo->prepare("UPDATE vault_accounts SET balance = balance - ? WHERE id = ?")->execute([$total_return_amount, $caisse_id]);
+                        }
+                    }
+                }
             }
 
             // Fix #7: Notification moved BEFORE commit() to be part of the transaction

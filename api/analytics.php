@@ -25,15 +25,27 @@ try {
             // Revenue & profit in range (deducting returns)
             $stmt = $pdo->prepare("
                 SELECT
-                    COALESCE(SUM(s.total - COALESCE(sr.refunded, 0)), 0) as revenue,
+                    COALESCE(SUM(
+                        CASE 
+                            WHEN s.subtotal > 0 THEN si.net_subtotal * (1 - (s.discount / s.subtotal))
+                            ELSE 0 
+                        END
+                    ), 0) as revenue,
                     COUNT(s.id)               as sales_count,
-                    COALESCE(AVG(s.total - COALESCE(sr.refunded, 0)), 0) as avg_order
+                    COALESCE(AVG(
+                        CASE 
+                            WHEN s.subtotal > 0 THEN si.net_subtotal * (1 - (s.discount / s.subtotal))
+                            ELSE 0 
+                        END
+                    ), 0) as avg_order
                 FROM sales s
                 LEFT JOIN (
-                    SELECT sale_id, SUM(total_amount) as refunded
-                    FROM sale_returns
+                    SELECT 
+                        sale_id,
+                        SUM((qty - returned_qty) * unit_price) as net_subtotal
+                    FROM sale_items
                     GROUP BY sale_id
-                ) sr ON sr.sale_id = s.id
+                ) si ON si.sale_id = s.id
                 WHERE DATE(s.date) BETWEEN ? AND ? AND s.status = 'Completed'
             ");
             $stmt->execute([$from, $to]);
@@ -100,16 +112,24 @@ try {
             $stmt = $pdo->prepare("
                 SELECT
                     $labelExpr as label,
-                    COALESCE(SUM(s.total - COALESCE(sr.refunded, 0)), 0) as revenue,
-                    COALESCE(SUM(s.total - COALESCE(sr.refunded, 0) - COALESCE(si.cogs, 0)), 0) as profit
+                    COALESCE(SUM(
+                        CASE 
+                            WHEN s.subtotal > 0 THEN si.net_subtotal * (1 - (s.discount / s.subtotal))
+                            ELSE 0 
+                        END
+                    ), 0) as revenue,
+                    COALESCE(SUM(
+                        CASE 
+                            WHEN s.subtotal > 0 THEN si.net_subtotal * (1 - (s.discount / s.subtotal))
+                            ELSE 0 
+                        END - si.net_cogs
+                    ), 0) as profit
                 FROM sales s
                 LEFT JOIN (
-                    SELECT sale_id, SUM(total_amount) as refunded
-                    FROM sale_returns
-                    GROUP BY sale_id
-                ) sr ON sr.sale_id = s.id
-                LEFT JOIN (
-                    SELECT sale_id, SUM((qty - returned_qty) * cost_price) as cogs
+                    SELECT 
+                        sale_id,
+                        SUM((qty - returned_qty) * unit_price) as net_subtotal,
+                        SUM((qty - returned_qty) * cost_price) as net_cogs
                     FROM sale_items
                     GROUP BY sale_id
                 ) si ON si.sale_id = s.id

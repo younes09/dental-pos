@@ -980,8 +980,8 @@ const posModule = {
         const currentTaxRate = invoiceType === 'BL' ? 0 : this.taxRate;
 
         const taxableAmount = Math.max(0, subtotal - discountAmount);
-        const tax = taxableAmount * currentTaxRate;
-        const total = taxableAmount + tax;
+        const tax = Math.round(taxableAmount * currentTaxRate * 100) / 100;
+        const total = Math.round((taxableAmount + tax) * 100) / 100;
 
         // Calculate potential points earned
         const earningRate = parseFloat(App.state.settings.loyalty_earning_rate || 100);
@@ -1131,6 +1131,7 @@ const posModule = {
                 quotation_id: this.currentQuotationId,
                 subtotal: totals.subtotal,
                 discount_amount: totals.discountAmount,
+                manual_discount_percent: parseFloat(document.getElementById('cart-discount').value) || 0,
                 tax: totals.tax,
                 total: totals.total,
                 paid_amount: totals.paidAmount,

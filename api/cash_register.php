@@ -19,12 +19,12 @@ try {
                 $sales_stmt->execute([$session['id']]);
                 $cash_sales = (float) $sales_stmt->fetchColumn() ?: 0;
 
-                // Cash returns in this session
+                // Cash returns in this session (only for anonymous customers who received cash refund)
                 $returns_stmt = $pdo->prepare("
                     SELECT SUM(sr.total_amount) 
                     FROM sale_returns sr
                     JOIN sales s ON sr.sale_id = s.id
-                    WHERE s.cash_session_id = ? AND s.payment_method = 'Cash'
+                    WHERE s.cash_session_id = ? AND s.payment_method = 'Cash' AND s.customer_id IS NULL
                 ");
                 $returns_stmt->execute([$session['id']]);
                 $cash_returns = (float) $returns_stmt->fetchColumn() ?: 0;
@@ -146,7 +146,7 @@ try {
                 SELECT SUM(sr.total_amount) 
                 FROM sale_returns sr
                 JOIN sales s ON sr.sale_id = s.id
-                WHERE s.cash_session_id = ? AND s.payment_method = 'Cash'
+                WHERE s.cash_session_id = ? AND s.payment_method = 'Cash' AND s.customer_id IS NULL
             ");
             $returns_stmt->execute([$session['id']]);
             $cash_returns = (float) $returns_stmt->fetchColumn() ?: 0;
