@@ -102,6 +102,14 @@ try {
             }
 
             // Calculate subtotal
+            // Validate prices against frontend to prevent desynchronization (Issue 8)
+            $frontend_total_price = 0;
+            foreach ($data['items'] as $item) {
+                $frontend_total_price += (float)($item['price'] ?? 0) * (int)($item['qty'] ?? 0);
+            }
+
+            // Calculate subtotal
+            $db_total_price = 0;
             $processed_items = [];
             foreach ($data['items'] as $item) {
                 $qty = (int)$item['qty'];
@@ -120,6 +128,7 @@ try {
                 }
                 
                 $price = (float)$db_prod['selling_price'];
+                $db_total_price += $price * $qty;
                 $cost = (float)$db_prod['purchase_price'];
                 $item_total = $price * $qty;
                 $subtotal += $item_total;
@@ -133,9 +142,18 @@ try {
                 ];
             }
 
+            if (abs($frontend_total_price - $db_total_price) > 0.05) {
+                throw new Exception("Price desynchronization detected. Some product prices have changed. Please refresh your cart.");
+            }
+
             // Recalculate and validate discount logic
-            $manual_discount_percent = max(0, min(100, (float)($data['manual_discount_percent'] ?? 0)));
-            $manual_discount = round($subtotal * ($manual_discount_percent / 100), 2);
+            $manual_discount_amount = isset($data['manual_discount_amount']) && $data['manual_discount_amount'] !== null ? (float)$data['manual_discount_amount'] : null;
+            if ($manual_discount_amount !== null) {
+                $manual_discount = round(max(0, min($subtotal, $manual_discount_amount)), 2);
+            } else {
+                $manual_discount_percent = max(0, min(100, (float)($data['manual_discount_percent'] ?? 0)));
+                $manual_discount = round($subtotal * ($manual_discount_percent / 100), 2);
+            }
 
             $points_redeemed = max(0, (int)($data['points_redeemed'] ?? 0));
             $points_discount = 0;
@@ -289,6 +307,11 @@ try {
                         $remaining_to_deduct -= $available;
                     }
                 }
+
+                if ($remaining_to_deduct > 0) {
+                    $adj_batch_stmt = $pdo->prepare("INSERT INTO stock_batches (product_id, purchase_type, initial_qty, remaining_qty) VALUES (?, 'BA', ?, ?)");
+                    $adj_batch_stmt->execute([$item['id'], -$remaining_to_deduct, -$remaining_to_deduct]);
+                }
             }
 
             // 3. Update customer loyalty points and balance
@@ -398,14 +421,20 @@ try {
             $items = $items_stmt->fetchAll();
             
             $restore_stmt = $pdo->prepare("UPDATE products SET stock_qty = stock_qty + ? WHERE id = ?");
-            $batch_stmt = $pdo->prepare("INSERT INTO stock_batches (product_id, purchase_type, initial_qty, remaining_qty) VALUES (?, 'BA', ?, ?)");
+            $batch_stmt = $pdo->prepare("INSERT INTO stock_batches (product_id, purchase_type, initial_qty, remaining_qty) VALUES (?, ?, ?, ?)");
+            
+            // Helper statement to find the most recent batch type for a product to keep fiscal nature
+            $type_stmt = $pdo->prepare("SELECT purchase_type FROM stock_batches WHERE product_id = ? ORDER BY id DESC LIMIT 1");
             
             foreach ($items as $item) {
                 // M7: Only restore stock that hasn't already been returned
                 $net_qty = $item['qty'] - ($item['returned_qty'] ?? 0);
                 if ($net_qty > 0) {
+                    $type_stmt->execute([$item['product_id']]);
+                    $purchase_type = $type_stmt->fetchColumn() ?: 'BA';
+
                     $restore_stmt->execute([$net_qty, $item['product_id']]);
-                    $batch_stmt->execute([$item['product_id'], $net_qty, $net_qty]);
+                    $batch_stmt->execute([$item['product_id'], $purchase_type, $net_qty, $net_qty]);
                 }
             }
             
@@ -466,17 +495,20 @@ try {
                 $item_return_value_ht = round($qty_to_return * $sale_item['unit_price'] * $discount_ratio, 2);
                 $item_return_value_ttc = round($item_return_value_ht * (1 + $effective_tax_rate), 2);
                 $total_return_amount += $item_return_value_ttc;
-
-                // Update sale_items
                 $update_item_stmt = $pdo->prepare("UPDATE sale_items SET returned_qty = returned_qty + ? WHERE id = ?");
                 $update_item_stmt->execute([$qty_to_return, $sale_item['id']]);
 
                 // Increase stock
                 $pdo->prepare("UPDATE products SET stock_qty = stock_qty + ? WHERE id = ?")->execute([$qty_to_return, $product_id]);
                 
+                // Retrieve the most recent batch type for this product to keep fiscal nature
+                $type_stmt = $pdo->prepare("SELECT purchase_type FROM stock_batches WHERE product_id = ? ORDER BY id DESC LIMIT 1");
+                $type_stmt->execute([$product_id]);
+                $purchase_type = $type_stmt->fetchColumn() ?: 'BA';
+
                 // Create stock batch for returned items
-                $pdo->prepare("INSERT INTO stock_batches (product_id, purchase_type, initial_qty, remaining_qty) VALUES (?, 'BA', ?, ?)")
-                    ->execute([$product_id, $qty_to_return, $qty_to_return]);
+                $pdo->prepare("INSERT INTO stock_batches (product_id, purchase_type, initial_qty, remaining_qty) VALUES (?, ?, ?, ?)")
+                    ->execute([$product_id, $purchase_type, $qty_to_return, $qty_to_return]);
 
                 $return_items[] = [
                     'product_id' => $product_id,

@@ -176,8 +176,8 @@ try {
             $paid_amount = isset($data['paid_amount']) ? (float)$data['paid_amount'] : 0;
             $user_id = $_SESSION['user_id'] ?? 1;
 
-            // Check if PO exists and is not already fully received
-            $stmt = $pdo->prepare("SELECT supplier_id, status, total, paid_amount FROM purchase_orders WHERE id = ?");
+            // Check if PO exists and is not already fully received (lock row to prevent race conditions - Issue 15)
+            $stmt = $pdo->prepare("SELECT supplier_id, status, total, paid_amount FROM purchase_orders WHERE id = ? FOR UPDATE");
             $stmt->execute([$po_id]);
             $po = $stmt->fetch();
 
