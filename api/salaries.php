@@ -88,6 +88,13 @@ try {
 
             $pdo->beginTransaction();
 
+            // Check for duplicate salary payment (Issue 13)
+            $dup_stmt = $pdo->prepare("SELECT id FROM salary_payments WHERE staff_id = ? AND period_month = ? AND period_year = ?");
+            $dup_stmt->execute([$staff_id, $period_month, $period_year]);
+            if ($dup_stmt->fetch()) {
+                throw new Exception("Un paiement de salaire a déjà été enregistré pour cet employé ce mois-ci ($period_month/$period_year).");
+            }
+
             // Fix #3: Check vault balance before debiting
             $balChk = $pdo->prepare("SELECT balance FROM vault_accounts WHERE id = ? FOR UPDATE");
             $balChk->execute([$vault_account_id]);

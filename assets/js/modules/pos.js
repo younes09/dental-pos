@@ -9,6 +9,7 @@ const posModule = {
     cart: [],
     taxRate: 0, // F1.5: Default to 0, will be loaded from settings
     currentQuotationId: null,
+    fixedDiscountAmount: null,
     allQuotations: [],
     _debtWarningShown: false,
     viewMode: localStorage.getItem('pos_view_mode') || 'grid',
@@ -119,7 +120,7 @@ const posModule = {
 
         // Cart controls
         document.getElementById('btn-clear-cart').onclick = () => this.clearCart();
-        document.getElementById('cart-discount').oninput = () => this.calculateTotals();
+        document.getElementById('cart-discount').oninput = () => { this.fixedDiscountAmount = null; this.calculateTotals(); };
         document.getElementById('cart-points-redeem').oninput = () => this.calculateTotals();
         document.getElementById('cart-paid-amount').oninput = () => this.calculateTotals();
 
@@ -470,12 +471,13 @@ const posModule = {
 
         this.selectCustomer(quotation.customer_id);
 
-        let subtotal = quotation.subtotal;
+        let subtotal = parseFloat(quotation.subtotal);
         let discountPercent = 0;
         if (subtotal > 0 && quotation.discount > 0) {
             discountPercent = (quotation.discount / subtotal) * 100;
         }
         document.getElementById('cart-discount').value = parseFloat(discountPercent).toFixed(2);
+        this.fixedDiscountAmount = parseFloat(quotation.discount) || null;
 
         this.renderCart();
         this.calculateTotals();
@@ -942,9 +944,14 @@ const posModule = {
         const subtotal = this.cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
 
         // Manual Discount
-        let discountPercent = parseFloat(document.getElementById('cart-discount').value) || 0;
-        discountPercent = Math.max(0, Math.min(100, discountPercent));
-        let discountAmount = subtotal * (discountPercent / 100);
+        let discountAmount = 0;
+        if (this.fixedDiscountAmount !== null && this.fixedDiscountAmount !== undefined) {
+            discountAmount = this.fixedDiscountAmount;
+        } else {
+            let discountPercent = parseFloat(document.getElementById('cart-discount').value) || 0;
+            discountPercent = Math.max(0, Math.min(100, discountPercent));
+            discountAmount = subtotal * (discountPercent / 100);
+        }
 
         // Points Discount
         let pointsRedeemed = 0;
@@ -980,8 +987,8 @@ const posModule = {
         const currentTaxRate = invoiceType === 'BL' ? 0 : this.taxRate;
 
         const taxableAmount = Math.max(0, subtotal - discountAmount);
-        const tax = taxableAmount * currentTaxRate;
-        const total = taxableAmount + tax;
+        const tax = Math.round(taxableAmount * currentTaxRate * 100) / 100;
+        const total = Math.round((taxableAmount + tax) * 100) / 100;
 
         // Calculate potential points earned
         const earningRate = parseFloat(App.state.settings.loyalty_earning_rate || 100);
@@ -1131,6 +1138,8 @@ const posModule = {
                 quotation_id: this.currentQuotationId,
                 subtotal: totals.subtotal,
                 discount_amount: totals.discountAmount,
+                manual_discount_percent: parseFloat(document.getElementById('cart-discount').value) || 0,
+                manual_discount_amount: this.fixedDiscountAmount,
                 tax: totals.tax,
                 total: totals.total,
                 paid_amount: totals.paidAmount,

@@ -10,7 +10,7 @@ if ($current_file !== 'auth.php' && !isset($_SESSION['user_id'])) {
 }
 
 define('DB_HOST', 'localhost');
-define('DB_NAME', 'dental_pos');
+define('DB_NAME', 'dental_pos_test');
 define('DB_USER', 'root');
 define('DB_PASS', '');
 
