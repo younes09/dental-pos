@@ -1,5 +1,5 @@
 <style>
-    /* Guide Custom Styling */
+/* Guide Custom Styling  */
     .guide-container {
         font-family: 'Inter', 'Outfit', sans-serif;
         color: #2b2d42;
@@ -119,10 +119,89 @@
         border-radius: 12px;
     }
     
-    .highlight-match {
-        background-color: #fef08a;
-        padding: 0 2px;
-        border-radius: 4px;
+    /* POS Map Mockup Styling */
+    .pos-map-mockup {
+        position: relative;
+        background: #f8fafc;
+        border: 2px dashed #cbd5e1;
+        border-radius: 16px;
+        padding: 20px;
+    }
+    
+    .pos-hotspot {
+        cursor: pointer;
+        padding: 10px 14px;
+        border-radius: 10px;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+        transition: all 0.2s ease;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        font-size: 0.85rem;
+    }
+    
+    .pos-hotspot:hover {
+        background: #0d9488;
+        color: #ffffff;
+        border-color: #0d9488;
+    }
+    
+    .pos-hotspot.active {
+        background: #0d9488;
+        color: #ffffff;
+        border-color: #0d9488;
+        font-weight: 600;
+    }
+    
+    .pos-explain-box {
+        min-height: 110px;
+        border-left: 4px solid #0d9488;
+        padding-left: 15px;
+        transition: all 0.3s ease;
+    }
+    
+    /* Stepper Scenario Simulator */
+    .sim-step-indicator {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background-color: #e2e8f0;
+        color: #475569;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        margin-right: 8px;
+        font-size: 0.9rem;
+    }
+    
+    .sim-step-indicator.active {
+        background-color: #0d9488;
+        color: #ffffff;
+        box-shadow: 0 2px 6px rgba(20, 184, 166, 0.3);
+    }
+    
+    .sim-step-indicator.completed {
+        background-color: #22c55e;
+        color: #ffffff;
+    }
+    
+    /* Glossary terms styling */
+    .glossary-item {
+        border-bottom: 1px solid #f1f5f9;
+        padding: 12px 0;
+        transition: all 0.2s ease;
+    }
+    
+    .glossary-item:last-child {
+        border-bottom: none;
+    }
+    
+    .glossary-item:hover {
+        background-color: rgba(20, 184, 166, 0.02);
+        padding-left: 8px;
     }
     
     /* Dark Mode styles override */
@@ -149,6 +228,31 @@
         border-color: #2dd4bf;
         background: rgba(20, 184, 166, 0.1);
     }
+    
+    body.dark-mode .pos-map-mockup {
+        background: #0f172a;
+        border-color: #334155;
+    }
+    
+    body.dark-mode .pos-hotspot {
+        background: #1e293b;
+        border-color: #334155;
+        color: #e2e8f0;
+    }
+    
+    body.dark-mode .pos-hotspot:hover, body.dark-mode .pos-hotspot.active {
+        background: #2dd4bf;
+        color: #0f172a;
+        border-color: #2dd4bf;
+    }
+    
+    body.dark-mode .glossary-item {
+        border-bottom-color: #334155;
+    }
+    
+    body.dark-mode .glossary-item:hover {
+        background-color: rgba(45, 212, 191, 0.05);
+    }
 </style>
 
 <div class="container-fluid guide-container py-3 animate__animated animate__fadeIn">
@@ -168,11 +272,11 @@
     <!-- Interactive Search Bar -->
     <div class="row mb-4">
         <div class="col-lg-12">
-            <div class="card border-0 shadow-sm rounded-4 p-3 ">
+            <div class="card border-0 shadow-sm rounded-4 p-3">
                 <div class="search-box w-100 position-relative">
                     <i class="fas fa-search text-teal position-absolute" style="left: 20px; top: 50%; transform: translateY(-50%); font-size: 1.1rem;"></i>
                     <input type="text" id="guide-search" class="form-control rounded-pill py-3 ps-5 border-0 bg-light" 
-                        placeholder="Rechercher une notion, un écran ou un mot-clé (ex: caisse, dette, stock, BL)...">
+                        placeholder="Rechercher une notion, un écran ou un mot-clé (ex: caisse, dette, stock, BL, bilan)...">
                     <button type="button" id="btn-clear-guide-search" class="btn btn-link text-muted position-absolute end-0 top-50 translate-middle-y border-0 p-0 me-3" style="display: none; text-decoration: none;">
                         <i class="fas fa-times"></i>
                     </button>
@@ -185,17 +289,21 @@
     <div class="row g-4">
         <!-- Sidebar Navigation -->
         <div class="col-lg-3 d-none d-lg-block">
-            <div class="guide-sidebar card border-0 shadow-sm rounded-4 p-4 ">
+            <div class="guide-sidebar card border-0 shadow-sm rounded-4 p-4">
                 <h6 class="fw-bold text-teal mb-3 uppercase small letter-spacing-1">Sections du Guide</h6>
                 <nav class="nav flex-column" id="toc-nav">
                     <a class="toc-link active" href="#sec-roles"><i class="fas fa-user-shield me-2"></i> Rôles & Accès</a>
                     <a class="toc-link" href="#sec-routine"><i class="fas fa-calendar-day me-2"></i> Routine Quotidienne</a>
+                    <a class="toc-link" href="#sec-pos-map"><i class="fas fa-map me-2"></i> Plan du Point de Vente</a>
                     <a class="toc-link" href="#sec-stock"><i class="fas fa-boxes-stacked me-2"></i> Gestion des Stocks</a>
                     <a class="toc-link" href="#sec-babl"><i class="fas fa-tags me-2"></i> Concept Clé : BA vs BL</a>
+                    <a class="toc-link" href="#sec-simulation"><i class="fas fa-chalkboard-user me-2"></i> Simulateur de Scénarios</a>
                     <a class="toc-link" href="#sec-contacts"><i class="fas fa-user-group me-2"></i> Clients & Fournisseurs</a>
                     <a class="toc-link" href="#sec-finance"><i class="fas fa-vault me-2"></i> Finances & Bilan</a>
+                    <a class="toc-link" href="#sec-glossary"><i class="fas fa-book me-2"></i> Glossaire des Termes</a>
                     <a class="toc-link" href="#sec-admin"><i class="fas fa-cog me-2"></i> Administration & Outils</a>
                     <a class="toc-link" href="#sec-tips"><i class="fas fa-bolt me-2"></i> Astuces d'Efficacité</a>
+                    <a class="toc-link" href="#sec-quiz"><i class="fas fa-graduation-cap me-2"></i> Testez vos Connaissances</a>
                     <a class="toc-link" href="#sec-faq"><i class="fas fa-circle-question me-2"></i> FAQ Interactive</a>
                 </nav>
             </div>
@@ -246,10 +354,10 @@
                             <h5 class="fw-bold text-teal mb-2"><i class="fas fa-shield-halved me-2"></i>Administrateur (Admin)</h5>
                             <p class="small text-muted mb-3">Responsable de la supervision complète de l'établissement.</p>
                             <ul class="row g-2 list-unstyled text-muted small mb-0">
-                                <li class="col-md-6"><i class="fas fa-check text-teal me-2"></i>Accès complet au **Bilan Financier** & **Trésorerie**</li>
-                                <li class="col-md-6"><i class="fas fa-check text-teal me-2"></i>Gestion de la **Paie / Salaires** du personnel</li>
-                                <li class="col-md-6"><i class="fas fa-check text-teal me-2"></i>Création et contrôle des **Utilisateurs** et de leurs rôles</li>
-                                <li class="col-md-6"><i class="fas fa-check text-teal me-2"></i>Modification des **Paramètres Généraux** (TVA, Devises...)</li>
+                                <li class="col-md-6"><i class="fas fa-check text-teal me-2"></i>Accès complet au <strong>Bilan Financier</strong> & <strong>Trésorerie</strong></li>
+                                <li class="col-md-6"><i class="fas fa-check text-teal me-2"></i>Gestion de la <strong>Paie / Salaires</strong> du personnel</li>
+                                <li class="col-md-6"><i class="fas fa-check text-teal me-2"></i>Création et contrôle des <strong>Utilisateurs</strong> et de leurs rôles</li>
+                                <li class="col-md-6"><i class="fas fa-check text-teal me-2"></i>Modification des <strong>Paramètres Généraux</strong> (TVA, Devises...)</li>
                             </ul>
                         </div>
                         <!-- Cashier -->
@@ -257,10 +365,10 @@
                             <h5 class="fw-bold text-teal mb-2"><i class="fas fa-cash-register me-2"></i>Caissier (Cashier)</h5>
                             <p class="small text-muted mb-3">Concentré sur le service client, l'encaissement et le suivi commercial quotidien.</p>
                             <ul class="row g-2 list-unstyled text-muted small mb-0">
-                                <li class="col-md-6"><i class="fas fa-check text-teal me-2"></i>Ouverture et clôture de sa session de **Caisse**</li>
-                                <li class="col-md-6"><i class="fas fa-check text-teal me-2"></i>Ventes directes rapides au **Point de Vente (POS)**</li>
-                                <li class="col-md-6"><i class="fas fa-check text-teal me-2"></i>Création de **Devis** et proformas pour les clients</li>
-                                <li class="col-md-6"><i class="fas fa-check text-teal me-2"></i>Enregistrement des règlements de **Dettes Clients**</li>
+                                <li class="col-md-6"><i class="fas fa-check text-teal me-2"></i>Ouverture et clôture de sa session de <strong>Caisse</strong></li>
+                                <li class="col-md-6"><i class="fas fa-check text-teal me-2"></i>Ventes directes rapides au <strong>Point de Vente (POS)</strong></li>
+                                <li class="col-md-6"><i class="fas fa-check text-teal me-2"></i>Création de <strong>Devis</strong> et proformas pour les clients</li>
+                                <li class="col-md-6"><i class="fas fa-check text-teal me-2"></i>Enregistrement des règlements de <strong>Dettes Clients</strong></li>
                             </ul>
                         </div>
                         <!-- Stock Manager -->
@@ -269,9 +377,9 @@
                             <p class="small text-muted mb-3">En charge de la réception des articles, du rangement et du contact avec les fournisseurs.</p>
                             <ul class="row g-2 list-unstyled text-muted small mb-0">
                                 <li class="col-md-6"><i class="fas fa-check text-teal me-2"></i>Ajout de produits et mise à jour des prix</li>
-                                <li class="col-md-6"><i class="fas fa-check text-teal me-2"></i>Édition des **Bons de Commande (PO)** aux fournisseurs</li>
+                                <li class="col-md-6"><i class="fas fa-check text-teal me-2"></i>Édition des <strong>Bons de Commande (PO)</strong> aux fournisseurs</li>
                                 <li class="col-md-6"><i class="fas fa-check text-teal me-2"></i>Réception et entrée de marchandise (lots BA/BL)</li>
-                                <li class="col-md-6"><i class="fas fa-check text-teal me-2"></i>Suivi et inventaire des **Équipements** physiques</li>
+                                <li class="col-md-6"><i class="fas fa-check text-teal me-2"></i>Suivi et inventaire des <strong>Équipements</strong> physiques</li>
                             </ul>
                         </div>
                     </div>
@@ -296,9 +404,9 @@
                                 <span class="badge bg-teal me-2">Étape 1</span>
                                 <h6 class="fw-bold mb-0 text-teal">L'Ouverture de Caisse (Matin)</h6>
                             </div>
-                            <p class="small text-muted">Avant d'encaisser, allez dans **Ventes** > **Caisse**. Déclarez le fond de caisse physique (pièces et billets de départ) et validez. Cela empêche le mélange entre la caisse d'hier et d'aujourd'hui.</p>
+                            <p class="small text-muted">Avant d'encaisser, allez dans <strong>Ventes</strong> > <strong>Caisse</strong>. Déclarez le fond de caisse physique (pièces et billets de départ) et validez. Cela empêche le mélange entre la caisse d'hier et d'aujourd'hui.</p>
                             <div class="alert alert-premium py-2 px-3 small text-teal mb-0">
-                                <i class="fas fa-lightbulb me-2"></i>**Exemple :** Vous ouvrez le tiroir-caisse, il y a 15 000 DZD en monnaie pour démarrer. Vous tapez ce montant en sélectionnant "Coffre-fort" comme source.
+                                <i class="fas fa-lightbulb me-2"></i><strong>Exemple :</strong> Vous ouvrez le tiroir-caisse, il y a 15 000 DZD en monnaie pour démarrer. Vous tapez ce montant en sélectionnant "Coffre-fort" comme source.
                             </div>
                         </div>
 
@@ -308,7 +416,7 @@
                                 <span class="badge bg-teal me-2">Étape 2</span>
                                 <h6 class="fw-bold mb-0 text-teal">Les Ventes au Point de Vente (POS)</h6>
                             </div>
-                            <p class="small text-muted">Ajoutez les produits au panier en cliquant dessus ou en scannant le code-barres. Sélectionnez le client. Saisissez le montant payé. Si le client paie moins que le total, la différence devient une **dette** sur son compte client.</p>
+                            <p class="small text-muted">Ajoutez les produits au panier en cliquant dessus ou en scannant le code-barres. Sélectionnez le client. Saisissez le montant payé. Si le client paie moins que le total, la différence devient une <strong>dette</strong> sur son compte client.</p>
                         </div>
 
                         <div class="timeline-item">
@@ -317,9 +425,57 @@
                                 <span class="badge bg-danger me-2">Étape 3</span>
                                 <h6 class="fw-bold mb-0 text-danger">La Clôture de Caisse (Soir)</h6>
                             </div>
-                            <p class="small text-muted">En fin de journée, cliquez sur **Fermer la session**. Comptez l'argent physique et tapez-le dans **Montant réel**. S'il y a une différence avec les calculs automatiques de l'ordinateur, un **écart de caisse (Discrepancy)** est enregistré.</p>
+                            <p class="small text-muted">En fin de journée, cliquez sur <strong>Fermer la session</strong>. Comptez l'argent physique et tapez-le dans <strong>Montant réel</strong>. S'il y a une différence avec les calculs automatiques de l'ordinateur, un <strong>écart de caisse (Discrepancy)</strong> est enregistré.</p>
                             <div class="alert alert-premium-warning py-2 px-3 small text-warning-dark mb-0">
-                                <i class="fas fa-triangle-exclamation me-2"></i>**Concept d'Écart :** Si l'ordinateur attendait 40 000 DZD mais que vous comptez 39 800 DZD, le système signale un écart de -200 DZD (par exemple, une erreur de rendu de monnaie dans la journée).
+                                <i class="fas fa-triangle-exclamation me-2"></i><strong>Concept d'Écart :</strong> Si l'ordinateur attendait 40 000 DZD mais que vous comptez 39 800 DZD, le système signale un écart de -200 DZD (par exemple, une erreur de rendu de monnaie dans la journée).
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- NEW SECTION 2.5: INTERACTIVE POS MAP -->
+            <section id="sec-pos-map" class="mb-5 guide-section">
+                <div class="guide-card p-4">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="icon-circle bg-teal-soft text-teal me-3" style="width: 48px; height: 48px;">
+                            <i class="fas fa-map fa-lg"></i>
+                        </div>
+                        <h4 class="fw-bold mb-0 text-navy">Plan Interactif de l'Écran de Vente (POS)</h4>
+                    </div>
+                    <p class="text-muted">Découvrez le rôle de chaque zone du Point de Vente en cliquant sur les éléments interactifs ci-dessous :</p>
+                    
+                    <div class="row g-4 mt-2">
+                        <div class="col-md-5">
+                            <div class="pos-map-mockup shadow-sm">
+                                <h6 class="fw-bold text-teal mb-3 text-center border-bottom pb-2">🛒 Interface de Vente (Simulée)</h6>
+                                <div class="pos-hotspot active" data-spot="search">
+                                    <i class="fas fa-magnifying-glass me-2"></i> 1. Recherche & Catégories
+                                </div>
+                                <div class="pos-hotspot" data-spot="grid">
+                                    <i class="fas fa-grip me-2"></i> 2. Grille des Produits
+                                </div>
+                                <div class="pos-hotspot" data-spot="customer">
+                                    <i class="fas fa-user-tag me-2"></i> 3. Choix du Client & Fidélité
+                                </div>
+                                <div class="pos-hotspot" data-spot="totals">
+                                    <i class="fas fa-receipt me-2"></i> 4. Calculs des Totaux & Crédit
+                                </div>
+                                <div class="pos-hotspot" data-spot="docpay">
+                                    <i class="fas fa-credit-card me-2"></i> 5. Type de Document & Paiement
+                                </div>
+                                <div class="pos-hotspot" data-spot="shortcuts">
+                                    <i class="fas fa-keyboard me-2"></i> 6. Mettre en attente / Devis
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-7">
+                            <div class="card border-0 bg-light p-4 rounded-4 h-100 d-flex flex-column justify-content-center">
+                                <div id="pos-explain-area" class="pos-explain-box">
+                                    <h5 class="fw-bold text-teal mb-2" id="pos-explain-title">1. Recherche & Catégories</h5>
+                                    <p class="small text-muted mb-0" id="pos-explain-desc">Cette zone vous permet de chercher un produit en tapant son nom, sa marque, sa catégorie ou en scannant directement son code-barres avec une douchette. Vous pouvez également cliquer sur les dossiers de catégories pour filtrer instantanément la grille.</p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -341,14 +497,14 @@
                         <div class="col-md-6">
                             <div class="card p-3 border-0 bg-light rounded-4 h-100">
                                 <h6 class="fw-bold text-teal mb-2"><i class="fas fa-plus-circle me-2"></i>Ajouter & Ajuster du Stock</h6>
-                                <p class="small text-muted">Saisissez toujours un **Stock minimum**. Si le stock passe sous cette valeur, une alerte s'affiche sur votre tableau de bord.
-                                Utilisez **Adjust Stock** pour modifier le stock en dehors des ventes (pour signaler un flacon cassé ou une perte).</p>
+                                <p class="small text-muted">Saisissez toujours un <strong>Stock minimum</strong>. Si le stock passe sous cette valeur, une alerte s'affiche sur votre tableau de bord.
+                                Utilisez <strong>Adjust Stock</strong> pour modifier le stock en dehors des ventes (pour signaler un flacon cassé ou une perte).</p>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="card p-3 border-0 bg-light rounded-4 h-100">
                                 <h6 class="fw-bold text-teal mb-2"><i class="fas fa-file-invoice-dollar me-2"></i>Bons de Commande Fournisseurs (PO)</h6>
-                                <p class="small text-muted">Créez un bon de commande avec les produits et prix convenus. Dès réception physique des colis, changez le statut du PO en **Received** (Reçu). L'ordinateur augmente alors automatiquement vos stocks.</p>
+                                <p class="small text-muted">Créez un bon de commande avec les produits et prix convenus. Dès réception physique des colis, changez le statut du PO en <strong>Received</strong> (Reçu). L'ordinateur augmente alors automatiquement vos stocks.</p>
                             </div>
                         </div>
                     </div>
@@ -391,19 +547,70 @@
                     <div class="p-3 bg-light rounded-4 border">
                         <p class="small text-muted mb-2">Imaginez que vous vendez des boîtes d'implants dentaires. Vous avez en rayon :</p>
                         <ul class="small text-muted ps-3 mb-3">
-                            <li>**3 implants** achetés avec facture officielle (**BA**)</li>
-                            <li>**5 implants** reçus par colis simple de livraison (**BL**)</li>
+                            <li><strong>3 implants</strong> achetés avec facture officielle (<strong>BA</strong>)</li>
+                            <li><strong>5 implants</strong> reçus par colis simple de livraison (<strong>BL</strong>)</li>
                         </ul>
-                        <p class="small text-muted mb-2">Un dentiste arrive et commande **5 implants** :</p>
+                        <p class="small text-muted mb-2">Un dentiste arrive et commande <strong>5 implants</strong> :</p>
                         <ol class="small text-muted ps-3 mb-0">
-                            <li>Le système vend d'abord en priorité les 3 implants officiels (**BA**).</li>
-                            <li>Pour les 2 implants restants, le système pioche dans le lot **BL** et affiche immédiatement une **Alerte (BL)** à l'écran.</li>
-                            <li>Le caissier a alors le choix :</li>
-                            <ul>
-                                <li>*Si le client veut une facture fiscale officielle* : Vous ne devez lui facturer que 3 implants. Vous enlevez les 2 autres du panier.</li>
-                                <li>*Si le client accepte un Bon de Livraison* : Vous validez l'alerte et sélectionnez **Bon de Livraison (BL)** comme type de document de vente.</li>
-                            </ul>
+                            <li>Le système vend d'abord en priorité les 3 implants officiels (<strong>BA</strong>).</li>
+                            <li>Pour les 2 implants restants, le système pioche dans le lot <strong>BL</strong> et affiche immédiatement une <strong>Alerte (BL)</strong> à l'écran.</li>
+                            <li>Le caissier a alors le choix :
+                                <ul>
+                                    <li><em>Si le client veut une facture fiscale officielle</em> : Vous ne devez lui facturer que 3 implants. Vous enlevez les 2 autres du panier.</li>
+                                    <li><em>Si le client accepte un Bon de Livraison</em> : Vous validez l'alerte et sélectionnez <strong>Bon de Livraison (BL)</strong> comme type de document de vente.</li>
+                                </ul>
+                            </li>
                         </ol>
+                    </div>
+                </div>
+            </section>
+
+            <!-- NEW SECTION 4.5: INTERACTIVE SCENARIO SIMULATOR -->
+            <section id="sec-simulation" class="mb-5 guide-section">
+                <div class="guide-card p-4">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="icon-circle bg-teal-soft text-teal me-3" style="width: 48px; height: 48px;">
+                            <i class="fas fa-chalkboard-user fa-lg"></i>
+                        </div>
+                        <h4 class="fw-bold mb-0 text-navy">Simulateur de Scénarios en Direct</h4>
+                    </div>
+                    <p class="text-muted">Sélectionnez une situation métier courante pour apprendre pas-à-pas les clics à effectuer :</p>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <select id="sim-scenario-selector" class="form-select rounded-pill px-3 border border-teal">
+                                <option value="debt">Scénario A : Vendre à crédit à un dentiste enregistré</option>
+                                <option value="bl_alert">Scénario B : Gérer une alerte stock "BL" en caisse</option>
+                                <option value="broken">Scénario C : Déclarer un produit cassé (Ajustement négatif)</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="card border-0 bg-light p-4 rounded-4 position-relative">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="fw-bold text-teal" id="sim-scenario-title">Scénario A : Vendre à crédit</span>
+                            <div>
+                                <span class="sim-step-indicator active">1</span>
+                                <span class="sim-step-indicator">2</span>
+                                <span class="sim-step-indicator">3</span>
+                                <span class="sim-step-indicator">4</span>
+                            </div>
+                        </div>
+                        
+                        <div id="sim-step-content" class="py-3 min-height-110">
+                            <!-- Injected dynamically -->
+                            <h6 class="fw-bold text-navy">Étape 1 : Choisir le client</h6>
+                            <p class="small text-muted mb-0">Au Point de Vente (POS), cliquez sur le bouton <strong>Changer</strong> à côté du client. Recherchez le nom du dentiste (ex: Dr. Benali) et sélectionnez-le. N'utilisez pas "Client de passage", car les crédits anonymes sont bloqués.</p>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between border-top pt-3 mt-3">
+                            <button id="sim-btn-prev" class="btn btn-sm btn-outline-secondary rounded-pill px-3" disabled>
+                                <i class="fas fa-chevron-left me-1"></i> Précédent
+                            </button>
+                            <button id="sim-btn-next" class="btn btn-sm btn-teal rounded-pill px-3">
+                                Suivant <i class="fas fa-chevron-right ms-1"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -425,8 +632,8 @@
                                 <h6 class="fw-bold text-teal mb-2"><i class="fas fa-user-check me-2"></i>Dette Client (Créances)</h6>
                                 <p class="small text-muted mb-2">Lorsqu'un client achète sans payer la totalité, sa dette augmente. Pour enregistrer son remboursement :</p>
                                 <ol class="small text-muted ps-3 mb-0">
-                                    <li>Allez dans **Contacts** > **Clients**.</li>
-                                    <li>Sélectionnez le client et cliquez sur **Régler la dette** (Settle Debt).</li>
+                                    <li>Allez dans <strong>Contacts</strong> > <strong>Clients</strong>.</li>
+                                    <li>Sélectionnez le client et cliquez sur <strong>Régler la dette</strong> (Settle Debt).</li>
                                     <li>Tapez le montant apporté et sélectionnez le compte de dépôt (ex: Banque).</li>
                                 </ol>
                             </div>
@@ -436,8 +643,8 @@
                                 <h6 class="fw-bold text-teal mb-2"><i class="fas fa-truck-field me-2"></i>Dette Fournisseur (Passif)</h6>
                                 <p class="small text-muted mb-2">Il s'agit des factures fournisseurs en attente de paiement. Pour les solder :</p>
                                 <ol class="small text-muted ps-3 mb-0">
-                                    <li>Allez dans **Contacts** > **Fournisseurs**.</li>
-                                    <li>Cliquez sur **Régler la dette** (Settle Debt) après lui avoir envoyé le paiement par chèque ou virement.</li>
+                                    <li>Allez dans <strong>Contacts</strong> > <strong>Fournisseurs</strong>.</li>
+                                    <li>Cliquez sur <strong>Régler la dette</strong> (Settle Debt) après lui avoir envoyé le paiement par chèque ou virement.</li>
                                 </ol>
                             </div>
                         </div>
@@ -456,7 +663,7 @@
                     </div>
 
                     <h6 class="fw-bold text-teal mb-2"><i class="fas fa-wallet me-2"></i>Les Comptes de Trésorerie</h6>
-                    <p class="small text-muted">Gérez vos banques, comptes CCP, ou caisses physiques. Le bouton **Transfert Interne** permet de déplacer de l'argent d'un compte à un autre (ex : déposer de l'argent de la caisse boutique vers le compte bancaire).</p>
+                    <p class="small text-muted">Gérez vos banques, comptes CCP, ou caisses physiques. Le bouton <strong>Transfert Interne</strong> permet de déplacer de l'argent d'un compte à un autre (ex : déposer de l'argent de la caisse boutique vers le compte bancaire).</p>
                     
                     <h6 class="fw-bold text-teal mb-2 mt-4"><i class="fas fa-scale-balanced me-2"></i>Le Bilan Financier : Comprendre sa richesse réelle</h6>
                     <p class="small text-muted">Votre richesse nette ne se résume pas à l'argent liquide en banque. Le bilan applique la formule suivante :</p>
@@ -469,10 +676,10 @@
                             <div class="card p-3 border-0 bg-light rounded-4">
                                 <h6 class="fw-bold text-success mb-2">1. L'Actif (Ce que vous possédez)</h6>
                                 <ul class="small text-muted ps-3 mb-0">
-                                    <li>**Trésorerie** : Liquidités en banque ou en coffre.</li>
-                                    <li>**Valeur du Stock** : Coût d'achat de vos marchandises.</li>
-                                    <li>**Créances Clients** : Dettes que les clients doivent vous payer.</li>
-                                    <li>**Équipements** : Vitrines, ordinateurs, matériel de démo.</li>
+                                    <li><strong>Trésorerie</strong> : Liquidités en banque ou en coffre.</li>
+                                    <li><strong>Valeur du Stock</strong> : Coût d'achat de vos marchandises.</li>
+                                    <li><strong>Créances Clients</strong> : Dettes que les clients doivent vous payer.</li>
+                                    <li><strong>Équipements</strong> : Vitrines, ordinateurs, matériel de démo.</li>
                                 </ul>
                             </div>
                         </div>
@@ -480,14 +687,70 @@
                             <div class="card p-3 border-0 bg-light rounded-4">
                                 <h6 class="fw-bold text-danger mb-2">2. Le Passif (Ce que vous devez)</h6>
                                 <ul class="small text-muted ps-3 mb-0">
-                                    <li>**Dettes Fournisseurs** : Ce que vous devez encore régler pour vos commandes de stock reçues.</li>
+                                    <li><strong>Dettes Fournisseurs</strong> : Ce que vous devez encore régler pour vos commandes de stock reçues.</li>
                                 </ul>
                             </div>
                         </div>
                     </div>
 
                     <div class="alert alert-premium py-2 px-3 small text-teal mb-0">
-                        <i class="fas fa-calculator me-2"></i>**Exemple :** Si votre boutique dispose de 10 000 DZD en caisse, 50 000 DZD de stock et 20 000 DZD de dettes clients (Total Actif = 80 000 DZD), mais que vous devez 15 000 DZD à un fournisseur (Passif), votre richesse réelle (**Capital Net**) est de **65 000 DZD**.
+                        <i class="fas fa-calculator me-2"></i><strong>Exemple :</strong> Si votre boutique dispose de 10 000 DZD en caisse, 50 000 DZD de stock et 20 000 DZD de dettes clients (Total Actif = 80 000 DZD), mais que vous devez 15 000 DZD à un fournisseur (Passif), votre richesse réelle (<strong>Capital Net</strong>) est de <strong>65 000 DZD</strong>.
+                    </div>
+                </div>
+            </section>
+
+            <!-- NEW SECTION 6.5: INTERACTIVE GLOSSARY -->
+            <section id="sec-glossary" class="mb-5 guide-section">
+                <div class="guide-card p-4">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="icon-circle bg-teal-soft text-teal me-3" style="width: 48px; height: 48px;">
+                            <i class="fas fa-book fa-lg"></i>
+                        </div>
+                        <h4 class="fw-bold mb-0 text-navy">Glossaire des Termes (Lexique Comptable & POS)</h4>
+                    </div>
+                    <p class="text-muted">Retrouvez la définition des abréviations et termes clés utilisés dans le logiciel :</p>
+                    
+                    <div class="input-group mb-3 search-box">
+                        <span class="input-group-text bg-light border-0"><i class="fas fa-search text-muted small"></i></span>
+                        <input type="text" id="glossary-search" class="form-control border-0 bg-light small" placeholder="Rechercher un terme dans le lexique...">
+                    </div>
+                    
+                    <div class="glossary-list" style="max-height: 250px; overflow-y: auto;">
+                        <div class="glossary-item" data-term="ba">
+                            <span class="badge bg-success text-white me-2">BA</span>
+                            <span class="fw-bold text-navy">Bon d'Achat :</span>
+                            <span class="small text-muted">Stock acheté officiellement auprès d'un fournisseur avec facture fiscale (assujetti à la TVA).</span>
+                        </div>
+                        <div class="glossary-item" data-term="bl">
+                            <span class="badge bg-warning text-dark me-2">BL</span>
+                            <span class="fw-bold text-navy">Bon de Livraison :</span>
+                            <span class="small text-muted">Document ou lot de stock reçu sans facture fiscale immédiate, souvent utilisé pour les transactions simples.</span>
+                        </div>
+                        <div class="glossary-item" data-term="bv">
+                            <span class="badge bg-teal text-white me-2">BV</span>
+                            <span class="fw-bold text-navy">Bon de Vente :</span>
+                            <span class="small text-muted">Reçu de caisse ordinaire imprimé pour les clients finaux lors d'un achat direct au comptoir.</span>
+                        </div>
+                        <div class="glossary-item" data-term="fifo">
+                            <span class="badge bg-secondary text-white me-2">FIFO</span>
+                            <span class="fw-bold text-navy">Premier entré, premier sorti (First-In First-Out) :</span>
+                            <span class="small text-muted">Méthode de gestion de stock vendant en priorité les produits achetés aux dates les plus anciennes.</span>
+                        </div>
+                        <div class="glossary-item" data-term="actif">
+                            <span class="badge bg-primary text-white me-2">Actif</span>
+                            <span class="fw-bold text-navy">Actifs :</span>
+                            <span class="small text-muted">Tout ce que l'entreprise possède (argent en banque, valeur des produits en stock, créances clients).</span>
+                        </div>
+                        <div class="glossary-item" data-term="passif">
+                            <span class="badge bg-danger text-white me-2">Passif</span>
+                            <span class="fw-bold text-navy">Passifs / Dettes :</span>
+                            <span class="small text-muted">Ce que l'entreprise doit aux autres (principalement les dettes d'achats impayées aux fournisseurs).</span>
+                        </div>
+                        <div class="glossary-item" data-term="ecart">
+                            <span class="badge bg-dark text-white me-2">Écart</span>
+                            <span class="fw-bold text-navy">Écart de Caisse (Discrepancy) :</span>
+                            <span class="small text-muted">Différence entre le solde théorique calculé par le logiciel et l'argent réel compté physiquement le soir.</span>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -506,13 +769,13 @@
                         <div class="col-md-4">
                             <div class="card p-3 border-0 bg-light rounded-4 h-100">
                                 <h6 class="fw-bold text-teal mb-2"><i class="fas fa-file-invoice me-2"></i>Devis (Proformas)</h6>
-                                <p class="small text-muted mb-0">Créez un devis pour un client. S'il l'accepte plus tard, allez au POS, cliquez sur **Charger Devis**, et le panier se remplira automatiquement en 1 seconde !</p>
+                                <p class="small text-muted mb-0">Créez un devis pour un client. S'il l'accepte plus tard, allez au POS, cliquez sur <strong>Charger Devis</strong>, et le panier se remplira automatiquement en 1 seconde !</p>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="card p-3 border-0 bg-light rounded-4 h-100">
                                 <h6 class="fw-bold text-teal mb-2"><i class="fas fa-arrow-rotate-left me-2"></i>Retours & Annulations</h6>
-                                <p class="small text-muted mb-0">Dans **Historique des Ventes**, vous pouvez annuler une vente erronée ou effectuer un retour partiel de marchandise. Le stock sera corrigé automatiquement.</p>
+                                <p class="small text-muted mb-0">Dans <strong>Historique des Ventes</strong>, vous pouvez annuler une vente erronée ou effectuer un retour partiel de marchandise. Le stock sera corrigé automatiquement.</p>
                             </div>
                         </div>
                         <div class="col-md-4">
@@ -539,13 +802,13 @@
                             <div class="d-flex w-100 justify-content-between">
                                 <h6 class="fw-bold mb-1 text-teal"><i class="fas fa-search me-2"></i>1. Recherche rapide universelle</h6>
                             </div>
-                            <p class="small text-muted mb-0">La barre de recherche tout en haut de l'écran vous permet de scanner un produit ou taper son nom à tout moment pour vérifier sa quantité en stock et son prix, sans quitter votre page actuelle.</p>
+                            <p class="small text-muted mb-0">La barre de recherche tout en haut de l'écran vous permet de scanner un produit ou tapez son nom à tout moment pour vérifier sa quantité en stock et son prix, sans quitter votre page actuelle.</p>
                         </li>
                         <li class="list-group-item px-0 py-3 bg-transparent">
                             <div class="d-flex w-100 justify-content-between">
                                 <h6 class="fw-bold mb-1 text-teal"><i class="fas fa-pause me-2"></i>2. Mettre une vente en attente (Hold)</h6>
                             </div>
-                            <p class="small text-muted mb-0">Si un client oublie son moyen de paiement, cliquez sur le bouton **Pause** en bas de son panier. Vous pouvez servir le client suivant. Récupérez ensuite son panier en cliquant sur le bouton **Récentes** (icône ticket) lorsque le client revient.</p>
+                            <p class="small text-muted mb-0">Si un client oublie son moyen de paiement, cliquez sur le bouton <strong>Pause</strong> en bas de son panier. Vous pouvez servir le client suivant. Récupérez ensuite son panier en cliquant sur le bouton <strong>Récentes</strong> (icône ticket) lorsque le client revient.</p>
                         </li>
                         <li class="list-group-item px-0 py-3 bg-transparent">
                             <div class="d-flex w-100 justify-content-between">
@@ -554,6 +817,65 @@
                             <p class="small text-muted mb-0">Pour masquer les barres de votre navigateur internet et maximiser l'espace d'affichage du Point de Vente, cliquez sur l'icône d'agrandissement en haut à droite.</p>
                         </li>
                     </ul>
+                </div>
+            </section>
+
+            <!-- NEW SECTION 8.5: INTERACTIVE TRAINING QUIZ -->
+            <section id="sec-quiz" class="mb-5 guide-section">
+                <div class="guide-card p-4">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="icon-circle bg-teal-soft text-teal me-3" style="width: 48px; height: 48px;">
+                            <i class="fas fa-graduation-cap fa-lg"></i>
+                        </div>
+                        <h4 class="fw-bold mb-0 text-navy">Testez vos Connaissances (Mini-Quiz de formation)</h4>
+                    </div>
+                    <p class="text-muted">Répondez à ces questions rapides pour valider votre formation sur DentalPOS :</p>
+                    
+                    <div id="quiz-container">
+                        <!-- Q1 -->
+                        <div class="mb-4 quiz-question" data-qid="1">
+                            <h6 class="fw-bold text-teal mb-2">Question 1 : Puis-je vendre à crédit (dette) à un "Client de passage" (anonyme) ?</h6>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio" name="q1" id="q1-a" value="yes">
+                                <label class="form-check-label small" for="q1-a">Oui, le système s'en rappellera.</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio" name="q1" id="q1-b" value="no">
+                                <label class="form-check-label small" for="q1-b">Non, uniquement aux clients enregistrés dans la base de données.</label>
+                            </div>
+                        </div>
+
+                        <!-- Q2 -->
+                        <div class="mb-4 quiz-question" data-qid="2">
+                            <h6 class="fw-bold text-teal mb-2">Question 2 : Que faire si le système affiche une alerte jaune "BL" au Point de Vente ?</h6>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio" name="q2" id="q2-a" value="cancel">
+                                <label class="form-check-label small" for="q2-a">Annuler la vente immédiatement, il s'agit d'une anomalie grave.</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio" name="q2" id="q2-b" value="select_bl">
+                                <label class="form-check-label small" for="q2-b">Choisir le type de document "Bon de Livraison (BL)" ou retirer les articles si le client veut une facture BA.</label>
+                            </div>
+                        </div>
+
+                        <!-- Q3 -->
+                        <div class="mb-4 quiz-question" data-qid="3">
+                            <h6 class="fw-bold text-teal mb-2">Question 3 : Comment est mis à jour le stock physique après l'achat de produits chez un fournisseur ?</h6>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio" name="q3" id="q3-a" value="manual">
+                                <label class="form-check-label small" for="q3-a">Il faut augmenter manuellement le stock de chaque fiche produit.</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio" name="q3" id="q3-b" value="auto">
+                                <label class="form-check-label small" for="q3-b">Le stock augmente automatiquement lorsque le statut du Bon de Commande (PO) passe à "Received" (Reçu).</label>
+                            </div>
+                        </div>
+                        
+                        <div class="border-top pt-3 d-flex justify-content-between align-items-center">
+                            <button id="quiz-btn-submit" class="btn btn-teal rounded-pill px-4">Soumettre mes réponses</button>
+                            <span id="quiz-result-score" class="fw-bold h6 mb-0 text-teal"></span>
+                        </div>
+                    </div>
                 </div>
             </section>
 
@@ -590,7 +912,7 @@
                             <div id="faq-c2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                                 <div class="accordion-body small text-muted">
                                     Vérifiez les points suivants :
-                                    1. Votre session de caisse du jour est-elle ouverte ? (Consultez **Caisse Enregistreuse**).
+                                    1. Votre session de caisse du jour est-elle ouverte ? (Consultez <strong>Caisse Enregistreuse</strong>).
                                     2. Le produit est-il en rupture de stock ? (S'il est à 0 et que la vente hors-stock est désactivée).
                                     3. Est-il désactivé dans le stock ? (Vérifiez le statut "Actif/Inactif" dans la fiche produit).
                                 </div>
@@ -605,7 +927,7 @@
                             </h2>
                             <div id="faq-c3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                                 <div class="accordion-body small text-muted">
-                                    Si vous avez enregistré par erreur un paiement de dette client, l'administrateur système doit se rendre dans l'historique du compte de trésorerie (Banque/Caisse) dans **Trésorerie** et supprimer le mouvement financier concerné pour réajuster le solde.
+                                    Si vous avez enregistré par erreur un paiement de dette client, l'administrateur système doit se rendre dans l'historique du compte de trésorerie (Banque/Caisse) dans <strong>Trésorerie</strong> et supprimer le mouvement financier concerné pour réajuster le solde.
                                 </div>
                             </div>
                         </div>
