@@ -89,8 +89,13 @@ const locales = {
         "pos.title": "Point of Sale",
         "catalog.title": "Catalog",
         "stock.title": "Stock Management",
+        "guide.title": "User Guide",
+        "guide.page_title": "User Guide",
 
         // Dashboard
+        "dashboard.welcome_title": "Welcome to DentalPOS",
+        "dashboard.welcome_subtitle": "Manage your stock and cash registry with ease.",
+        "dashboard.btn_guide": "User Guide",
         "dashboard.kpi.revenue": "Today's Revenue",
         "dashboard.kpi.vs_yesterday": "-- vs yesterday",
         "dashboard.kpi.monthly_sales": "Monthly Sales",
@@ -1265,8 +1270,13 @@ const locales = {
         "pos.title": "Point de Vente",
         "catalog.title": "Catalogue",
         "stock.title": "Gestion du Stock",
+        "guide.title": "Guide d'Utilisation",
+        "guide.page_title": "Guide d'Utilisation",
 
         // Dashboard
+        "dashboard.welcome_title": "Bienvenue dans DentalPOS",
+        "dashboard.welcome_subtitle": "Gérez vos stocks et votre caisse en toute sérénité.",
+        "dashboard.btn_guide": "Guide d'Utilisation",
         "dashboard.kpi.revenue": "Revenu du Jour",
         "dashboard.kpi.vs_yesterday": "-- vs hier",
         "dashboard.kpi.monthly_sales": "Ventes Mensuelles",

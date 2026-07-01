@@ -36,7 +36,8 @@ const App = {
             'balance': ['Admin'],
             'settings': ['Admin'],
             'profile': ['Admin', 'Cashier', 'Stock Manager'],
-            'notifications': ['Admin', 'Cashier', 'Stock Manager']
+            'notifications': ['Admin', 'Cashier', 'Stock Manager'],
+            'guide': ['Admin', 'Cashier', 'Stock Manager']
         }
     },
 

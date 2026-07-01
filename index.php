@@ -76,6 +76,13 @@ if (!isset($_SESSION['user_id'])) {
             </li>
             <?php endif; ?>
 
+            <li>
+                <a href="#guide" class="nav-link">
+                    <i class="fas fa-book-open"></i>
+                    <span data-i18n="guide.title">Guide d'Utilisation</span>
+                </a>
+            </li>
+
             <?php if (in_array($_SESSION['user_role'] ?? '', ['Admin', 'Cashier'])): ?>
             <li>
                 <a href="#salesSubmenu" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle nav-link">
