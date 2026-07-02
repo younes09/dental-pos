@@ -85,6 +85,8 @@ try {
 
             if (!$staff_id || !$vault_account_id) throw new Exception('Sélectionnez un membre et un compte de trésorerie.');
             if ($amount <= 0) throw new Exception('Montant invalide.');
+            if ($period_month < 1 || $period_month > 12) throw new Exception('Mois de période invalide (doit être entre 1 et 12).');
+            if ($period_year < 2000 || $period_year > 2099) throw new Exception('Année de période invalide.');
 
             $pdo->beginTransaction();
 

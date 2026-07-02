@@ -32,6 +32,10 @@ try {
 
             if (empty($name) || empty($email)) throw new Exception('Name and email are required.');
 
+            if (!empty($password) && strlen($password) < 6) {
+                throw new Exception('Password must be at least 6 characters long.');
+            }
+
             if ($id) {
                 // Update
                 if (!empty($password)) {

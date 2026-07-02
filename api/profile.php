@@ -41,6 +41,9 @@ try {
 
             // If updating password, verify current one
             if (!empty($new_password)) {
+                if (strlen($new_password) < 6) {
+                    throw new Exception('New password must be at least 6 characters long.');
+                }
                 if (empty($current_password)) {
                     throw new Exception('Current password is required to set a new one');
                 }

@@ -54,6 +54,10 @@ try {
             $opening_balance = (float) ($data['opening_balance'] ?? 0);
             $account_id = $data['account_id'] ?? null;
 
+            if ($opening_balance < 0) {
+                throw new Exception('Opening balance cannot be negative.');
+            }
+
             // Check if any session is already open
             $stmt = $pdo->query("SELECT id FROM cash_sessions WHERE status = 'Open'");
             if ($stmt->fetch()) {
