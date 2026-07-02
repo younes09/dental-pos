@@ -107,9 +107,17 @@
         }
 
         .brand-sub {
-            color: var(--text-light);
-            font-size: 14px;
-            margin-top: 5px;
+            font-family: 'Outfit', sans-serif;
+            color: var(--primary-teal);
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-top: 6px;
+            display: inline-block;
+            padding: 3px 8px;
+            background: rgba(0, 191, 166, 0.08);
+            border-radius: 4px;
         }
 
         .invoice-meta {
@@ -424,7 +432,12 @@
 
             // Set Shop Info
             if (settings) {
-                document.getElementById('receipt-brand-name').innerHTML = settings.store_name?.replace('POS', '<span>POS</span>') || 'Dental<span>POS</span>';
+                if (settings.store_logo) {
+                    document.getElementById('receipt-brand-name').innerHTML = `<img src="../${settings.store_logo}" alt="${settings.store_name || 'Logo'}" style="max-height: 90px; width: auto; object-fit: contain;">`;
+                } else {
+                    document.getElementById('receipt-brand-name').innerHTML = settings.store_name?.replace('POS', '<span>POS</span>') || 'Dental<span>POS</span>';
+                }
+                document.getElementById('receipt-brand-sub').textContent = settings.store_name || 'DentalPOS Premium';
                 document.getElementById('shop-name').textContent = settings.store_name || 'DentalPOS Premium';
                 document.getElementById('shop-address').textContent = settings.address || '';
                 if (settings.store_phone) {

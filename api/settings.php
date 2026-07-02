@@ -68,6 +68,76 @@ switch ($method) {
             exit;
         }
 
+        // Handle Logo Upload
+        if (isset($_GET['action']) && $_GET['action'] === 'upload_logo') {
+            if (!isset($_FILES['logo_file'])) {
+                http_response_code(400);
+                echo json_encode(['error' => 'No logo file uploaded']);
+                exit;
+            }
+
+            $file = $_FILES['logo_file'];
+            if ($file['error'] !== UPLOAD_ERR_OK) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Upload error code: ' . $file['error']]);
+                exit;
+            }
+
+            // Validate file extension and MIME type
+            $allowed_ext = ['jpg', 'jpeg', 'png', 'webp'];
+            $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+            if (!in_array($ext, $allowed_ext)) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Invalid image format. Allowed: jpg, png, webp']);
+                exit;
+            }
+
+            $finfo = new finfo(FILEINFO_MIME_TYPE);
+            $mime = $finfo->file($file['tmp_name']);
+            if (!str_starts_with($mime, 'image/')) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Uploaded file is not a valid image']);
+                exit;
+            }
+
+            $target_dir = "../assets/img/";
+            if (!is_dir($target_dir)) {
+                mkdir($target_dir, 0755, true);
+            }
+
+            $file_name = "store_logo_" . time() . "_" . bin2hex(random_bytes(4)) . "." . $ext;
+            $target_path = $target_dir . $file_name;
+
+            if (move_uploaded_file($file['tmp_name'], $target_path)) {
+                // Delete old logo file if it exists in settings
+                try {
+                    $stmt = $pdo->prepare("SELECT setting_value FROM settings WHERE setting_key = 'store_logo'");
+                    $stmt->execute();
+                    $old_logo = $stmt->fetchColumn();
+                    if ($old_logo && str_starts_with($old_logo, 'assets/img/')) {
+                        $old_logo_file = "../" . $old_logo;
+                        if (file_exists($old_logo_file)) {
+                            @unlink($old_logo_file);
+                        }
+                    }
+                } catch (Exception $e) {
+                    // Ignore deletion error
+                }
+
+                $logo_path = 'assets/img/' . $file_name;
+
+                // Save setting
+                $stmt = $pdo->prepare("INSERT INTO settings (setting_key, setting_value) VALUES ('store_logo', ?) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)");
+                $stmt->execute([$logo_path]);
+
+                echo json_encode(['success' => true, 'logo_path' => $logo_path]);
+            } else {
+                http_response_code(500);
+                echo json_encode(['error' => 'Failed to save uploaded file']);
+            }
+            exit;
+        }
+
         // Handle Database Restore
         if (isset($_GET['action']) && $_GET['action'] === 'restore') {
             if (!isset($_FILES['backup_file'])) {
@@ -147,7 +217,8 @@ switch ($method) {
                 'currency', 'tax_rate', 'vat_rate', 'tax_number', 'nif', 'nis', 'rc', 'address',
                 'low_stock_threshold', 'receipt_footer',
                 'language', 'timezone', 'date_format', 'theme',
-                'loyalty_earning_rate', 'loyalty_point_value'
+                'loyalty_earning_rate', 'loyalty_point_value',
+                'store_logo'
             ];
 
             $pdo->beginTransaction();

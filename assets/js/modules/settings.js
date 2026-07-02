@@ -28,6 +28,46 @@ const settingsModule = {
             };
         }
 
+        const uploadLogoBtn = document.getElementById('btn-upload-logo');
+        if (uploadLogoBtn) {
+            uploadLogoBtn.onclick = async () => {
+                const fileInput = document.getElementById('store-logo-file');
+                const file = fileInput.files[0];
+                if (!file) {
+                    App.toast('error', App.t('settings.js.select_logo') || 'Please select a logo file first');
+                    return;
+                }
+
+                const formData = new FormData();
+                formData.append('logo_file', file);
+
+                try {
+                    uploadLogoBtn.disabled = true;
+                    uploadLogoBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Uploading...`;
+
+                    const response = await fetch('api/settings.php?action=upload_logo', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const result = await response.json();
+
+                    if (result.success) {
+                        App.toast('success', App.t('settings.js.logo_uploaded') || 'Logo uploaded successfully');
+                        document.getElementById('store-logo-preview').src = result.logo_path;
+                        App.state.settings.store_logo = result.logo_path;
+                        fileInput.value = ''; // Reset input
+                    } else {
+                        App.toast('error', result.error || 'Failed to upload logo');
+                    }
+                } catch (error) {
+                    App.toast('error', 'Error: ' + error.message);
+                } finally {
+                    uploadLogoBtn.disabled = false;
+                    uploadLogoBtn.innerHTML = App.t('settings.business.btn_upload_logo') || 'Upload Logo';
+                }
+            };
+        }
+
         document.getElementById('settingsDarkModeToggle').onchange = (e) => {
             App.toggleDarkMode();
         };
@@ -63,6 +103,16 @@ const settingsModule = {
             if (loyaltyForm) {
                 if (settings.loyalty_earning_rate) loyaltyForm.elements['loyalty_earning_rate'].value = settings.loyalty_earning_rate;
                 if (settings.loyalty_point_value) loyaltyForm.elements['loyalty_point_value'].value = settings.loyalty_point_value;
+            }
+
+            // Fill Logo Preview
+            const logoPreview = document.getElementById('store-logo-preview');
+            if (logoPreview) {
+                if (settings.store_logo) {
+                    logoPreview.src = settings.store_logo;
+                } else {
+                    logoPreview.src = 'assets/img/logo.png';
+                }
             }
         }
     },
