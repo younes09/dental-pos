@@ -155,16 +155,33 @@ switch ($method) {
             
             foreach ($data as $key => $value) {
                 if (!in_array($key, $allowed_keys)) continue; // Skip unknown keys
+
+                if ($key === 'vat_rate') {
+                    if (!is_numeric($value) || (float)$value < 0 || (float)$value > 100) {
+                        throw new Exception('VAT rate must be a number between 0 and 100.');
+                    }
+                }
+                if (in_array($key, ['loyalty_earning_rate', 'loyalty_point_value'])) {
+                    if (!is_numeric($value) || (float)$value < 0) {
+                        throw new Exception(ucfirst(str_replace('_', ' ', $key)) . ' must be a non-negative number.');
+                    }
+                }
+                if ($key === 'low_stock_threshold') {
+                    if (!is_numeric($value) || (int)$value < 0) {
+                        throw new Exception('Low stock threshold must be a non-negative integer.');
+                    }
+                }
+
                 $stmt->execute([$key, $value]);
             }
             
             $pdo->commit();
             echo json_encode(['success' => true, 'message' => 'Settings updated successfully']);
-        } catch (PDOException $e) {
-            $pdo->rollBack();
-            http_response_code(500);
+        } catch (Exception $e) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            http_response_code(400);
             error_log("Settings POST Error: " . $e->getMessage());
-            echo json_encode(['error' => 'Failed to update settings.']);
+            echo json_encode(['error' => $e->getMessage()]);
         }
         break;
 

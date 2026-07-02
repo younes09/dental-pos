@@ -3,3 +3,6 @@
 
 # Ignore uploaded brnad images
 /assets/img/products/*
+
+# Ignore tests folder
+/tests

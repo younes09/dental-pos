@@ -26,12 +26,26 @@ try {
                 throw new Exception('Access denied.');
             }
             $id = $_POST['id'] ?? null;
-            $name = $_POST['name'] ?? '';
-            $phone = $_POST['phone'] ?? '';
-            $email = $_POST['email'] ?? '';
-            $wilaya = $_POST['wilaya'] ?? null;
+            $name = isset($_POST['name']) ? trim($_POST['name']) : '';
+            $phone = isset($_POST['phone']) ? trim($_POST['phone']) : '';
+            $email = isset($_POST['email']) ? trim($_POST['email']) : '';
+            $wilaya = !empty($_POST['wilaya']) ? trim($_POST['wilaya']) : null;
 
             if (empty($name)) throw new Exception('Customer name is required.');
+
+            if (!empty($email) && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                throw new Exception('Invalid email format.');
+            }
+
+            if (!empty($phone) && !preg_match('/^\+?[0-9\s\-()]{5,20}$/', $phone)) {
+                throw new Exception('Invalid phone number format.');
+            }
+
+            if ($wilaya !== null) {
+                if (!preg_match('/^[0-9]{2}$/', $wilaya) || (int)$wilaya < 1 || (int)$wilaya > 58) {
+                    throw new Exception('Invalid wilaya code.');
+                }
+            }
 
             if ($id) {
                 // Fix #12: Do NOT allow overwriting balance/loyalty_points via this form
