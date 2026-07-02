@@ -81,9 +81,11 @@ try {
             $method = $_POST['payment_method'] ?? 'Cash';
             $notes = $_POST['notes'] ?? '';
             $user_id = $_SESSION['user_id'] ?? null;
+            $account_id = $_POST['account_id'] ?? null;
 
             if (!$supplier_id) throw new Exception("Supplier ID required");
             if ($amount <= 0) throw new Exception("Invalid payment amount");
+            if (!$account_id) throw new Exception("Account ID is required");
 
             $pdo->beginTransaction();
 

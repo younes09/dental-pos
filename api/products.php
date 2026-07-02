@@ -108,7 +108,10 @@ try {
                 throw new Exception('Access denied. Only Admins or Stock Managers can save products.');
             }
             $id = $_POST['id'] ?? null;
-            $name = $_POST['name'];
+            $name = isset($_POST['name']) ? trim($_POST['name']) : '';
+            if ($name === '') {
+                throw new Exception('Product name is required');
+            }
             $category_id = !empty($_POST['category_id']) ? $_POST['category_id'] : null;
             $brand_id = !empty($_POST['brand_id']) ? $_POST['brand_id'] : null;
             $barcode = !empty($_POST['barcode']) ? $_POST['barcode'] : null;

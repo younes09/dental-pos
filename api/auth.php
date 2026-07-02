@@ -11,6 +11,36 @@ try {
             $email = $_POST['email'] ?? '';
             $password = $_POST['password'] ?? '';
 
+            // Rate limiting check
+            $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+            $key = md5($ip);
+            $filePath = dirname(__DIR__) . '/database/dpos_rate_limit_' . $key . '.json';
+            $now = time();
+            $window = 60;
+            $maxAttempts = 5;
+
+            $data = ['attempts' => []];
+            if (file_exists($filePath)) {
+                $content = file_get_contents($filePath);
+                $decoded = json_decode($content, true);
+                if (is_array($decoded)) {
+                    $data = $decoded;
+                }
+            }
+
+            // Filter out old attempts
+            $data['attempts'] = array_filter($data['attempts'], function($t) use ($now, $window) {
+                return ($now - $t) < $window;
+            });
+
+            if (count($data['attempts']) >= $maxAttempts) {
+                $oldest = min($data['attempts']);
+                $timeLeft = $window - ($now - $oldest);
+                http_response_code(429);
+                echo json_encode(['error' => "Too many login attempts. Please try again after " . max(1, $timeLeft) . " seconds."]);
+                exit;
+            }
+
             $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
             $stmt->execute([$email]);
             $user = $stmt->fetch();
@@ -20,11 +50,17 @@ try {
                     echo json_encode(['error' => 'Your account is inactive. Please contact the administrator.']);
                     exit;
                 }
+                // Clear attempts on successful login
+                if (file_exists($filePath)) {
+                    @unlink($filePath);
+                }
                 $_SESSION['user_id'] = $user['id'];
                 $_SESSION['user_name'] = $user['name'];
                 $_SESSION['user_role'] = $user['role'];
                 echo json_encode(['success' => true]);
             } else {
+                $data['attempts'][] = $now;
+                file_put_contents($filePath, json_encode($data));
                 echo json_encode(['error' => 'Invalid email or password']);
             }
             break;
