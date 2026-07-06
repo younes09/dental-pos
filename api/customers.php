@@ -48,15 +48,18 @@ try {
             }
 
             if ($id) {
-                // Fix #12: Do NOT allow overwriting balance/loyalty_points via this form
-                // These are updated only through dedicated payment/sale actions
-                $stmt = $pdo->prepare("UPDATE customers SET name=?, phone=?, email=?, wilaya=? WHERE id=?");
-                $stmt->execute([$name, $phone, $email, $wilaya, $id]);
+                $balance = isset($_POST['balance']) ? (float)$_POST['balance'] : 0.0;
+                $loyalty_points = isset($_POST['loyalty_points']) ? (int)$_POST['loyalty_points'] : 0;
+
+                $stmt = $pdo->prepare("UPDATE customers SET name=?, phone=?, email=?, wilaya=?, balance=?, loyalty_points=? WHERE id=?");
+                $stmt->execute([$name, $phone, $email, $wilaya, $balance, $loyalty_points, $id]);
                 echo json_encode(['success' => 'Customer updated successfully']);
             } else {
-                // Fix #12: Force balance=0 and loyalty_points=0 for new customers
-                $stmt = $pdo->prepare("INSERT INTO customers (name, phone, email, wilaya, balance, loyalty_points) VALUES (?, ?, ?, ?, 0, 0)");
-                $stmt->execute([$name, $phone, $email, $wilaya]);
+                $balance = isset($_POST['balance']) ? (float)$_POST['balance'] : 0.0;
+                $loyalty_points = isset($_POST['loyalty_points']) ? (int)$_POST['loyalty_points'] : 0;
+
+                $stmt = $pdo->prepare("INSERT INTO customers (name, phone, email, wilaya, balance, loyalty_points) VALUES (?, ?, ?, ?, ?, ?)");
+                $stmt->execute([$name, $phone, $email, $wilaya, $balance, $loyalty_points]);
                 $newId = $pdo->lastInsertId();
                 echo json_encode(['success' => 'Customer added successfully', 'id' => $newId]);
             }
