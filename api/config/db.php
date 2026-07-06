@@ -5,7 +5,7 @@ if (php_sapi_name() !== 'cli') {
     }
 
     $current_file = basename($_SERVER['PHP_SELF']);
-    if ($current_file !== 'auth.php' && !isset($_SESSION['user_id'])) {
+    if ($current_file !== 'auth.php' && $current_file !== 'public_store.php' && !isset($_SESSION['user_id'])) {
         http_response_code(401);
         die(json_encode(['error' => 'Unauthorized access. Please log in.']));
     }

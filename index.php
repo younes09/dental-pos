@@ -144,6 +144,11 @@ if (!isset($_SESSION['user_id'])) {
                             <i class="fas fa-book-open"></i> <span data-i18n="sidebar.catalog">Catalog</span>
                         </a>
                     </li>
+                    <li>
+                        <a href="store.php" target="_blank">
+                            <i class="fas fa-store text-teal"></i> <span data-i18n="sidebar.public_store">Public Store</span>
+                        </a>
+                    </li>
                 </ul>
             </li>
 

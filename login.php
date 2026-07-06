@@ -110,7 +110,11 @@ if (isset($_SESSION['user_id'])) {
                 </div>
                 <button type="submit" class="btn btn-teal" data-i18n="login.btn_signin">SIGN IN</button>
             </form>
-            <!-- Demo credentials removed for production -->
+            
+            <div class="text-center mt-3">
+                <i class="fas fa-store fs-5 text-teal"></i>
+                <a href="store.php" class="text-decoration-none fw-semibold small" data-i18n="login.public_catalog">Consulter notre boutique</a>
+            </div>
             
             <!-- Language Switcher -->
             <div class="text-center mt-3 border-top pt-3">
