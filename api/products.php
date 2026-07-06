@@ -530,7 +530,7 @@ try {
 
             // Batches
             $batch_stmt = $pdo->prepare("
-                SELECT id, purchase_type, initial_qty, remaining_qty, expiry_date, created_at
+                SELECT id, purchase_type, initial_qty, remaining_qty, expiry_date, purchase_price, created_at
                 FROM stock_batches 
                 WHERE product_id = ? AND remaining_qty > 0
                 ORDER BY IFNULL(expiry_date, '9999-12-31') ASC, created_at ASC
