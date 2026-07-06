@@ -318,8 +318,8 @@ const stockModule = {
                         }
                         if (type === 'display') {
                             return `
-                                <small class="text-muted">B: ${App.formatCurrency(row.purchase_price)}</small><br>
-                                <span class="text-teal fw-bold">S: ${App.formatCurrency(val)}</span>
+                                <small class="text-muted">A: ${App.formatCurrency(row.purchase_price)}</small><br>
+                                <span class="text-teal fw-bold">V: ${App.formatCurrency(val)}</span>
                             `;
                         }
                         return val;
