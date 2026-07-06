@@ -81,7 +81,9 @@ const sales_historyModule = {
                         const val = parseFloat(data || 0);
                         if (type === 'display') {
                             const textStyle = row.status === 'Cancelled' ? 'style="text-decoration: line-through; opacity: 0.6;"' : '';
-                            return `<span class="fw-bold text-navy" ${textStyle}>${App.formatCurrency(val)}</span>`;
+                            const colorClass = val >= 0 ? 'text-success' : 'text-danger';
+                            const sign = val >= 0 ? '+' : '';
+                            return `<span class="fw-bold ${colorClass}" ${textStyle}>${sign}${App.formatCurrency(val)}</span>`;
                         }
                         return val;
                     }
