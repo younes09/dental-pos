@@ -60,18 +60,18 @@ try {
             if (empty($name)) {
                 throw new Exception('Category name is required.');
             }
-            
+
             // Check if exists
             $stmt = $pdo->prepare("SELECT id FROM categories WHERE name = ?");
             $stmt->execute([$name]);
             if ($row = $stmt->fetch()) {
                 throw new Exception('A category with this name already exists.');
             }
-            
+
             $stmt = $pdo->prepare("INSERT INTO categories (name) VALUES (?)");
             $stmt->execute([$name]);
             $id = $pdo->lastInsertId();
-            
+
             echo json_encode(['success' => 'Category added successfully', 'data' => ['id' => $id, 'name' => $name]]);
             break;
 
@@ -87,18 +87,18 @@ try {
             if (empty($name)) {
                 throw new Exception('Brand name is required.');
             }
-            
+
             // Check if exists
             $stmt = $pdo->prepare("SELECT id FROM brands WHERE name = ?");
             $stmt->execute([$name]);
             if ($row = $stmt->fetch()) {
                 throw new Exception('A brand with this name already exists.');
             }
-            
+
             $stmt = $pdo->prepare("INSERT INTO brands (name) VALUES (?)");
             $stmt->execute([$name]);
             $id = $pdo->lastInsertId();
-            
+
             echo json_encode(['success' => 'Brand added successfully', 'data' => ['id' => $id, 'name' => $name]]);
             break;
 
@@ -185,11 +185,11 @@ try {
                     WHERE id=?
                 ");
                 $stmt->execute([$name, $category_id, $brand_id, $barcode, $purchase_price, $selling_price, $min_stock, $expiry_date, $image, $status, $id]);
-                
+
                 // Sync expiry date to active stock batches to ensure consistency
                 $sync_batches = $pdo->prepare("UPDATE stock_batches SET expiry_date = ? WHERE product_id = ? AND remaining_qty > 0");
                 $sync_batches->execute([$expiry_date, $id]);
-                
+
                 echo json_encode(['success' => 'Product updated successfully']);
             } else {
                 $pdo->beginTransaction();
@@ -276,7 +276,7 @@ try {
                     if ($purchase_price === null) {
                         $p_stmt = $pdo->prepare("SELECT purchase_price FROM products WHERE id = ?");
                         $p_stmt->execute([$id]);
-                        $purchase_price = (float)($p_stmt->fetchColumn() ?: 0.00);
+                        $purchase_price = (float) ($p_stmt->fetchColumn() ?: 0.00);
                     }
 
                     // 1. Add to products table stock_qty and update its expiry date if a new one is provided
@@ -350,13 +350,15 @@ try {
             $input = json_decode(file_get_contents('php://input'), true);
             $batch_id = $input['batch_id'] ?? null;
             $purchase_type = $input['purchase_type'] ?? 'BA';
-            $initial_qty = (int)($input['initial_qty'] ?? 0);
-            $remaining_qty = (int)($input['remaining_qty'] ?? 0);
+            $initial_qty = (int) ($input['initial_qty'] ?? 0);
+            $remaining_qty = (int) ($input['remaining_qty'] ?? 0);
             $expiry_date = !empty($input['expiry_date']) ? $input['expiry_date'] : null;
-            $purchase_price = isset($input['purchase_price']) ? (float)$input['purchase_price'] : 0.00;
-            
-            if (!$batch_id) throw new Exception('Batch ID is required.');
-            if ($initial_qty < 0 || $remaining_qty < 0) throw new Exception('Quantities cannot be negative.');
+            $purchase_price = isset($input['purchase_price']) ? (float) $input['purchase_price'] : 0.00;
+
+            if (!$batch_id)
+                throw new Exception('Batch ID is required.');
+            if ($initial_qty < 0 || $remaining_qty < 0)
+                throw new Exception('Quantities cannot be negative.');
 
             $pdo->beginTransaction();
             try {
@@ -365,14 +367,15 @@ try {
                 $stmt->execute([$batch_id]);
                 $product_id = $stmt->fetchColumn();
 
-                if (!$product_id) throw new Exception('Batch not found');
+                if (!$product_id)
+                    throw new Exception('Batch not found');
 
                 $update_query = "UPDATE stock_batches SET purchase_type = ?, initial_qty = ?, remaining_qty = ?, expiry_date = ?, purchase_price = ?";
                 $params = [$purchase_type, $initial_qty, $remaining_qty, $expiry_date, $purchase_price];
 
                 if (!empty($input['created_at'])) {
                     $update_query .= ", created_at = CONCAT(?, ' ', IFNULL(TIME(created_at), '00:00:00'))";
-                    $params[] = $input['created_at']; 
+                    $params[] = $input['created_at'];
                 }
 
                 $update_query .= " WHERE id = ?";
@@ -384,14 +387,14 @@ try {
                 // Recalculate the overall product stock_qty based on all batches
                 $sum_stmt = $pdo->prepare("SELECT SUM(remaining_qty) as total FROM stock_batches WHERE product_id = ? AND remaining_qty > 0");
                 $sum_stmt->execute([$product_id]);
-                $total_stock = (int)$sum_stmt->fetchColumn();
+                $total_stock = (int) $sum_stmt->fetchColumn();
 
                 $update_prod_stmt = $pdo->prepare("UPDATE products SET stock_qty = ? WHERE id = ?");
                 $update_prod_stmt->execute([$total_stock, $product_id]);
 
                 $pdo->commit();
                 echo json_encode(['success' => 'Batch updated successfully']);
-                
+
             } catch (Exception $e) {
                 $pdo->rollBack();
                 throw $e;

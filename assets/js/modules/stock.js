@@ -549,8 +549,7 @@ const stockModule = {
     async viewDetails(id) {
         try {
             const response = await App.api(`products.php?action=get_details&id=${id}`);
-            if (response && response.error) {
-                App.toast('error', response.error);
+            if (!response) {
                 return;
             }
 
