@@ -594,10 +594,25 @@ try {
             $customer_id = $_GET['customer_id'] ?? null;
             $query = "
                 SELECT s.*, c.name as customer_name, u.name as user_name,
-                       (SELECT COUNT(*) FROM sale_returns WHERE sale_id = s.id) as has_returns
+                       (SELECT COUNT(*) FROM sale_returns WHERE sale_id = s.id) as has_returns,
+                       COALESCE(
+                           CASE 
+                               WHEN s.subtotal > 0 THEN (si.net_subtotal * (1 - (s.discount / s.subtotal))) - si.net_cogs
+                               ELSE -si.net_cogs
+                           END, 
+                           0
+                       ) as profit
                 FROM sales s
                 LEFT JOIN customers c ON s.customer_id = c.id
                 LEFT JOIN users u ON s.user_id = u.id
+                LEFT JOIN (
+                    SELECT 
+                        sale_id,
+                        SUM((qty - returned_qty) * unit_price) as net_subtotal,
+                        SUM((qty - returned_qty) * cost_price) as net_cogs
+                    FROM sale_items
+                    GROUP BY sale_id
+                ) si ON si.sale_id = s.id
             ";
             
             if ($customer_id) {

@@ -75,7 +75,7 @@ const sales_historyModule = {
                     }
                 },
                 {
-                    data: 'total',
+                    data: 'profit',
                     type: 'num',
                     render: (data, type, row) => {
                         const val = parseFloat(data || 0);
@@ -145,7 +145,7 @@ const sales_historyModule = {
             App.t('sh.table.cashier'),
             App.t('sh.table.payment'),
             App.t('sh.table.doc'),
-            App.t('sh.table.total')
+            App.t('sh.table.profit')
         ];
 
         const rows = data.map(r => [
@@ -155,7 +155,7 @@ const sales_historyModule = {
             r.user_name,
             r.payment_method,
             r.invoice_type || 'BV',
-            `${parseFloat(r.total).toFixed(2)} ${App.state.settings.currency}`
+            `${parseFloat(r.profit).toFixed(2)} ${App.state.settings.currency}`
         ]);
 
         doc.autoTable({
@@ -184,7 +184,7 @@ const sales_historyModule = {
             [App.t('sh.table.cashier')]: r.user_name,
             [App.t('sh.table.payment')]: r.payment_method,
             [App.t('sh.table.doc')]: r.invoice_type || 'BV',
-            [App.t('sh.table.total')]: `${parseFloat(r.total).toFixed(2)} ${App.state.settings.currency}`
+            [App.t('sh.table.profit')]: `${parseFloat(r.profit).toFixed(2)} ${App.state.settings.currency}`
         }));
 
         const ws = XLSX.utils.json_to_sheet(rows);
