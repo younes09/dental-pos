@@ -6,3 +6,11 @@
 
 # Ignore tests folder
 /tests
+
+#Ignore all database backup files 
+/database/backups/*.sql
+/database/backups/backup.log
+
+
+#Ignore img that start with 'store_logo' in assets folder
+/assets/img/store_logo.*

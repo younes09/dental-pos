@@ -1,13 +1,16 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
+if (php_sapi_name() !== 'cli') {
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+
+    $current_file = basename($_SERVER['PHP_SELF']);
+    if ($current_file !== 'auth.php' && !isset($_SESSION['user_id'])) {
+        http_response_code(401);
+        die(json_encode(['error' => 'Unauthorized access. Please log in.']));
+    }
 }
 
-$current_file = basename($_SERVER['PHP_SELF']);
-if ($current_file !== 'auth.php' && !isset($_SESSION['user_id'])) {
-    http_response_code(401);
-    die(json_encode(['error' => 'Unauthorized access. Please log in.']));
-}
 
 define('DB_HOST', 'localhost');
 define('DB_NAME', 'dental_pos');
