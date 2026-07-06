@@ -61,6 +61,7 @@ CREATE TABLE stock_batches (
     purchase_type ENUM('BA', 'BL') DEFAULT 'BA',
     initial_qty INT NOT NULL,
     remaining_qty INT NOT NULL,
+    purchase_price DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
     expiry_date DATE NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE

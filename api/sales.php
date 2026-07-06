@@ -236,7 +236,7 @@ try {
             ]);
             $sale_id = $pdo->lastInsertId();
 
-            // 2. Insert items (F1.2: snapshot cost_price) and update stock
+            // 2. Insert items (FIFO cost snapshot) and update stock
             $item_stmt = $pdo->prepare("
                 INSERT INTO sale_items (sale_id, product_id, qty, unit_price, cost_price, total) 
                 VALUES (?, ?, ?, ?, ?, ?)
@@ -244,12 +244,58 @@ try {
             $stock_stmt = $pdo->prepare("UPDATE products SET stock_qty = stock_qty - ? WHERE id = ?");
 
             foreach ($processed_items as $item) {
+                // FIFO Batch Deduction & Cost calculation
+                $remaining_to_deduct = $item['qty'];
+                $batches_stmt = $pdo->prepare("SELECT id, remaining_qty, purchase_price FROM stock_batches WHERE product_id = ? AND remaining_qty > 0 ORDER BY created_at ASC FOR UPDATE");
+                $batches_stmt->execute([$item['id']]);
+                $batches = $batches_stmt->fetchAll();
+                
+                $update_batch_stmt = $pdo->prepare("UPDATE stock_batches SET remaining_qty = ? WHERE id = ?");
+                
+                $total_item_cost = 0.00;
+                $deducted_qty = 0;
+                
+                foreach ($batches as $batch) {
+                    if ($remaining_to_deduct <= 0) break;
+                    
+                    $available = (int)$batch['remaining_qty'];
+                    $batch_price = (float)$batch['purchase_price'];
+                    
+                    if ($available >= $remaining_to_deduct) {
+                        $new_qty = $available - $remaining_to_deduct;
+                        $update_batch_stmt->execute([$new_qty, $batch['id']]);
+                        
+                        $total_item_cost += $remaining_to_deduct * $batch_price;
+                        $deducted_qty += $remaining_to_deduct;
+                        $remaining_to_deduct = 0;
+                    } else {
+                        $update_batch_stmt->execute([0, $batch['id']]);
+                        
+                        $total_item_cost += $available * $batch_price;
+                        $deducted_qty += $available;
+                        $remaining_to_deduct -= $available;
+                    }
+                }
+
+                // Negative stock/out of sync fallback
+                if ($remaining_to_deduct > 0) {
+                    $fallback_price = $item['cost']; // Snapshot purchase price of the product
+                    $total_item_cost += $remaining_to_deduct * $fallback_price;
+                    $deducted_qty += $remaining_to_deduct;
+                    
+                    $adj_batch_stmt = $pdo->prepare("INSERT INTO stock_batches (product_id, purchase_type, initial_qty, remaining_qty, purchase_price) VALUES (?, 'BA', ?, ?, ?)");
+                    $adj_batch_stmt->execute([$item['id'], -$remaining_to_deduct, -$remaining_to_deduct, $fallback_price]);
+                }
+
+                $actual_cost_price = $deducted_qty > 0 ? ($total_item_cost / $deducted_qty) : 0.00;
+
+                // Insert the sale item with the actual cost
                 $item_stmt->execute([
                     $sale_id,
                     $item['id'],
                     $item['qty'],
                     $item['price'],
-                    $item['cost'],
+                    $actual_cost_price,
                     $item['total']
                 ]);
 
@@ -284,33 +330,6 @@ try {
                             '#stock'
                         ]);
                     }
-                }
-                
-                // FIFO Batch Deduction
-                $remaining_to_deduct = $item['qty'];
-                $batches_stmt = $pdo->prepare("SELECT id, remaining_qty FROM stock_batches WHERE product_id = ? AND remaining_qty > 0 ORDER BY created_at ASC FOR UPDATE");
-                $batches_stmt->execute([$item['id']]);
-                $batches = $batches_stmt->fetchAll();
-                
-                $update_batch_stmt = $pdo->prepare("UPDATE stock_batches SET remaining_qty = ? WHERE id = ?");
-                
-                foreach ($batches as $batch) {
-                    if ($remaining_to_deduct <= 0) break;
-                    
-                    $available = (int)$batch['remaining_qty'];
-                    if ($available >= $remaining_to_deduct) {
-                        $new_qty = $available - $remaining_to_deduct;
-                        $update_batch_stmt->execute([$new_qty, $batch['id']]);
-                        $remaining_to_deduct = 0;
-                    } else {
-                        $update_batch_stmt->execute([0, $batch['id']]);
-                        $remaining_to_deduct -= $available;
-                    }
-                }
-
-                if ($remaining_to_deduct > 0) {
-                    $adj_batch_stmt = $pdo->prepare("INSERT INTO stock_batches (product_id, purchase_type, initial_qty, remaining_qty) VALUES (?, 'BA', ?, ?)");
-                    $adj_batch_stmt->execute([$item['id'], -$remaining_to_deduct, -$remaining_to_deduct]);
                 }
             }
 
@@ -421,7 +440,7 @@ try {
             $items = $items_stmt->fetchAll();
             
             $restore_stmt = $pdo->prepare("UPDATE products SET stock_qty = stock_qty + ? WHERE id = ?");
-            $batch_stmt = $pdo->prepare("INSERT INTO stock_batches (product_id, purchase_type, initial_qty, remaining_qty) VALUES (?, ?, ?, ?)");
+            $batch_stmt = $pdo->prepare("INSERT INTO stock_batches (product_id, purchase_type, initial_qty, remaining_qty, purchase_price) VALUES (?, ?, ?, ?, ?)");
             
             // Helper statement to find the most recent batch type for a product to keep fiscal nature
             $type_stmt = $pdo->prepare("SELECT purchase_type FROM stock_batches WHERE product_id = ? ORDER BY id DESC LIMIT 1");
@@ -434,7 +453,7 @@ try {
                     $purchase_type = $type_stmt->fetchColumn() ?: 'BA';
 
                     $restore_stmt->execute([$net_qty, $item['product_id']]);
-                    $batch_stmt->execute([$item['product_id'], $purchase_type, $net_qty, $net_qty]);
+                    $batch_stmt->execute([$item['product_id'], $purchase_type, $net_qty, $net_qty, $item['cost_price']]);
                 }
             }
             
@@ -480,7 +499,7 @@ try {
                 if ($qty_to_return <= 0) continue;
 
                 // Validate against sale items
-                $item_stmt = $pdo->prepare("SELECT id, qty, returned_qty, unit_price FROM sale_items WHERE sale_id = ? AND product_id = ? FOR UPDATE");
+                $item_stmt = $pdo->prepare("SELECT id, qty, returned_qty, unit_price, cost_price FROM sale_items WHERE sale_id = ? AND product_id = ? FOR UPDATE");
                 $item_stmt->execute([$sale_id, $product_id]);
                 $sale_item = $item_stmt->fetch();
 
@@ -507,8 +526,8 @@ try {
                 $purchase_type = $type_stmt->fetchColumn() ?: 'BA';
 
                 // Create stock batch for returned items
-                $pdo->prepare("INSERT INTO stock_batches (product_id, purchase_type, initial_qty, remaining_qty) VALUES (?, ?, ?, ?)")
-                    ->execute([$product_id, $purchase_type, $qty_to_return, $qty_to_return]);
+                $pdo->prepare("INSERT INTO stock_batches (product_id, purchase_type, initial_qty, remaining_qty, purchase_price) VALUES (?, ?, ?, ?, ?)")
+                    ->execute([$product_id, $purchase_type, $qty_to_return, $qty_to_return, $sale_item['cost_price']]);
 
                 $return_items[] = [
                     'product_id' => $product_id,

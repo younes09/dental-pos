@@ -333,6 +333,10 @@
                                 Date</label>
                             <input type="date" name="expiry_date" class="form-control">
                         </div>
+                        <div class="col-md-6" id="adj-price-container">
+                            <label class="form-label fw-semibold" data-i18n="stock.adj.purchase_price">Purchase Price</label>
+                            <input type="number" step="0.01" name="purchase_price" id="adj-purchase-price" class="form-control">
+                        </div>
                         <div class="col-md-12" id="adj-purchase-type-container">
                             <label class="form-label fw-semibold" data-i18n="stock.adj.addition_type">Addition
                                 Type</label>
@@ -430,7 +434,7 @@
 </div>
 
 <!-- Product Details Modal -->
-<div class="modal fade" id="productDetailsModal" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="productDetailsModal" data-bs-focus="false" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4">
             <div class="modal-header border-bottom-0 p-4 pb-0">
@@ -556,6 +560,7 @@
                                         <th data-i18n="stock.details.batch_type">Type</th>
                                         <th data-i18n="stock.details.batch_initial">Initial Qty</th>
                                         <th data-i18n="stock.details.batch_remain">Remaining Qty</th>
+                                        <th data-i18n="stock.details.batch_price">Purchase Price</th>
                                         <th data-i18n="stock.details.batch_expiry">Expiry Date</th>
                                     </tr>
                                 </thead>

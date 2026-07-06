@@ -224,6 +224,7 @@ const stockModule = {
                     qty: formData.get('quantity'),
                     expiry_date: formData.get('expiry_date'),
                     purchase_type: formData.get('purchase_type') || 'BA',
+                    purchase_price: formData.get('purchase_price'),
                     reason: formData.get('reason') || 'Manual adjustment'
                 });
 
@@ -521,19 +522,23 @@ const stockModule = {
         document.getElementById('adj-product-id').value = product.id;
         document.getElementById('adj-product-name').value = product.name;
         document.getElementById('adj-current-stock').value = `${product.stock_qty} units`;
+        document.getElementById('adj-purchase-price').value = product.purchase_price;
 
         // Bind adj-type toggle
         const adjType = document.getElementById('adj-type');
         const adjPurchaseTypeContainer = document.getElementById('adj-purchase-type-container');
         const adjExpiryContainer = document.getElementById('adj-expiry-container');
+        const adjPriceContainer = document.getElementById('adj-price-container');
 
         adjType.onchange = (e) => {
             if (e.target.value === 'add') {
                 adjPurchaseTypeContainer.classList.remove('d-none');
                 adjExpiryContainer.classList.remove('d-none');
+                adjPriceContainer.classList.remove('d-none');
             } else {
                 adjPurchaseTypeContainer.classList.add('d-none');
                 adjExpiryContainer.classList.add('d-none');
+                adjPriceContainer.classList.add('d-none');
             }
         };
         adjType.dispatchEvent(new Event('change'));
@@ -616,6 +621,7 @@ const stockModule = {
                         <td><span class="badge bg-secondary-subtle border border-secondary-subtle">${b.purchase_type || 'BA'}</span></td>
                         <td>${b.initial_qty}</td>
                         <td class="fw-bold text-primary">${b.remaining_qty}</td>
+                        <td>${App.formatCurrency(b.purchase_price)}</td>
                         <td class="${expClass} d-flex align-items-center">${expDisplay} ${editBtn}</td>
                     </tr>
                 `;
@@ -713,7 +719,7 @@ const stockModule = {
                 firstTab.show();
             }
 
-            bootstrap.Modal.getOrCreateInstance(document.getElementById('productDetailsModal')).show();
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('productDetailsModal'), { focus: false }).show();
         } catch (error) {
             console.error(error);
             App.toast('error', App.t('error.generic') || 'An error occurred fetching details');
@@ -753,6 +759,10 @@ const stockModule = {
                     <label class="form-label fw-bold">Date d'expiration</label>
                     <input type="date" id="swal-batch-expiry" class="form-control" value="${expiryDate}">
                 </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Prix d'achat (DA)</label>
+                    <input type="number" step="0.01" id="swal-batch-price" class="form-control" value="${b.purchase_price}">
+                </div>
             </form>
         `;
 
@@ -771,6 +781,7 @@ const stockModule = {
                     initial_qty: document.getElementById('swal-batch-initial').value,
                     remaining_qty: document.getElementById('swal-batch-remain').value,
                     expiry_date: document.getElementById('swal-batch-expiry').value,
+                    purchase_price: document.getElementById('swal-batch-price').value,
                 }
             }
         });

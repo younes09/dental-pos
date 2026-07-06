@@ -95,7 +95,7 @@ try {
 
             $stmtItem = $pdo->prepare("INSERT INTO purchase_order_items (po_id, product_id, qty, received_qty, unit_cost, old_unit_cost) VALUES (?, ?, ?, ?, ?, ?)");
             $stmtUpdateProduct = $pdo->prepare("UPDATE products SET stock_qty = stock_qty + ?, purchase_price = ? WHERE id = ?");
-            $stmtBatch = $pdo->prepare("INSERT INTO stock_batches (product_id, purchase_type, initial_qty, remaining_qty, expiry_date) VALUES (?, ?, ?, ?, ?)");
+            $stmtBatch = $pdo->prepare("INSERT INTO stock_batches (product_id, purchase_type, initial_qty, remaining_qty, expiry_date, purchase_price) VALUES (?, ?, ?, ?, ?, ?)");
             $stmtGetOldPrice = $pdo->prepare("SELECT purchase_price FROM products WHERE id = ?");
 
             foreach ($items as $item) {
@@ -109,7 +109,7 @@ try {
                 
                 if ($status === 'Received') {
                     $stmtUpdateProduct->execute([$item['qty'], $item['unit_cost'], $item['product_id']]);
-                    $stmtBatch->execute([$item['product_id'], $purchase_type, $item['qty'], $item['qty'], $item['expiry_date'] ?? null]);
+                    $stmtBatch->execute([$item['product_id'], $purchase_type, $item['qty'], $item['qty'], $item['expiry_date'] ?? null, $item['unit_cost']]);
                 }
             }
 
@@ -188,7 +188,7 @@ try {
             $stmtUpdateItemRow = $pdo->prepare("UPDATE purchase_order_items SET received_qty = received_qty + ? WHERE id = ? AND po_id = ?");
             $stmtGetItemCost = $pdo->prepare("SELECT unit_cost FROM purchase_order_items WHERE id = ?");
             $stmtUpdateProduct = $pdo->prepare("UPDATE products SET stock_qty = stock_qty + ?, purchase_price = ? WHERE id = ?");
-            $stmtBatch = $pdo->prepare("INSERT INTO stock_batches (product_id, purchase_type, initial_qty, remaining_qty, expiry_date) VALUES (?, ?, ?, ?, ?)");
+            $stmtBatch = $pdo->prepare("INSERT INTO stock_batches (product_id, purchase_type, initial_qty, remaining_qty, expiry_date, purchase_price) VALUES (?, ?, ?, ?, ?, ?)");
 
             $total_received_value = 0;
 
@@ -220,7 +220,7 @@ try {
 
                 // Update product stock and creation batch
                 $stmtUpdateProduct->execute([$recv_qty_now, $item_cost, $product_id]);
-                $stmtBatch->execute([$product_id, $purchase_type, $recv_qty_now, $recv_qty_now, $recv_item['expiry_date'] ?? null]);
+                $stmtBatch->execute([$product_id, $purchase_type, $recv_qty_now, $recv_qty_now, $recv_item['expiry_date'] ?? null, $item_cost]);
 
                 $total_received_value += ($recv_qty_now * $item_cost);
             }

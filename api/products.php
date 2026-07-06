@@ -202,8 +202,8 @@ try {
 
                 $product_id = $pdo->lastInsertId();
                 if ($stock_qty > 0) {
-                    $batch_stmt = $pdo->prepare("INSERT INTO stock_batches (product_id, purchase_type, initial_qty, remaining_qty, expiry_date) VALUES (?, ?, ?, ?, ?)");
-                    $batch_stmt->execute([$product_id, $purchase_type, $stock_qty, $stock_qty, $expiry_date]);
+                    $batch_stmt = $pdo->prepare("INSERT INTO stock_batches (product_id, purchase_type, initial_qty, remaining_qty, expiry_date, purchase_price) VALUES (?, ?, ?, ?, ?, ?)");
+                    $batch_stmt->execute([$product_id, $purchase_type, $stock_qty, $stock_qty, $expiry_date, $purchase_price]);
                 }
 
                 $pdo->commit();
@@ -262,6 +262,7 @@ try {
             $qty = (int) ($input['qty'] ?? 0);
             $expiry_date = !empty($input['expiry_date']) ? $input['expiry_date'] : null;
             $purchase_type = $input['purchase_type'] ?? 'BA';
+            $purchase_price = isset($input['purchase_price']) && $input['purchase_price'] !== '' ? (float) $input['purchase_price'] : null;
 
             if (!in_array($type, ['add', 'subtract']))
                 throw new Exception('Invalid adjustment type.');
@@ -272,13 +273,19 @@ try {
 
             try {
                 if ($type === 'add') {
+                    if ($purchase_price === null) {
+                        $p_stmt = $pdo->prepare("SELECT purchase_price FROM products WHERE id = ?");
+                        $p_stmt->execute([$id]);
+                        $purchase_price = (float)($p_stmt->fetchColumn() ?: 0.00);
+                    }
+
                     // 1. Add to products table stock_qty and update its expiry date if a new one is provided
                     $stmt = $pdo->prepare("UPDATE products SET stock_qty = stock_qty + ?, expiry_date = COALESCE(?, expiry_date) WHERE id = ?");
                     $stmt->execute([$qty, $expiry_date, $id]);
 
                     // 2. Create new stock batch
-                    $batch_stmt = $pdo->prepare("INSERT INTO stock_batches (product_id, purchase_type, initial_qty, remaining_qty, expiry_date) VALUES (?, ?, ?, ?, ?)");
-                    $batch_stmt->execute([$id, $purchase_type, $qty, $qty, $expiry_date]);
+                    $batch_stmt = $pdo->prepare("INSERT INTO stock_batches (product_id, purchase_type, initial_qty, remaining_qty, expiry_date, purchase_price) VALUES (?, ?, ?, ?, ?, ?)");
+                    $batch_stmt->execute([$id, $purchase_type, $qty, $qty, $expiry_date, $purchase_price]);
 
                 } else if ($type === 'subtract') {
                     // F2.1 + F2.2: Lock row and validate stock before subtract
@@ -346,6 +353,7 @@ try {
             $initial_qty = (int)($input['initial_qty'] ?? 0);
             $remaining_qty = (int)($input['remaining_qty'] ?? 0);
             $expiry_date = !empty($input['expiry_date']) ? $input['expiry_date'] : null;
+            $purchase_price = isset($input['purchase_price']) ? (float)$input['purchase_price'] : 0.00;
             
             if (!$batch_id) throw new Exception('Batch ID is required.');
             if ($initial_qty < 0 || $remaining_qty < 0) throw new Exception('Quantities cannot be negative.');
@@ -359,8 +367,8 @@ try {
 
                 if (!$product_id) throw new Exception('Batch not found');
 
-                $update_query = "UPDATE stock_batches SET purchase_type = ?, initial_qty = ?, remaining_qty = ?, expiry_date = ?";
-                $params = [$purchase_type, $initial_qty, $remaining_qty, $expiry_date];
+                $update_query = "UPDATE stock_batches SET purchase_type = ?, initial_qty = ?, remaining_qty = ?, expiry_date = ?, purchase_price = ?";
+                $params = [$purchase_type, $initial_qty, $remaining_qty, $expiry_date, $purchase_price];
 
                 if (!empty($input['created_at'])) {
                     $update_query .= ", created_at = CONCAT(?, ' ', IFNULL(TIME(created_at), '00:00:00'))";
@@ -480,8 +488,8 @@ try {
 
                     $product_id = $pdo->lastInsertId();
                     if ($stock_qty > 0) {
-                        $batch_stmt = $pdo->prepare("INSERT INTO stock_batches (product_id, purchase_type, initial_qty, remaining_qty, expiry_date) VALUES (?, 'BA', ?, ?, ?)");
-                        $batch_stmt->execute([$product_id, $stock_qty, $stock_qty, $expiry_date]);
+                        $batch_stmt = $pdo->prepare("INSERT INTO stock_batches (product_id, purchase_type, initial_qty, remaining_qty, expiry_date, purchase_price) VALUES (?, 'BA', ?, ?, ?, ?)");
+                        $batch_stmt->execute([$product_id, $stock_qty, $stock_qty, $expiry_date, $purchase_price]);
                     }
 
                     $success_count++;
