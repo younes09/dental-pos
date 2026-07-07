@@ -37,7 +37,7 @@ const sales_historyModule = {
                             const returnBadge = row.has_returns > 0 ? `<span class="badge bg-danger-subtle text-danger ms-2 small" title="Contains Returned Items"><i class="fas fa-undo me-1"></i>Returned</span>` : '';
                             const cancelledBadge = row.status === 'Cancelled' ? `<span class="badge bg-danger-subtle text-danger ms-2 small" title="Cancelled Sale"><i class="fas fa-ban me-1"></i>Cancelled</span>` : '';
                             const textStyle = row.status === 'Cancelled' ? 'style="text-decoration: line-through; opacity: 0.6;"' : '';
-                            return `<span class="fw-bold" ${textStyle}>#INV-${data}</span>${returnBadge}${cancelledBadge}`;
+                            return `<span class="fw-bold" ${textStyle}>${row.invoice_number || `#INV-${data}`}</span>${returnBadge}${cancelledBadge}`;
                         }
                         return data;
                     }
@@ -151,7 +151,7 @@ const sales_historyModule = {
         ];
 
         const rows = data.map(r => [
-            `#INV-${r.id}`,
+            r.invoice_number || `#INV-${r.id}`,
             new Date(r.date).toLocaleString(),
             r.customer_name || App.t('sh.text.walk_in'),
             r.user_name,
@@ -180,7 +180,7 @@ const sales_historyModule = {
         }
 
         const rows = data.map(r => ({
-            [App.t('sh.table.invoice')]: `#INV-${r.id}`,
+            [App.t('sh.table.invoice')]: r.invoice_number || `#INV-${r.id}`,
             [App.t('sh.table.datetime')]: new Date(r.date).toLocaleString(),
             [App.t('sh.table.customer')]: r.customer_name || App.t('sh.text.walk_in'),
             [App.t('sh.table.cashier')]: r.user_name,
@@ -207,7 +207,7 @@ const sales_historyModule = {
         const { sale, items } = result;
 
         // Populate Modal Header
-        document.getElementById('sale-details-subtitle').textContent = `Invoice #INV-${sale.id} | ${new Date(sale.date).toLocaleString()}`;
+        document.getElementById('sale-details-subtitle').textContent = `${sale.invoice_number || `Invoice #INV-${sale.id}`} | ${new Date(sale.date).toLocaleString()}`;
 
         // Populate Customer Info
         document.getElementById('sale-details-customer-info').innerHTML = `
@@ -289,7 +289,7 @@ const sales_historyModule = {
 
         const { sale, items } = result;
         document.getElementById('return-sale-id').value = sale.id;
-        document.getElementById('sale-return-subtitle').textContent = `Invoice #INV-${sale.id} | ${sale.customer_name || (App.t('sh.text.walk_in') || 'Walk-in')}`;
+        document.getElementById('sale-return-subtitle').textContent = `${sale.invoice_number || `Invoice #INV-${sale.id}`} | ${sale.customer_name || (App.t('sh.text.walk_in') || 'Walk-in')}`;
         document.getElementById('return-reason').value = '';
 
         const tbody = document.querySelector('#sale-return-items-table tbody');

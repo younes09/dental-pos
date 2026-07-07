@@ -142,9 +142,9 @@ INSERT INTO purchase_order_items (po_id, product_id, qty, received_qty, unit_cos
 (2, 4, 12, 12, 45.00, 45.00);
 
 -- 14. Sales
-INSERT INTO sales (customer_id, user_id, cash_session_id, subtotal, discount, tax, total, paid_amount, payment_status, payment_method, points_earned) VALUES
-(1, 1, 1, 130.00, 0, 0, 130.00, 130.00, 'Paid', 'Cash', 13),
-(2, 1, 1, 65.00, 5.00, 0, 60.00, 60.00, 'Paid', 'Cash', 6);
+INSERT INTO sales (customer_id, user_id, cash_session_id, subtotal, discount, tax, total, paid_amount, payment_status, payment_method, points_earned, invoice_number) VALUES
+(1, 1, 1, 130.00, 0, 0, 130.00, 130.00, 'Paid', 'Cash', 13, 'FAC-2026-0001'),
+(2, 1, 1, 65.00, 5.00, 0, 60.00, 60.00, 'Paid', 'Cash', 6, 'FAC-2026-0002');
 
 -- 15. Sale Items (including cost_price)
 INSERT INTO sale_items (sale_id, product_id, qty, unit_price, cost_price, total) VALUES

@@ -130,7 +130,7 @@ const reportsModule = {
 
                     return `
                         <tr>
-                            <td>#${r.id}</td>
+                            <td>${r.invoice_number || `#${r.id}`}</td>
                             <td>${r.customer || App.t('reports.table.walking')}</td>
                             <td>${new Date(r.date).toLocaleDateString()}</td>
                             <td>${r.subtotal} ${App.state.settings.currency}</td>

@@ -86,6 +86,7 @@ const settingsModule = {
                 if (settings.tax_number) businessForm.elements['tax_number'].value = settings.tax_number;
                 if (settings.currency) businessForm.elements['currency'].value = settings.currency;
                 if (settings.store_phone) businessForm.elements['store_phone'].value = settings.store_phone;
+                if (settings.store_phone_2) businessForm.elements['store_phone_2'].value = settings.store_phone_2;
                 if (settings.address) businessForm.elements['address'].value = settings.address;
                 if (settings.nif) businessForm.elements['nif'].value = settings.nif;
                 if (settings.nis) businessForm.elements['nis'].value = settings.nis;

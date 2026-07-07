@@ -175,7 +175,7 @@ const dashboardModule = {
 
         tableBody.innerHTML = transactions.map(t => `
             <tr>
-                <td><strong>#${t.id}</strong></td>
+                <td><strong>${t.invoice_number || `#${t.id}`}</strong></td>
                 <td>${t.customer_name || 'Walking Customer'}</td>
                 <td>${new Date(t.date).toLocaleDateString()}</td>
                 <td class="fw-bold">${App.formatCurrency(t.total)}</td>
@@ -224,7 +224,7 @@ const dashboardModule = {
         const { sale, items } = result;
 
         // Populate Modal Header
-        document.getElementById('sale-details-subtitle').textContent = `Invoice #INV-${sale.id} | ${new Date(sale.date).toLocaleString()}`;
+        document.getElementById('sale-details-subtitle').textContent = `${sale.invoice_number || `Invoice #INV-${sale.id}`} | ${new Date(sale.date).toLocaleString()}`;
 
         // Populate Customer Info
         document.getElementById('sale-details-customer-info').innerHTML = `

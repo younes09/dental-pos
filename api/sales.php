@@ -236,6 +236,13 @@ try {
             ]);
             $sale_id = $pdo->lastInsertId();
 
+            // Generate and update invoice number
+            $prefix = ($invoice_type === 'BL') ? 'BL' : 'FAC';
+            $year = date('Y');
+            $invoice_number = $prefix . '-' . $year . '-' . str_pad($sale_id, 4, '0', STR_PAD_LEFT);
+            $update_invoice_stmt = $pdo->prepare("UPDATE sales SET invoice_number = ? WHERE id = ?");
+            $update_invoice_stmt->execute([$invoice_number, $sale_id]);
+
             // 2. Insert items (FIFO cost snapshot) and update stock
             $item_stmt = $pdo->prepare("
                 INSERT INTO sale_items (sale_id, product_id, qty, unit_price, cost_price, total) 
@@ -424,7 +431,7 @@ try {
                     $caisse_id = $caisse_acc ? $caisse_acc['id'] : null;
                     
                     if ($caisse_id) {
-                        $desc = "Refund for Cancelled Sale #" . $sale['id'] . " (from closed session)";
+                        $desc = "Refund for Cancelled Sale " . ($sale['invoice_number'] ?: "#" . $sale['id']) . " (from closed session)";
                         $tx_stmt = $pdo->prepare("INSERT INTO vault_transactions (account_id, type, amount, description, related_type, related_id, user_id) VALUES (?, 'Expense', ?, ?, 'SaleCancellation', ?, ?)");
                         $tx_stmt->execute([$caisse_id, $net_refund, $desc, $sale['id'], $_SESSION['user_id'] ?? 1]);
                         
@@ -566,7 +573,7 @@ try {
                         $caisse_id = $caisse_acc ? $caisse_acc['id'] : null;
                         
                         if ($caisse_id) {
-                            $desc = "Refund for Return on Sale #" . $sale['id'] . " (from closed session)";
+                            $desc = "Refund for Return on Sale " . ($sale['invoice_number'] ?: "#" . $sale['id']) . " (from closed session)";
                             $tx_stmt = $pdo->prepare("INSERT INTO vault_transactions (account_id, type, amount, description, related_type, related_id, user_id) VALUES (?, 'Expense', ?, ?, 'SaleReturn', ?, ?)");
                             $tx_stmt->execute([$caisse_id, $total_return_amount, $desc, $return_id, $user_id]);
                             
@@ -579,7 +586,7 @@ try {
 
             // Fix #7: Notification moved BEFORE commit() to be part of the transaction
             $ins_notif = $pdo->prepare("INSERT INTO notifications (role, title, message, type, link) VALUES (?, ?, ?, ?, ?)");
-            $ret_msg = "Customer return processed for Sale #$sale_id by " . ($_SESSION['user_name'] ?? 'User') . ". Amount: " . number_format($total_return_amount, 2);
+            $ret_msg = "Customer return processed for Sale " . ($sale['invoice_number'] ?: "#$sale_id") . " by " . ($_SESSION['user_name'] ?? 'User') . ". Amount: " . number_format($total_return_amount, 2);
             if ($reason) $ret_msg .= " Reason: $reason";
             $ins_notif->execute(['Admin', 'Customer Return Processed', $ret_msg, 'warning', '#sales_history']);
 
@@ -639,7 +646,9 @@ try {
             
             // Get Sale Header
             $stmt = $pdo->prepare("
-                SELECT s.*, c.name as customer_name, c.phone as customer_phone, u.name as user_name
+                SELECT s.*, c.name as customer_name, c.phone as customer_phone, 
+                       c.wilaya as customer_wilaya, c.balance as customer_balance, 
+                       u.name as user_name
                 FROM sales s
                 LEFT JOIN customers c ON s.customer_id = c.id
                 LEFT JOIN users u ON s.user_id = u.id

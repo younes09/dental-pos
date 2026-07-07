@@ -210,7 +210,7 @@ try {
 
     // 4. Recent Transactions
     $stmt = $pdo->prepare("
-        SELECT s.id, c.name as customer_name, s.date, s.total, s.status
+        SELECT s.id, s.invoice_number, c.name as customer_name, s.date, s.total, s.status
         FROM sales s
         LEFT JOIN customers c ON s.customer_id = c.id
         ORDER BY s.date DESC

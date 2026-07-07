@@ -224,6 +224,7 @@ CREATE TABLE sales (
     status ENUM('Completed', 'Hold', 'Cancelled') DEFAULT 'Completed',
     points_earned INT NOT NULL DEFAULT 0,
     points_redeemed INT NOT NULL DEFAULT 0,
+    invoice_number VARCHAR(50) DEFAULT NULL,
     FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE SET NULL,
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (cash_session_id) REFERENCES cash_sessions(id) ON DELETE SET NULL
@@ -323,6 +324,8 @@ INSERT IGNORE INTO settings (setting_key, setting_value) VALUES
 ('vat_rate', '0'),
 ('loyalty_earning_rate', '100'),
 ('loyalty_point_value', '1'),
+('store_phone', '05 5648 4421'),
+('store_phone_2', ''),
 ('nif', '0'),
 ('nis', '0'),
 ('rc', '0');

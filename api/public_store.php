@@ -11,7 +11,7 @@ try {
             $categories = $pdo->query("SELECT * FROM categories ORDER BY name ASC")->fetchAll();
             $brands = $pdo->query("SELECT * FROM brands ORDER BY name ASC")->fetchAll();
             
-            $settings_stmt = $pdo->query("SELECT setting_key, setting_value FROM settings WHERE setting_key IN ('store_name', 'currency', 'store_phone')");
+            $settings_stmt = $pdo->query("SELECT setting_key, setting_value FROM settings WHERE setting_key IN ('store_name', 'currency', 'store_phone', 'store_phone_2')");
             $settings = [];
             while ($row = $settings_stmt->fetch()) {
                 $settings[$row['setting_key']] = $row['setting_value'];

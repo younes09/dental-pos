@@ -1,28 +1,27 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Receipt - DentalPOS</title>
+    <title>Facture - DentalPOS</title>
     <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
             --primary-navy: #0A1628;
             --primary-teal: #00BFA6;
-            --text-dark: #2C3E50;
-            --text-light: #7F8C8D;
-            --border-color: #E9ECEF;
-            --glass-bg: rgba(255, 255, 255, 0.95);
+            --text-dark: #1E293B;
+            --text-light: #64748B;
+            --border-color: #CBD5E1;
         }
 
         @media print {
             @page {
                 size: A4;
-                margin: 15mm;
+                margin: 10mm;
             }
 
             body {
@@ -45,7 +44,6 @@
                 max-width: 100% !important;
                 background: white !important;
                 min-height: auto !important;
-                /* Allow single page for short receipts */
             }
 
             .items-table thead {
@@ -56,281 +54,401 @@
                 page-break-inside: avoid;
             }
 
-            .totals-section {
+            .totals-container {
                 page-break-inside: avoid;
             }
         }
 
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f0f2f5;
+            background-color: #f8fafc;
             color: var(--text-dark);
             margin: 0;
-            padding: 40px 20px;
+            padding: 30px 15px;
             display: flex;
             justify-content: center;
             min-height: 100vh;
         }
 
         .receipt-container {
-            background: var(--glass-bg);
+            background: #ffffff;
             width: 100%;
-            max-width: 800px;
+            max-width: 850px;
             min-height: 297mm;
-            /* Standard A4 height for better preview */
-            padding: 60px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 50px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
             position: relative;
             display: flex;
             flex-direction: column;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            backdrop-filter: blur(10px);
+            border: 1px solid #E2E8F0;
+            box-sizing: border-box;
         }
 
-        .header {
+        /* Invoice Header Grid */
+        .header-container {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            margin-bottom: 40px;
+            margin-bottom: 25px;
+            gap: 20px;
         }
 
-        .brand h1 {
-            font-family: 'Outfit', sans-serif;
-            font-size: 28px;
-            font-weight: 700;
-            margin: 0;
-            color: var(--primary-navy);
+        .header-left {
+            width: 55%;
         }
 
-        .brand span {
-            color: var(--primary-teal);
-        }
-
-
-        .invoice-meta {
+        .header-right {
+            width: 40%;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
             text-align: right;
         }
 
-        .invoice-meta h2 {
+        .store-title {
             font-family: 'Outfit', sans-serif;
-            font-size: 32px;
+            font-size: 26px;
             font-weight: 700;
-            margin: 0;
-            color: var(--primary-navy);
-            opacity: 0.1;
+            color: #000;
+            margin-bottom: 8px;
             text-transform: uppercase;
-            letter-spacing: 2px;
         }
 
-        .meta-item {
-            margin-top: 10px;
-            font-size: 14px;
-        }
-
-        .meta-label {
-            color: var(--text-light);
-            text-transform: uppercase;
-            font-weight: 600;
+        .store-details {
             font-size: 11px;
-            letter-spacing: 1px;
+            line-height: 1.5;
+            color: #334155;
         }
 
-        .meta-value {
-            font-weight: 700;
-            color: var(--primary-navy);
-            display: block;
+        .store-details div {
+            margin-bottom: 2px;
         }
 
-        .info-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 40px;
-            margin-bottom: 40px;
-            padding: 30px;
-            background: rgba(0, 191, 166, 0.03);
-            border-radius: 16px;
-        }
-
-        .info-section h3 {
-            font-family: 'Outfit', sans-serif;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--primary-teal);
-            margin: 0 0 15px 0;
-        }
-
-        .info-content {
-            font-size: 15px;
-            line-height: 1.6;
-        }
-
-        .info-name {
-            font-weight: 700;
-            font-size: 18px;
-            color: var(--primary-navy);
-            margin-bottom: 5px;
-        }
-
-        .items-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 40px;
-        }
-
-        .items-table th {
-            text-align: left;
-            padding: 15px;
-            border-bottom: 2px solid var(--primary-navy);
-            font-family: 'Outfit', sans-serif;
-            font-size: 13px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--primary-navy);
-        }
-
-        .items-table td {
-            padding: 20px 15px;
-            border-bottom: 1px solid var(--border-color);
-            font-size: 15px;
-            vertical-align: top;
-        }
-
-        .item-name {
-            font-weight: 600;
-            color: var(--primary-navy);
-        }
-
-        .item-sku {
-            display: block;
-            font-size: 12px;
-            color: var(--text-light);
-            margin-top: 4px;
-        }
-
-        .totals-section {
+        .logo-box {
+            height: 60px;
+            margin-bottom: 12px;
             display: flex;
+            align-items: center;
             justify-content: flex-end;
         }
 
-        .totals-box {
-            width: 300px;
+        .logo-box img {
+            max-height: 100%;
+            max-width: 180px;
+            object-fit: contain;
         }
 
-        .total-row {
+        .reg-details {
+            font-size: 11px;
+            line-height: 1.5;
+            color: #334155;
+        }
+
+        .reg-details div {
+            margin-bottom: 2px;
+        }
+
+        .date-location {
+            margin-top: 10px;
+            font-weight: 600;
+            font-size: 12px;
+            color: #000;
+        }
+
+        /* Document Title */
+        .document-title-box {
+            text-align: center;
+            margin: 20px 0;
+            border-top: 1px solid #E2E8F0;
+            border-bottom: 1px solid #E2E8F0;
+            padding: 12px 0;
+        }
+
+        .document-title-box h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 22px;
+            font-weight: 800;
+            color: #000;
+            margin: 0;
+            letter-spacing: 3px;
+        }
+
+        .doc-number {
+            font-size: 13px;
+            font-weight: 600;
+            margin-top: 4px;
+            color: #334155;
+        }
+
+        /* Billed To Section */
+        .billed-to-box {
+            margin-top: 15px;
+            border-top: 1px solid #E2E8F0;
+            padding-top: 12px;
+        }
+
+        .billed-title {
+            font-weight: 700;
+            font-size: 12px;
+            text-transform: uppercase;
+            color: #000;
+            margin-bottom: 6px;
+            letter-spacing: 0.5px;
+        }
+
+        .billed-details {
+            font-size: 11.5px;
+            line-height: 1.5;
+            color: #334155;
+        }
+
+        .billed-details div {
+            margin-bottom: 2px;
+        }
+
+        /* Table Sizing & Design */
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 25px;
+            margin-bottom: 30px;
+        }
+
+        .items-table th {
+            background-color: #E2E8F0;
+            color: #000;
+            border: 1px solid #94A3B8;
+            font-family: 'Outfit', sans-serif;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 8px 6px;
+            text-align: left;
+            text-transform: uppercase;
+        }
+
+        .items-table td {
+            border: 1px solid #CBD5E1;
+            padding: 8px 6px;
+            font-size: 11px;
+            color: #0f172a;
+            vertical-align: middle;
+        }
+
+        .items-table tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+
+        /* Table Column Alignments */
+        .col-idx { text-align: center; width: 45px; }
+        .col-ref { text-align: center; width: 90px; }
+        .col-desc { text-align: left; }
+        .col-vat { text-align: center; width: 75px; }
+        .col-pu { text-align: right; width: 100px; }
+        .col-qty { text-align: center; width: 60px; }
+        .col-total { text-align: right; width: 110px; font-weight: 600; }
+
+        /* Totals section split layout */
+        .totals-container {
             display: flex;
             justify-content: space-between;
-            padding: 10px 0;
-            font-size: 15px;
+            align-items: flex-start;
+            margin-top: auto; /* Push to bottom of content */
+            padding-top: 20px;
+            border-top: 1px solid #E2E8F0;
+            gap: 30px;
         }
 
-        .total-row.grand-total {
-            margin-top: 15px;
-            padding: 20px 0;
-            border-top: 2px solid var(--primary-navy);
-            font-size: 24px;
-            font-weight: 700;
-            color: var(--primary-teal);
-            font-family: 'Outfit', sans-serif;
+        .totals-left {
+            width: 50%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
 
-        .footer {
-            margin-top: 60px;
-            padding-top: 30px;
-            border-top: 1px solid var(--border-color);
+        .payment-info {
+            font-size: 11px;
+            line-height: 1.5;
+            color: #334155;
+            margin-bottom: 20px;
+        }
+
+        .payment-info div {
+            margin-bottom: 4px;
+        }
+
+        .amount-in-words {
+            font-size: 11.5px;
+            line-height: 1.6;
+            color: #000;
+            background: #f8fafc;
+            border-left: 3px solid #64748B;
+            padding: 10px 12px;
+            margin-bottom: 20px;
+            font-style: italic;
+        }
+
+        .stamp-placeholder {
+            border: 2px dashed #94A3B8;
+            border-radius: 50%;
+            width: 120px;
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             text-align: center;
-            color: var(--text-light);
-            font-size: 13px;
+            font-size: 9px;
+            color: #64748B;
+            font-weight: 700;
+            margin: 10px 0 10px 40px;
+            transform: rotate(-8deg);
+            opacity: 0.75;
+        }
+
+        .totals-right {
+            width: 45%;
+        }
+
+        .totals-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .totals-table td {
+            padding: 6px 0;
+            font-size: 12px;
+            color: #334155;
+            border-bottom: 1px dashed #E2E8F0;
+        }
+
+        .totals-table td.label {
+            text-align: left;
+            font-weight: 500;
+        }
+
+        .totals-table td.value {
+            text-align: right;
+            font-weight: 600;
+            color: #000;
+        }
+
+        .totals-table tr.grand-total td {
+            border-top: 1.5px solid #000;
+            border-bottom: 1.5px solid #000;
+            padding: 8px 0;
+            font-size: 14px;
+            font-weight: 700;
+            color: #000;
+        }
+
+        .totals-table tr.grand-total td.value {
+            font-size: 15px;
+            font-weight: 800;
+        }
+
+        .totals-table tr.debt-row td {
+            color: #b91c1c;
+        }
+
+        .totals-table tr.debt-row td.value {
+            color: #b91c1c;
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: 40px;
+            padding-top: 15px;
+            border-top: 1px solid #E2E8F0;
+            text-align: center;
+            color: #64748B;
+            font-size: 11px;
+            line-height: 1.4;
         }
 
         .print-btn {
             position: fixed;
             bottom: 30px;
             right: 30px;
-            background: var(--primary-teal);
+            background: #0f172a;
             color: white;
             border: none;
-            padding: 15px 30px;
-            border-radius: 50px;
+            padding: 12px 24px;
+            border-radius: 8px;
             font-weight: 600;
-            box-shadow: 0 10px 20px rgba(0, 191, 166, 0.3);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 10px;
-            transition: all 0.3s;
+            gap: 8px;
+            transition: all 0.2s;
             z-index: 1001;
+            font-size: 13px;
         }
 
         .print-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 30px rgba(0, 191, 166, 0.4);
-            background: #00A690;
-        }
-
-        .text-end {
-            text-align: right !important;
-        }
-
-        .text-center {
-            text-align: center !important;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+            background: #1e293b;
         }
     </style>
 </head>
 
 <body>
     <button class="print-btn no-print" onclick="window.print()">
-        <i class="fas fa-print"></i> <span data-i18n="receipt.btn_print">Print Receipt</span>
+        <i class="fas fa-print"></i> <span data-i18n="receipt.btn_print">Imprimer la facture</span>
     </button>
 
     <div class="receipt-container" id="receipt-content">
-        <div class="header">
-            <div class="brand">
-                <h1 id="receipt-brand-name">Dental<span>POS</span></h1>
-            </div>
-            <div class="invoice-meta">
-                <h2 id="receipt-title" data-i18n="receipt.title">Receipt</h2>
-                <div class="meta-item">
-                    <span class="meta-label" data-i18n="receipt.invoice_no">Invoice Number</span>
-                    <span class="meta-value" id="receipt-id">#INV-0000</span>
+        <!-- Header Section -->
+        <div class="header-container">
+            <div class="header-left">
+                <div class="store-title" id="shop-name">DONCTICIA</div>
+                <div class="store-details">
+                    <div><strong>Adresse :</strong> <span id="shop-address"></span></div>
+                    <div><strong>Domaine d'activité :</strong> Vente en détail des produits dentaires</div>
+                    <div><span id="shop-phone"></span> &nbsp;//&nbsp; <span id="shop-email">dentalline16@gmail.com</span></div>
+                    <div><strong>Compte :</strong> // &nbsp;<strong>N° :</strong> //</div>
                 </div>
-                <div class="meta-item">
-                    <span class="meta-label" data-i18n="receipt.date_issued">Date Issued</span>
-                    <span class="meta-value" id="receipt-date">March 03, 2026</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="info-grid">
-            <div class="info-section">
-                <h3 data-i18n="receipt.from">From</h3>
-                <div class="info-content">
-                    <div class="info-name" id="shop-name"></div>
-                    <div id="shop-address">123 Clinical Way, Medical District</div>
-                    <div id="shop-phone">Tel: +213 555 1234</div>
-                    <div id="shop-tax">VAT-12345678</div>
-                    <div id="shop-nif" style="display: none;"></div>
-                    <div id="shop-nis" style="display: none;"></div>
-                    <div id="shop-rc" style="display: none;"></div>
+                
+                <div class="billed-to-box">
+                    <div class="billed-title">Facturé à :</div>
+                    <div class="billed-details">
+                        <div><strong>Client :</strong> <span id="customer-name">Walk-in Customer</span></div>
+                        <div><strong>Adresse :</strong> <span id="customer-address">//</span></div>
+                        <div><strong>Tél :</strong> <span id="customer-phone">No phone provided</span></div>
+                    </div>
                 </div>
             </div>
-            <div class="info-section">
-                <h3 data-i18n="receipt.bill_to">Bill To</h3>
-                <div class="info-content">
-                    <div class="info-name" id="customer-name">Walk-in Customer</div>
-                    <div id="customer-phone">No phone provided</div>
-                    <div><span data-i18n="receipt.payment_method">Payment Method</span>: <strong id="payment-method">Cash</strong></div>
+            
+            <div class="header-right">
+                <div class="logo-box" id="receipt-brand-name">
+                    <!-- Logo image will be dynamically inserted here -->
+                </div>
+                <div class="reg-details">
+                    <div id="shop-rc-row"><strong>RC :</strong> <span id="shop-rc">0</span></div>
+                    <div id="shop-ai-row"><strong>AI :</strong> <span id="shop-ai">16201218382</span></div>
+                    <div id="shop-nif-row"><strong>ID Fiscal :</strong> <span id="shop-nif">0</span></div>
+                    <div class="date-location" id="receipt-date-location">Alger, le : </div>
                 </div>
             </div>
         </div>
 
+        <!-- Document Title & Number -->
+        <div class="document-title-box">
+            <h1 id="receipt-title">FACTURE</h1>
+            <div class="doc-number" id="receipt-id">N° : FAC-2026-0000</div>
+        </div>
+
+        <!-- Items Table -->
         <table class="items-table" style="flex-grow: 1;">
             <thead>
                 <tr>
-                    <th data-i18n="receipt.th_desc">Description</th>
-                    <th class="text-center" data-i18n="receipt.th_qty">Qty</th>
-                    <th class="text-end" data-i18n="receipt.th_unit_price">Unit Price</th>
-                    <th class="text-end" data-i18n="receipt.th_amount">Amount</th>
+                    <th class="col-idx">N°</th>
+                    <th class="col-ref">RÉF</th>
+                    <th class="col-desc">DÉSIGNATION</th>
+                    <th class="col-vat">TVA %</th>
+                    <th class="col-pu">PU TTC</th>
+                    <th class="col-qty">QTÉ</th>
+                    <th class="col-total">TOTAL</th>
                 </tr>
             </thead>
             <tbody id="receipt-items">
@@ -338,39 +456,60 @@
             </tbody>
         </table>
 
-        <div class="totals-section">
-            <div class="totals-box">
-                <div class="total-row">
-                    <span data-i18n="receipt.subtotal">Subtotal</span>
-                    <span id="receipt-subtotal">$0.00</span>
+        <!-- Totals Split Section -->
+        <div class="totals-container">
+            <div class="totals-left">
+                <div class="payment-info">
+                    <div><strong>Mode de paiement :</strong> <span id="payment-method">Espèce</span></div>
                 </div>
-                <div class="total-row">
-                    <span data-i18n="receipt.discount">Discount</span>
-                    <span id="receipt-discount">-$0.00</span>
+                
+                <div class="amount-in-words" id="amount-words-box">
+                    La présente facture est arrêtée à la somme de : <strong id="receipt-total-words">...</strong>
                 </div>
-                <div class="total-row" id="receipt-paid-row" style="display: none;">
-                    <span data-i18n="receipt.paid_amount">Paid Amount</span>
-                    <span id="receipt-paid">$0.00</span>
+                
+                <div class="stamp-placeholder">
+                    CACHET ET<br>SIGNATURE
                 </div>
-                <div class="total-row">
-                    <span id="receipt-tax-label">Tax (15%)</span>
-                    <span id="receipt-tax">$0.00</span>
-                </div>
-                <div class="total-row" id="receipt-remaining-row" style="display: none; font-weight: 700; color: #dc3545;">
-                    <span data-i18n="receipt.remaining_amount">Remaining to Pay</span>
-                    <span id="receipt-remaining">$0.00</span>
-                </div>
-                <div class="total-row grand-total">
-                    <span data-i18n="receipt.grand_total">Grand Total</span>
-                    &emsp;
-                    <span class="flex-grow-1 text-end" id="receipt-total">$0.00</span>
-                </div>
+            </div>
+            
+            <div class="totals-right">
+                <table class="totals-table">
+                    <tr id="receipt-subtotal-row">
+                        <td class="label">Total HT</td>
+                        <td class="value" id="receipt-subtotal">0.00</td>
+                    </tr>
+                    <tr id="receipt-discount-row" style="display: none;">
+                        <td class="label">Remise</td>
+                        <td class="value" id="receipt-discount">0.00</td>
+                    </tr>
+                    <tr id="receipt-tax-row">
+                        <td class="label" id="receipt-tax-label">TVA (19%)</td>
+                        <td class="value" id="receipt-tax">0.00</td>
+                    </tr>
+                    <tr class="grand-total">
+                        <td class="label">Total TTC</td>
+                        <td class="value" id="receipt-total">0.00</td>
+                    </tr>
+                    <tr id="receipt-prev-balance-row" style="display: none;">
+                        <td class="label">Solde précédent</td>
+                        <td class="value" id="receipt-prev-balance">0.00</td>
+                    </tr>
+                    <tr id="receipt-paid-row" style="display: none;">
+                        <td class="label">Payé</td>
+                        <td class="value" id="receipt-paid">0.00</td>
+                    </tr>
+                    <tr id="receipt-remaining-row" class="debt-row" style="display: none;">
+                        <td class="label">Reste à payer</td>
+                        <td class="value" id="receipt-remaining">0.00</td>
+                    </tr>
+                </table>
             </div>
         </div>
 
-        <div class="footer" style="margin-top: auto; page-break-inside: avoid;">
-            <p data-i18n="receipt.footer_thanks">Thank you for choosing our Store!</p>
-            <p class="small" data-i18n="receipt.footer_system">This is a system generated receipt.</p>
+        <!-- Receipt Footer -->
+        <div class="footer" style="page-break-inside: avoid;">
+            <p id="receipt-footer-text">Merci pour votre confiance !</p>
+            <p class="small text-muted" style="margin-top: 5px; font-size: 9px; opacity: 0.6;">Facture générée automatiquement par DentalPOS</p>
         </div>
     </div>
 
@@ -406,108 +545,269 @@
             return translation;
         }
 
+        // French numbers to words conversion helper
+        function numberToWordsFR(num) {
+            if (num === 0) return 'Zéro';
+
+            const units = ['', 'Un', 'Deux', 'Trois', 'Quatre', 'Cinq', 'Six', 'Sept', 'Huit', 'Neuf'];
+            const teens = ['Dix', 'Onze', 'Douze', 'Treize', 'Quatorze', 'Quinze', 'Seize', 'Dix-Sept', 'Dix-Huit', 'Dix-Neuf'];
+            const tens = ['', 'Dix', 'Vingt', 'Trente', 'Quarante', 'Cinquante', 'Soixante', 'Soixante-Dix', 'Quatre-Vingt', 'Quatre-Vingt-Dix'];
+
+            function convertGroup(n) {
+                let words = '';
+                const h = Math.floor(n / 100);
+                const t = Math.floor((n % 100) / 10);
+                const u = n % 10;
+
+                if (h > 0) {
+                    if (h === 1) {
+                        words += 'Cent ';
+                    } else {
+                        words += units[h] + ' Cent ';
+                    }
+                }
+
+                if (t > 0) {
+                    if (t === 7) {
+                        if (u === 1) {
+                            words += 'Soixante et Onze';
+                        } else {
+                            words += 'Soixante-' + teens[u];
+                        }
+                    } else if (t === 9) {
+                        words += 'Quatre-Vingt-' + teens[u];
+                    } else if (t === 8) {
+                        if (u === 0) {
+                            words += 'Quatre-Vingts';
+                        } else {
+                            words += 'Quatre-Vingt-' + units[u];
+                        }
+                    } else if (t === 1) {
+                        words += teens[u];
+                    } else {
+                        words += tens[t];
+                        if (u > 0) {
+                            words += (u === 1) ? ' et Un' : '-' + units[u];
+                        }
+                    }
+                } else if (u > 0) {
+                    words += units[u];
+                }
+
+                return words.trim();
+            }
+
+            let words = '';
+            const mainPart = Math.floor(num);
+            const centsPart = Math.round((num - mainPart) * 100);
+
+            const billions = Math.floor(mainPart / 1000000000);
+            const millions = Math.floor((mainPart % 1000000000) / 1000000);
+            const thousands = Math.floor((mainPart % 1000000) / 1000);
+            const remainder = mainPart % 1000;
+
+            if (billions > 0) {
+                words += convertGroup(billions) + ' Milliard' + (billions > 1 ? 's' : '') + ' ';
+            }
+            if (millions > 0) {
+                words += convertGroup(millions) + ' Million' + (millions > 1 ? 's' : '') + ' ';
+            }
+            if (thousands > 0) {
+                if (thousands === 1) {
+                    words += 'Mille ';
+                } else {
+                    words += convertGroup(thousands) + ' Mille ';
+                }
+            }
+            if (remainder > 0) {
+                words += convertGroup(remainder) + ' ';
+            }
+
+            words = words.trim();
+
+            if (centsPart > 0) {
+                words += ' Dinars et ' + convertGroup(centsPart) + ' Centimes';
+            } else {
+                words += ' Dinars';
+            }
+
+            return words.replace(/\s+/g, ' ').trim();
+        }
+
+        // Algerian Wilayas mapping
+        const wilayas = {
+            "01": "Adrar", "02": "Chlef", "03": "Laghouat", "04": "Oum El Bouaghi", "05": "Batna",
+            "06": "Béjaïa", "07": "Biskra", "08": "Béchar", "09": "Blida", "10": "Bouira",
+            "11": "Tamanrasset", "12": "Tébessa", "13": "Tlemcen", "14": "Tiaret", "15": "Tizi Ouzou",
+            "16": "Alger", "17": "Djelfa", "18": "Jijel", "19": "Sétif", "20": "Saïda",
+            "21": "Skikda", "22": "Sidi Bel Abbès", "23": "Annaba", "24": "Guelma", "25": "Constantine",
+            "26": "Médéa", "27": "Mostaganem", "28": "M'Sila", "29": "Mascara", "30": "Ouargla",
+            "31": "Oran", "32": "El Bayadh", "33": "Illizi", "34": "Bordj Bou Arréridj", "35": "Boumerdès",
+            "36": "El Tarf", "37": "Tindouf", "38": "Tissemsilt", "39": "El Oued", "40": "Khenchela",
+            "41": "Souk Ahras", "42": "Tipaza", "43": "Mila", "44": "Aïn Defla", "45": "Naâma",
+            "46": "Aïn Témouchent", "47": "Ghardaïa", "48": "Relizane", "49": "El M'Ghair", "50": "El Meniaa",
+            "51": "Ouled Djellal", "52": "Bordj Baji Mokhtar", "53": "Béni Abbès", "54": "In Salah", "55": "In Guezzam",
+            "56": "Touggourt", "57": "Djanet", "58": "In Amenas"
+        };
+
         // Function to populate receipt data
         function populateReceipt(data) {
             const { sale, items, settings } = data;
-            const currency = settings?.currency || '$';
-            const vatRate = settings?.vat_rate || 15;
+            const vatRate = settings?.vat_rate || 19; // Default Algerian VAT is 19%
 
-            function formatCurrency(amount) {
-                return `${parseFloat(amount).toFixed(2)} ${currency}`;
-            }
-
-            // Set Shop Info
+            // Set Shop Details
             if (settings) {
-                if (settings.store_logo) {
-                    document.getElementById('receipt-brand-name').innerHTML = `<img src="../${settings.store_logo}" alt="${settings.store_name || 'Logo'}" style="max-height: 130px; width: auto; object-fit: contain;">`;
-                } else {
-                    document.getElementById('receipt-brand-name').innerHTML = settings.store_name?.replace('POS', '<span>POS</span>') || 'Dental<span>POS</span>';
-                }
-                document.getElementById('shop-name').textContent = settings.store_name || 'DentalPOS Premium';
+                document.getElementById('shop-name').textContent = settings.store_name || 'DentalPOS';
                 document.getElementById('shop-address').textContent = settings.address || '';
-                if (settings.store_phone) {
-                    document.getElementById('shop-phone').textContent = 'Tel: ' + settings.store_phone;
-                }
-                document.getElementById('shop-tax').textContent = settings.tax_number || '';
                 
-                if (settings.nif) {
-                    const elNif = document.getElementById('shop-nif');
-                    elNif.textContent = 'NIF: ' + settings.nif;
-                    elNif.style.display = 'block';
-                }
-                if (settings.nis) {
-                    const elNis = document.getElementById('shop-nis');
-                    elNis.textContent = 'NIS: ' + settings.nis;
-                    elNis.style.display = 'block';
-                }
-                if (settings.rc) {
-                    const elRc = document.getElementById('shop-rc');
-                    elRc.textContent = 'RC: ' + settings.rc;
-                    elRc.style.display = 'block';
+                let phones = [];
+                if (settings.store_phone) phones.push(settings.store_phone);
+                if (settings.store_phone_2) phones.push(settings.store_phone_2);
+                if (phones.length > 0) {
+                    document.getElementById('shop-phone').innerHTML = '<strong>Tél :</strong> ' + phones.join(' / ');
+                } else {
+                    document.getElementById('shop-phone').innerHTML = '';
                 }
 
-                // Set dynamic VAT label if exists
-                const taxLabel = document.getElementById('receipt-tax-label');
-                if (taxLabel) {
-                    taxLabel.textContent = `${t('receipt.tax')} (${vatRate}%)`;
+                if (settings.clinic_email) {
+                    document.getElementById('shop-email').textContent = settings.clinic_email;
+                } else if (settings.email) {
+                    document.getElementById('shop-email').textContent = settings.email;
+                } else {
+                    document.getElementById('shop-email').textContent = 'dentalline16@gmail.com';
+                }
+
+                // Show company registrations
+                document.getElementById('shop-rc').textContent = settings.rc || '//';
+                document.getElementById('shop-ai').textContent = settings.tax_number || '//';
+                document.getElementById('shop-nif').textContent = settings.nif || '//';
+
+                // Set Logo
+                if (settings.store_logo) {
+                    document.getElementById('receipt-brand-name').innerHTML = `<img src="../${settings.store_logo}" alt="${settings.store_name || 'Logo'}">`;
+                } else {
+                    document.getElementById('receipt-brand-name').innerHTML = `<span style="font-family:'Outfit'; font-size: 20px; font-weight: 700; color: var(--primary-navy);">${settings.store_name || 'DentalPOS'}</span>`;
                 }
             }
 
-            // Set Header Info
-            const receiptTitle = document.getElementById('receipt-title');
-            if (receiptTitle) {
-                const isBL = sale.invoice_type === 'BL';
-                receiptTitle.textContent = isBL ? t('receipt.delivery_note') : t('receipt.sales_receipt');
-
-                // Adjust font size for longer titles
-                receiptTitle.style.fontSize = isBL ? '24px' : '32px';
+            // Extract City & Date Issued (Algerian French Date Format)
+            const city = settings?.address ? settings.address.split(',')[0].trim() : 'Alger';
+            const frenchMonths = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+            
+            function formatFrenchDate(dateStr) {
+                const date = new Date(dateStr);
+                if (isNaN(date)) return '';
+                return `${date.getDate()} ${frenchMonths[date.getMonth()]} ${date.getFullYear()}`;
             }
+            
+            const formattedDate = sale.date ? formatFrenchDate(sale.date) : formatFrenchDate(new Date());
+            document.getElementById('receipt-date-location').innerHTML = `<strong>${city}</strong>, le : ${formattedDate}`;
 
-            document.getElementById('receipt-id').textContent = `#INV-${sale.id}`;
-            document.getElementById('receipt-date').textContent = new Date(sale.date).toLocaleDateString('en-US', {
-                year: 'numeric', month: 'long', day: 'numeric'
-            });
+            // Document Title (FACTURE vs BON DE LIVRAISON)
+            const isBL = sale.invoice_type === 'BL';
+            document.getElementById('receipt-title').textContent = isBL ? 'BON DE LIVRAISON' : 'FACTURE';
+            
+            const prefix = isBL ? 'BL' : 'FAC';
+            const saleYear = new Date(sale.date || Date.now()).getFullYear();
+            document.getElementById('receipt-id').textContent = `N° : ${sale.invoice_number || `${prefix}-${saleYear}-${String(sale.id).padStart(4, '0')}`}`;
 
-            // Set Customer Info
-            document.getElementById('customer-name').textContent = sale.customer_name || t('pos.walking_customer');
-            document.getElementById('customer-phone').textContent = sale.customer_phone || t('sh.text.no_phone');
-            document.getElementById('payment-method').textContent = t(`customers.method.${sale.payment_method.toLowerCase()}`) || sale.payment_method;
+            // Customer Details
+            let customerAddr = '';
+            if (sale.customer_wilaya && wilayas[sale.customer_wilaya]) {
+                customerAddr = wilayas[sale.customer_wilaya].toUpperCase();
+            } else {
+                customerAddr = sale.customer_address || '//';
+            }
+            document.getElementById('customer-name').textContent = sale.customer_name || 'Client de passage';
+            document.getElementById('customer-phone').textContent = sale.customer_phone || 'Non renseigné';
+            document.getElementById('customer-address').textContent = customerAddr;
 
-            // Populate Items
+            // Payment Method
+            const paymentMethodsFR = {
+                'cash': 'Espèce',
+                'card': 'Carte',
+                'insurance': 'Assurance',
+                'credit': 'Crédit'
+            };
+            const rawMethod = (sale.payment_method || 'cash').toLowerCase();
+            document.getElementById('payment-method').textContent = paymentMethodsFR[rawMethod] || sale.payment_method || 'Espèce';
+
+            // Calculate Effective Tax Rate
+            const saleTaxRate = isBL ? 0 : (parseFloat(sale.tax) / (parseFloat(sale.subtotal) - parseFloat(sale.discount)));
+            const rateMultiplier = 1 + (isNaN(saleTaxRate) ? 0 : saleTaxRate);
+
+            // Populate Items Table
             const itemsTbody = document.getElementById('receipt-items');
-            itemsTbody.innerHTML = items.map(item => `
-                <tr>
-                    <td>
-                        <span class="item-name">${item.product_name}</span>
-                        <span class="item-sku">${item.barcode || ''}</span>
-                    </td>
-                    <td class="text-center">${item.qty}</td>
-                    <td class="text-end">${formatCurrency(item.unit_price)}</td>
-                    <td class="text-end fw-bold">${formatCurrency(item.total)}</td>
-                </tr>
-            `).join('');
+            itemsTbody.innerHTML = items.map((item, idx) => {
+                const numStr = String(idx + 1).padStart(3, '0');
+                const itemVat = isBL ? '0.00%' : `${((saleTaxRate || (vatRate / 100)) * 100).toFixed(2)}%`;
+                const unitPriceTTC = parseFloat(item.unit_price) * rateMultiplier;
+                const totalTTC = parseFloat(item.total) * rateMultiplier;
+                
+                return `
+                    <tr>
+                        <td class="col-idx">${numStr}</td>
+                        <td class="col-ref">${item.barcode || '//'}</td>
+                        <td class="col-desc">${item.product_name}</td>
+                        <td class="col-vat">${itemVat}</td>
+                        <td class="col-pu">${unitPriceTTC.toFixed(2)}</td>
+                        <td class="col-qty">${item.qty}</td>
+                        <td class="col-total">${totalTTC.toFixed(2)}</td>
+                    </tr>
+                `;
+            }).join('');
 
-            // Set Totals
+            // Populate Totals Table
+            const subtotalVal = parseFloat(sale.subtotal);
+            const discountVal = parseFloat(sale.discount);
+            const taxVal = parseFloat(sale.tax);
             const totalVal = parseFloat(sale.total);
             const paidVal = parseFloat(sale.paid_amount !== undefined && sale.paid_amount !== null ? sale.paid_amount : totalVal);
 
-            document.getElementById('receipt-subtotal').textContent = formatCurrency(parseFloat(sale.subtotal));
-            document.getElementById('receipt-discount').textContent = `-${formatCurrency(parseFloat(sale.discount))}`;
-            document.getElementById('receipt-tax-label').textContent = `Tax (${vatRate}%)`;
-            document.getElementById('receipt-tax').textContent = formatCurrency(parseFloat(sale.tax));
-            document.getElementById('receipt-total').textContent = formatCurrency(totalVal);
+            document.getElementById('receipt-subtotal').textContent = subtotalVal.toFixed(2);
+            
+            // Discount display logic
+            const discountRow = document.getElementById('receipt-discount-row');
+            if (discountVal > 0) {
+                document.getElementById('receipt-discount').textContent = `-${discountVal.toFixed(2)}`;
+                discountRow.style.display = 'table-row';
+            } else {
+                discountRow.style.display = 'none';
+            }
 
+            // Tax display logic
+            document.getElementById('receipt-tax-label').textContent = `TVA (${isBL ? '0.00' : ((saleTaxRate || (vatRate / 100)) * 100).toFixed(2)}%)`;
+            document.getElementById('receipt-tax').textContent = taxVal.toFixed(2);
+            document.getElementById('receipt-total').textContent = totalVal.toFixed(2);
+
+            // Total in Words
+            document.getElementById('receipt-total-words').textContent = numberToWordsFR(totalVal);
+
+            // Customer Debt / Balance details (only if registered customer)
+            const prevBalRow = document.getElementById('receipt-prev-balance-row');
             const paidRow = document.getElementById('receipt-paid-row');
             const remainingRow = document.getElementById('receipt-remaining-row');
 
-            if (paidVal < totalVal) {
-                document.getElementById('receipt-paid').textContent = formatCurrency(paidVal);
-                document.getElementById('receipt-remaining').textContent = formatCurrency(totalVal - paidVal);
-                paidRow.style.display = 'flex';
-                remainingRow.style.display = 'flex';
+            if (sale.customer_id) {
+                const currentBalance = parseFloat(sale.customer_balance || 0);
+                const prevBalance = currentBalance - (totalVal - paidVal);
+
+                document.getElementById('receipt-prev-balance').textContent = prevBalance.toFixed(2);
+                document.getElementById('receipt-paid').textContent = paidVal.toFixed(2);
+                document.getElementById('receipt-remaining').textContent = currentBalance.toFixed(2);
+
+                prevBalRow.style.display = 'table-row';
+                paidRow.style.display = 'table-row';
+                remainingRow.style.display = 'table-row';
             } else {
+                prevBalRow.style.display = 'none';
                 paidRow.style.display = 'none';
                 remainingRow.style.display = 'none';
+            }
+
+            // Custom footer text if available in settings
+            if (settings?.receipt_footer) {
+                document.getElementById('receipt-footer-text').textContent = settings.receipt_footer;
             }
         }
 

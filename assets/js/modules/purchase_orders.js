@@ -92,6 +92,42 @@ const purchase_ordersModule = {
             };
         }
 
+        // Image Preview & Upload for Inline Product
+        const imageUploadBtn = document.getElementById('imageUploadBtn');
+        const productImageInput = document.getElementById('product-image-input');
+        const btnRemoveImage = document.getElementById('btn-remove-image');
+
+        if (imageUploadBtn && productImageInput) {
+            imageUploadBtn.onclick = () => {
+                productImageInput.click();
+            };
+
+            productImageInput.onchange = (e) => {
+                if (e.target.files && e.target.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        const preview = document.getElementById('product-img-preview');
+                        if (preview) preview.src = event.target.result;
+                        if (btnRemoveImage) btnRemoveImage.classList.remove('d-none');
+                    };
+                    reader.readAsDataURL(e.target.files[0]);
+                }
+            };
+        }
+
+        if (btnRemoveImage && productImageInput) {
+            btnRemoveImage.onclick = (e) => {
+                e.stopPropagation();
+                productImageInput.value = '';
+                const existingImg = document.getElementById('existing-image');
+                if (existingImg) existingImg.value = '';
+                const preview = document.getElementById('product-img-preview');
+                if (preview) preview.src = 'assets/img/img_holder.png';
+                btnRemoveImage.classList.add('d-none');
+            };
+        }
+
+
         // Inline Create Category (in PO Modal)
         const btnAddCat = document.getElementById('btn-add-category');
         if (btnAddCat) {

@@ -407,8 +407,13 @@
             if (settings) {
                 document.getElementById('receipt-brand-name').innerHTML = settings.store_name?.replace('POS', '<span>POS</span>') || 'Dental<span>POS</span>';
                 document.getElementById('receipt-brand-sub').textContent = settings.address || 'Premium Dental store Management';
-                if (settings.store_phone) {
-                    document.getElementById('receipt-brand-phone').textContent = 'Tel: ' + settings.store_phone;
+                let phones = [];
+                if (settings.store_phone) phones.push(settings.store_phone);
+                if (settings.store_phone_2) phones.push(settings.store_phone_2);
+                if (phones.length > 0) {
+                    document.getElementById('receipt-brand-phone').textContent = 'Tel: ' + phones.join(' / ');
+                } else {
+                    document.getElementById('receipt-brand-phone').textContent = '';
                 }
                 if (settings.tax_number) {
                     const elTax = document.getElementById('receipt-brand-tax');
