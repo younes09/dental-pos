@@ -87,7 +87,7 @@ try {
                 exit;
             }
             session_destroy();
-            echo json_encode(['success' => true, 'redirect' => '../login.php']);
+            header('Location: ../login.php');
             exit;
 
         default:
