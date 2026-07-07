@@ -213,7 +213,9 @@ switch ($method) {
             // Fix #15: Whitelist allowed setting keys to prevent arbitrary key injection
             // Bug #3 Fix: Include all settings keys used across the application
             $allowed_keys = [
-                'store_name', 'store_phone', 'store_phone_2', 'clinic_name', 'clinic_phone', 'clinic_email', 'clinic_address',
+                'store_name', 'store_phone', 'store_phone_2', 'store_email',
+                'store_bank_account', 'store_bank_number',
+                'clinic_name', 'clinic_phone', 'clinic_email', 'clinic_address',
                 'currency', 'tax_rate', 'vat_rate', 'tax_number', 'nif', 'nis', 'rc', 'address',
                 'low_stock_threshold', 'receipt_footer',
                 'language', 'timezone', 'date_format', 'theme',

@@ -87,6 +87,9 @@ const settingsModule = {
                 if (settings.currency) businessForm.elements['currency'].value = settings.currency;
                 if (settings.store_phone) businessForm.elements['store_phone'].value = settings.store_phone;
                 if (settings.store_phone_2) businessForm.elements['store_phone_2'].value = settings.store_phone_2;
+                if (settings.store_email !== undefined) businessForm.elements['store_email'].value = settings.store_email;
+                if (settings.store_bank_account !== undefined) businessForm.elements['store_bank_account'].value = settings.store_bank_account;
+                if (settings.store_bank_number !== undefined) businessForm.elements['store_bank_number'].value = settings.store_bank_number;
                 if (settings.address) businessForm.elements['address'].value = settings.address;
                 if (settings.nif) businessForm.elements['nif'].value = settings.nif;
                 if (settings.nis) businessForm.elements['nis'].value = settings.nis;

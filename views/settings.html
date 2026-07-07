@@ -58,9 +58,23 @@
                                 <input type="text" class="form-control" name="store_phone_2" value="">
                             </div>
                         </div>
+                        <div class="mt-3 mb-1">
+                            <label class="form-label small fw-bold" data-i18n="settings.business.store_email">Email Address</label>
+                            <input type="email" class="form-control" name="store_email" placeholder="contact@example.com" value="">
+                        </div>
                         <div class="mt-3 mb-3">
                             <label class="form-label small fw-bold" data-i18n="settings.business.address">Address</label>
                             <textarea class="form-control" name="address" rows="2"></textarea>
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold" data-i18n="settings.business.store_bank_account">Bank Account (Compte)</label>
+                                <input type="text" class="form-control" name="store_bank_account" placeholder="ex: CPA 00123 456789" value="">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold" data-i18n="settings.business.store_bank_number">Account Number (N°)</label>
+                                <input type="text" class="form-control" name="store_bank_number" placeholder="ex: 00400623400" value="">
+                            </div>
                         </div>
                         <button type="submit" class="btn btn-teal" data-i18n="settings.business.btn_save">Save Business Info</button>
                     </form>

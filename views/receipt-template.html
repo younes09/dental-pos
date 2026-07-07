@@ -405,8 +405,8 @@
                 <div class="store-details">
                     <div><strong>Adresse :</strong> <span id="shop-address"></span></div>
                     <div><strong>Domaine d'activité :</strong> Vente en détail des produits dentaires</div>
-                    <div><span id="shop-phone"></span> &nbsp;//&nbsp; <span id="shop-email">dentalline16@gmail.com</span></div>
-                    <div><strong>Compte :</strong> // &nbsp;<strong>N° :</strong> //</div>
+                    <div id="shop-contact-line"><span id="shop-phone"></span><span id="shop-email-sep" style="display:none;"> &nbsp;<strong>Mail:</strong>&nbsp; </span><span id="shop-email" style="display:none;"></span></div>
+                    <div id="shop-bank-row" style="display:none;"><strong>Compte :</strong> <span id="shop-bank-account"></span> &nbsp;<strong>N° :</strong> <span id="shop-bank-number"></span></div>
                 </div>
                 
                 <div class="billed-to-box">
@@ -669,12 +669,26 @@
                     document.getElementById('shop-phone').innerHTML = '';
                 }
 
-                if (settings.clinic_email) {
-                    document.getElementById('shop-email').textContent = settings.clinic_email;
-                } else if (settings.email) {
-                    document.getElementById('shop-email').textContent = settings.email;
+                const emailEl = document.getElementById('shop-email');
+                const emailSepEl = document.getElementById('shop-email-sep');
+                const displayEmail = settings.store_email || settings.clinic_email || settings.email || '';
+                if (displayEmail) {
+                    emailEl.textContent = displayEmail;
+                    emailEl.style.display = '';
+                    if (emailSepEl) emailSepEl.style.display = '';
                 } else {
-                    document.getElementById('shop-email').textContent = 'dentalline16@gmail.com';
+                    emailEl.style.display = 'none';
+                    if (emailSepEl) emailSepEl.style.display = 'none';
+                }
+
+                // Show bank info if configured
+                const bankRow = document.getElementById('shop-bank-row');
+                if (settings.store_bank_account || settings.store_bank_number) {
+                    document.getElementById('shop-bank-account').textContent = settings.store_bank_account || '//';
+                    document.getElementById('shop-bank-number').textContent = settings.store_bank_number || '//';
+                    if (bankRow) bankRow.style.display = '';
+                } else {
+                    if (bankRow) bankRow.style.display = 'none';
                 }
 
                 // Show company registrations

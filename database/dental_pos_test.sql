@@ -326,6 +326,9 @@ INSERT IGNORE INTO settings (setting_key, setting_value) VALUES
 ('loyalty_point_value', '1'),
 ('store_phone', '05 5648 4421'),
 ('store_phone_2', ''),
+('store_email', ''),
+('store_bank_account', ''),
+('store_bank_number', ''),
 ('nif', '0'),
 ('nis', '0'),
 ('rc', '0');
