@@ -6,7 +6,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title data-i18n="store.title">Product Catalogue - DentalPOS</title>
+    <title data-i18n="store.title">Product Catalogue - DONTICIA</title>
     
     <link rel="icon" type="image/png" href="assets/img/favicon.png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -266,7 +266,7 @@
         <div class="container">
             <a class="navbar-brand fw-bold d-flex align-items-center" href="#">
                 <i class="fas fa-tooth text-teal me-2" style="font-size: 1.5rem;"></i>
-                <span class="font-outfit"><span id="nav-store-name">Dental</span><span>POS</span></span>
+                <span class="font-outfit"><span class="text-teal" id="nav-store-name"></span>
             </a>
             
             <div class="d-flex align-items-center ms-auto">
@@ -365,7 +365,7 @@
                     <h5 class="modal-title fw-bold font-outfit" id="modalProductTitle" data-i18n="store.product_details">Product Details</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body p-4 pt-0">
+                <div class="modal-body mt-3 p-4 pt-0">
                     <div class="row g-4">
                         <div class="col-md-5">
                             <img id="modalImg" src="assets/img/products/default.jpg" class="modal-product-img img-fluid" alt="Product Image">
@@ -379,7 +379,7 @@
                                 <table class="table table-borderless align-middle mb-4">
                                     <tbody>
                                         <tr>
-                                            <td class="ps-0 py-2 text-muted fw-medium" width="130" data-i18n="store.category">Category</td>
+                                            <td class="ps-0 py-2 text-muted fw-medium" width="160" data-i18n="store.category">Category</td>
                                             <td class="py-2 fw-semibold" id="modalCategory">-</td>
                                         </tr>
                                         <tr>
@@ -392,6 +392,10 @@
                                                 <span id="modalStockQty" class="badge bg-secondary">0</span>
                                                 <span id="modalAvailabilityBadge" class="availability-badge ms-2">Badge</span>
                                             </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="ps-0 py-2 text-muted fw-medium" data-i18n="store.expiry_date">Expiry Date</td>
+                                            <td class="py-2 fw-semibold" id="modalExpiryDate">-</td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -494,7 +498,7 @@
                 
                 if (result.settings) {
                     storeSettings = result.settings;
-                    document.getElementById('nav-store-name').innerHTML = storeSettings.store_name + '<span>POS</span>';
+                    document.getElementById('nav-store-name').innerHTML = storeSettings.store_name;
                 }
 
                 const catSelect = document.getElementById('categoryFilter');
@@ -636,7 +640,7 @@
             document.getElementById('modalName').textContent = product.name;
             document.getElementById('modalBrand').textContent = product.brand_name ? product.brand_name.toUpperCase() : '-';
             document.getElementById('modalCategory').textContent = product.category_name ? product.category_name : '-';
-            document.getElementById('modalBarcode').innerHTML = product.barcode ? `<code class="bg-light px-2 py-1 rounded text-dark">${product.barcode}</code>` : `<span class="text-muted">-</span>`;
+            document.getElementById('modalBarcode').innerHTML = product.barcode ? `<code class="bg-light px-2 py-1 rounded">${product.barcode}</code>` : `<span class="text-muted">-</span>`;
             
             const stockQty = parseInt(product.stock_qty) || 0;
             const minStock = parseInt(product.min_stock) || 5;
@@ -653,6 +657,14 @@
             } else {
                 badgeSpan.className = 'availability-badge bg-success-subtle text-success';
                 badgeSpan.innerHTML = `<i class="fas fa-check-circle me-1"></i>${t('store.status_in_stock')}`;
+            }
+
+            // Populate Expiry details
+            const expiryDateEl = document.getElementById('modalExpiryDate');
+            if (product.expiry_date) {
+                expiryDateEl.textContent = product.expiry_date;
+            } else {
+                expiryDateEl.textContent = t('store.status_not_applicable');
             }
 
             const imgSrc = product.image && product.image !== 'default.jpg' ? 'assets/img/products/' + product.image : 'assets/img/products/default.jpg';

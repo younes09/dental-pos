@@ -1197,6 +1197,13 @@ const locales = {
         "store.no_products": "No products found matching your search criteria.",
         "store.view_details": "View Details",
         "store.back_to_login": "Back to Login",
+        "store.expiry_date": "Expiry Date",
+        "store.min_stock": "Min Stock Threshold",
+        "store.expiry_status": "Expiry Status",
+        "store.status_expired": "Expired!",
+        "store.status_expiring_soon": "Expiring Soon",
+        "store.status_normal": "Valid",
+        "store.status_not_applicable": "N/A",
 
         // DataTables
         "dt.emptyTable": "No data available in table",
@@ -2410,6 +2417,13 @@ const locales = {
         "store.no_products": "Aucun produit ne correspond à vos critères de recherche.",
         "store.view_details": "Voir détails",
         "store.back_to_login": "Retour à la Connexion",
+        "store.expiry_date": "Date d'expiration",
+        "store.min_stock": "Seuil de stock min",
+        "store.expiry_status": "Statut d'expiration",
+        "store.status_expired": "Expiré !",
+        "store.status_expiring_soon": "Expire Bientôt",
+        "store.status_normal": "Valide",
+        "store.status_not_applicable": "N/A",
 
         // DataTables
         "dt.emptyTable": "Aucune donnée disponible dans le tableau",

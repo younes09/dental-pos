@@ -37,7 +37,7 @@ try {
             $availability = $_GET['availability'] ?? 'all';
 
             $query = "
-                SELECT p.id, p.name, p.selling_price, p.stock_qty, p.min_stock, p.image, p.barcode,
+                SELECT p.id, p.name, p.selling_price, p.stock_qty, p.min_stock, p.image, p.barcode, p.expiry_date,
                        c.name as category_name, b.name as brand_name
                 FROM products p
                 LEFT JOIN categories c ON p.category_id = c.id
