@@ -104,7 +104,15 @@ if ($return_var !== 0) {
     exit(1);
 }
 
-log_msg("SUCCESS: Backup created successfully at: $backup_filename");
+// Fix #6: Validate the backup file is non-empty (guards against silent mysqldump failures)
+$backupSize = file_exists($backup_path) ? filesize($backup_path) : 0;
+if ($backupSize === 0) {
+    log_msg("ERROR: Backup file was created but is empty. Possible mysqldump issue.");
+    @unlink($backup_path);
+    exit(1);
+}
+
+log_msg("SUCCESS: Backup created successfully at: $backup_filename (size: " . number_format($backupSize) . " bytes)");
 
 // Perform backup rotation (keep maximum of 5 files)
 $search_pattern = $backup_dir . DIRECTORY_SEPARATOR . 'dental_pos_backup_*.sql';

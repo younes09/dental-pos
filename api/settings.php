@@ -1,5 +1,6 @@
 <?php
-header('Content-Type: application/json');
+// NOTE: Content-Type: application/json is set per-branch below.
+// We do NOT set it globally here because the backup action streams binary data.
 require_once 'config/db.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
@@ -9,6 +10,7 @@ switch ($method) {
         if (isset($_GET['action']) && $_GET['action'] === 'backup') {
             // Only Admin can backup
             if (($_SESSION['user_role'] ?? '') !== 'Admin') {
+                header('Content-Type: application/json');
                 http_response_code(403);
                 echo json_encode(['error' => 'Only Admins can perform database backup.']);
                 exit;
@@ -40,12 +42,14 @@ switch ($method) {
                 passthru($command);
                 exit;
             } catch (Exception $e) {
+                header('Content-Type: application/json');
                 http_response_code(500);
                 echo json_encode(['error' => $e->getMessage()]);
                 exit;
             }
         }
 
+        header('Content-Type: application/json');
         try {
             $stmt = $pdo->query("SELECT setting_key, setting_value FROM settings");
             $settings = [];
@@ -61,6 +65,7 @@ switch ($method) {
         break;
 
     case 'POST':
+        header('Content-Type: application/json');
         // F4.1: Only Admin can modify settings / restore
         if (($_SESSION['user_role'] ?? '') !== 'Admin') {
             http_response_code(403);
@@ -157,12 +162,31 @@ switch ($method) {
                 $mysqlPath = defined('MYSQL_PATH') ? MYSQL_PATH : 'C:\\xampp\\mysql\\bin\\mysql.exe';
                 $tmpFile = $file['tmp_name'];
 
-                // Fix #5: Validate the uploaded file is actually a .sql file
+                // Validate extension
                 $uploadedName = $file['name'] ?? '';
                 $ext = strtolower(pathinfo($uploadedName, PATHINFO_EXTENSION));
                 if ($ext !== 'sql') {
                     http_response_code(400);
                     echo json_encode(['error' => 'Invalid file type. Only .sql backup files are accepted.']);
+                    exit;
+                }
+
+                // Fix #3: Enforce 100MB file size limit
+                $maxBytes = 100 * 1024 * 1024; // 100 MB
+                if ($file['size'] > $maxBytes) {
+                    http_response_code(400);
+                    echo json_encode(['error' => 'File too large. Maximum allowed size is 100 MB.']);
+                    exit;
+                }
+
+                // Fix #2: Validate actual file content — must look like a SQL dump
+                $handle = fopen($tmpFile, 'r');
+                $header = $handle ? fread($handle, 512) : '';
+                if ($handle) fclose($handle);
+                $looksLikeSQL = preg_match('/^\s*(--\s|\/?\*|CREATE\s|DROP\s|INSERT\s|SET\s|USE\s|BEGIN)/i', $header);
+                if (!$looksLikeSQL) {
+                    http_response_code(400);
+                    echo json_encode(['error' => 'Uploaded file does not appear to be a valid SQL dump.']);
                     exit;
                 }
 
@@ -187,7 +211,9 @@ switch ($method) {
                 if ($returnVar === 0) {
                     echo json_encode(['success' => true, 'message' => 'Database restored successfully']);
                 } else {
-                    error_log("DB Restore failed with exit code $returnVar. Command: $winCommand");
+                    // Fix #7: Log the actual mysql error output
+                    $errorDetail = implode("\n", $output);
+                    error_log("DB Restore failed (exit code $returnVar). Output: $errorDetail");
                     http_response_code(500);
                     echo json_encode([
                         'error' => 'Restore failed with exit code ' . $returnVar,
@@ -259,6 +285,7 @@ switch ($method) {
         break;
 
     default:
+        header('Content-Type: application/json');
         http_response_code(405);
         echo json_encode(['error' => 'Method not allowed']);
         break;

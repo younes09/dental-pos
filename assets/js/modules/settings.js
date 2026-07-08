@@ -167,11 +167,16 @@ const settingsModule = {
 
     backupDB() {
         App.toast('info', App.t('settings.js.backup_generating') || 'Generating SQL backup... please wait');
-        // Trigger download via hidden iframe or direct navigation
-        // Direct navigation is often simplest for downloads
-        window.location.href = 'api/settings.php?action=backup';
 
-        // Hide loading message after a short delay (the browser will handle the download in background)
+        // Fix #4: Use a hidden <a download> to trigger the download without navigating away
+        const a = document.createElement('a');
+        a.href = 'api/settings.php?action=backup';
+        a.download = '';
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
         setTimeout(() => {
             App.toast('success', App.t('settings.js.backup_sent') || 'Backup request sent');
         }, 2000);

@@ -704,8 +704,7 @@
                 }
             }
 
-            // Extract City & Date Issued (Algerian French Date Format)
-            const city = settings?.address ? settings.address.split(',')[0].trim() : 'Alger';
+            // Extract Date Issued (Algerian French Date Format)            
             const frenchMonths = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
             
             function formatFrenchDate(dateStr) {
@@ -715,7 +714,7 @@
             }
             
             const formattedDate = sale.date ? formatFrenchDate(sale.date) : formatFrenchDate(new Date());
-            document.getElementById('receipt-date-location').innerHTML = `<strong>${city}</strong>, le : ${formattedDate}`;
+            document.getElementById('receipt-date-location').innerHTML = `Le : ${formattedDate}`;
 
             // Document Title (FACTURE vs BON DE LIVRAISON)
             const isBL = sale.invoice_type === 'BL';
