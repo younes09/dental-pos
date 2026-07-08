@@ -1223,7 +1223,26 @@ const locales = {
         "dt.paginate.first": "First",
         "dt.paginate.last": "Last",
         "dt.paginate.next": "Next",
-        "dt.paginate.previous": "Previous"
+        "dt.paginate.previous": "Previous",
+        
+        // AI & Scanning
+        "po.btn_scan": "Scan / Upload Invoice",
+        "po.scan_modal.title": "Scan or Upload Purchase Invoice",
+        "po.scan_modal.desc": "Select an image of your purchase invoice or a PDF file. Gemini AI will automatically extract the supplier, items, prices, and quantities to draft your purchase receipt.",
+        "po.scan_modal.drag_drop": "Drag & drop file here or click to browse",
+        "po.scan_modal.loading_title": "Analyzing Invoice...",
+        "po.scan_modal.loading_desc": "Gemini AI is extracting invoice data, please wait a few seconds.",
+        "po.scan_modal.new_supplier_btn": "New",
+        "po.scan_modal.items_title": "Extracted Invoice Items",
+        "po.scan_modal.map_product": "Inventory Mapping",
+        "po.scan_modal.selling_price": "Selling Price",
+        "po.scan_modal.btn_save": "Create Purchase Receipt",
+        "po.js.err_no_gemini_key": "Gemini API key is missing. Please configure it in System Settings.",
+        "settings.ai.title": "AI Integration",
+        "settings.ai.gemini_key": "Gemini API Key",
+        "settings.ai.gemini_info": "Used for scanning and uploading purchase invoices. Get a free API key from Google AI Studio.",
+        "settings.ai.btn_save": "Save AI Settings",
+        "settings.js.ai_saved": "AI settings saved successfully"
     },
     fr: {
         // General
@@ -2448,6 +2467,25 @@ const locales = {
         "dt.paginate.first": "Premier",
         "dt.paginate.last": "Dernier",
         "dt.paginate.next": "Suivant",
-        "dt.paginate.previous": "Précédent"
+        "dt.paginate.previous": "Précédent",
+
+        // AI & Scanning
+        "po.btn_scan": "Scanner / Importer Facture",
+        "po.scan_modal.title": "Scanner ou Importer une Facture d'Achat",
+        "po.scan_modal.desc": "Sélectionnez une image de votre facture d'achat ou un fichier PDF. L'intelligence artificielle Gemini extraira automatiquement le fournisseur, les articles, les prix et les quantités pour générer votre bon d'achat.",
+        "po.scan_modal.drag_drop": "Glissez-déposez le fichier ici ou cliquez pour choisir",
+        "po.scan_modal.loading_title": "Analyse de la facture en cours...",
+        "po.scan_modal.loading_desc": "L'IA Gemini extrait les données, veuillez patienter quelques secondes.",
+        "po.scan_modal.new_supplier_btn": "Nouveau",
+        "po.scan_modal.items_title": "Articles Extraits de la Facture",
+        "po.scan_modal.map_product": "Association Stock",
+        "po.scan_modal.selling_price": "Prix de Vente",
+        "po.scan_modal.btn_save": "Créer le Bon d'Achat",
+        "po.js.err_no_gemini_key": "La clé API Gemini est manquante. Veuillez la configurer dans les paramètres système.",
+        "settings.ai.title": "Intégration IA",
+        "settings.ai.gemini_key": "Clé API Gemini",
+        "settings.ai.gemini_info": "Requise pour scanner et importer les factures d'achat. Obtenez une clé gratuite sur Google AI Studio.",
+        "settings.ai.btn_save": "Enregistrer les Paramètres IA",
+        "settings.js.ai_saved": "Configuration IA enregistrée avec succès"
     }
 };

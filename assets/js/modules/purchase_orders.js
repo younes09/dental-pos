@@ -229,6 +229,156 @@ const purchase_ordersModule = {
                 }
             };
         }
+        // Scan Invoice Events
+        const dragDropZone = document.getElementById('drag-drop-zone');
+        const fileInput = document.getElementById('invoice-file-input');
+        
+        if (dragDropZone && fileInput) {
+            dragDropZone.onclick = () => fileInput.click();
+            
+            fileInput.onchange = (e) => {
+                if (e.target.files && e.target.files[0]) {
+                    this.uploadAndParseInvoice(e.target.files[0]);
+                }
+            };
+            
+            dragDropZone.ondragover = (e) => {
+                e.preventDefault();
+                dragDropZone.classList.add('bg-secondary-subtle');
+            };
+            
+            dragDropZone.ondragleave = () => {
+                dragDropZone.classList.remove('bg-secondary-subtle');
+            };
+            
+            dragDropZone.ondrop = (e) => {
+                e.preventDefault();
+                dragDropZone.classList.remove('bg-secondary-subtle');
+                if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                    this.uploadAndParseInvoice(e.dataTransfer.files[0]);
+                }
+            };
+        }
+
+        // Toggling new supplier
+        const btnToggleNewSupplier = document.getElementById('btn-toggle-new-supplier');
+        const supplierSelect = document.getElementById('scan-supplier-select');
+        const newSupplierContainer = document.getElementById('scan-new-supplier-container');
+        const newSupplierNameInput = document.getElementById('scan-new-supplier-name');
+
+        if (btnToggleNewSupplier) {
+            btnToggleNewSupplier.onclick = () => {
+                const isNew = newSupplierContainer.classList.contains('d-none');
+                if (isNew) {
+                    newSupplierContainer.classList.remove('d-none');
+                    supplierSelect.value = '__NEW__';
+                    supplierSelect.required = false;
+                    newSupplierNameInput.required = true;
+                    btnToggleNewSupplier.innerHTML = `<i class="fas fa-list"></i> <span data-i18n="po.scan_modal.existing_supplier_btn">Existant</span>`;
+                    App.translate(btnToggleNewSupplier.parentElement);
+                } else {
+                    newSupplierContainer.classList.add('d-none');
+                    supplierSelect.value = '';
+                    supplierSelect.required = true;
+                    newSupplierNameInput.required = false;
+                    newSupplierNameInput.value = '';
+                    btnToggleNewSupplier.innerHTML = `<i class="fas fa-plus"></i> <span data-i18n="po.scan_modal.new_supplier_btn">Nouveau</span>`;
+                    App.translate(btnToggleNewSupplier.parentElement);
+                }
+            };
+        }
+
+        if (supplierSelect) {
+            supplierSelect.onchange = (e) => {
+                if (e.target.value === '__NEW__') {
+                    newSupplierContainer.classList.remove('d-none');
+                    newSupplierNameInput.required = true;
+                    if (btnToggleNewSupplier) {
+                        btnToggleNewSupplier.innerHTML = `<i class="fas fa-list"></i> <span data-i18n="po.scan_modal.existing_supplier_btn">Existant</span>`;
+                        App.translate(btnToggleNewSupplier.parentElement);
+                    }
+                } else {
+                    newSupplierContainer.classList.add('d-none');
+                    newSupplierNameInput.required = false;
+                    newSupplierNameInput.value = '';
+                    if (btnToggleNewSupplier) {
+                        btnToggleNewSupplier.innerHTML = `<i class="fas fa-plus"></i> <span data-i18n="po.scan_modal.new_supplier_btn">Nouveau</span>`;
+                        App.translate(btnToggleNewSupplier.parentElement);
+                    }
+                }
+            };
+        }
+
+        // Toggle finance fields in scan modal
+        const scanPoStatus = document.getElementById('scan-po-status');
+        if (scanPoStatus) {
+            scanPoStatus.onchange = (e) => {
+                const container = document.getElementById('scan-po-purchase-type-container');
+                const financeContainer = document.getElementById('scan-po-finance-container');
+                
+                if (e.target.value === 'Received') {
+                    container.classList.remove('d-none');
+                    document.getElementById('scan-po-purchase-type').required = true;
+                    financeContainer.classList.remove('d-none');
+                } else {
+                    container.classList.add('d-none');
+                    document.getElementById('scan-po-purchase-type').required = false;
+                    financeContainer.classList.add('d-none');
+                }
+            };
+        }
+
+        // Add manual item in scan modal
+        const btnScanAddItem = document.getElementById('scan-btn-add-item');
+        if (btnScanAddItem) {
+            btnScanAddItem.onclick = () => {
+                this.addScannedItemRow({
+                    product_name: '',
+                    qty: 1,
+                    unit_cost: 0.00
+                });
+            };
+        }
+
+        // Reset step view when modal shows up
+        const scanModalEl = document.getElementById('scanInvoiceModal');
+        if (scanModalEl) {
+            scanModalEl.addEventListener('show.bs.modal', () => {
+                document.getElementById('scan-step-upload').classList.remove('d-none');
+                document.getElementById('scan-step-loading').classList.add('d-none');
+                document.getElementById('scan-step-edit').classList.add('d-none');
+                if (fileInput) fileInput.value = '';
+                document.getElementById('scannedInvoiceForm').reset();
+                document.querySelector('#scan-items-table tbody').innerHTML = '';
+                
+                // Repopulate supplier dropdowns just in case meta loaded/changed
+                const scanSupplierSelect = document.getElementById('scan-supplier-select');
+                if (scanSupplierSelect) {
+                    scanSupplierSelect.innerHTML = `<option value="">${App.t('po.modal.supplier_select')}</option>` +
+                        `<option value="__NEW__">${App.t('po.scan_modal.new_supplier_option') || 'Créer nouveau fournisseur'}</option>` +
+                        this.suppliers.map(s => `<option value="${s.id}">${s.name} (${s.company})</option>`).join('');
+                }
+                
+                // Populate source accounts dropdown
+                const scanPoAccount = document.getElementById('scan-po-account-id');
+                if (scanPoAccount && window.vaultAccountsOptions) {
+                    scanPoAccount.innerHTML = window.vaultAccountsOptions;
+                } else if (scanPoAccount) {
+                    // fall back to default loaded accounts options
+                    const origAcctSelect = document.getElementById('po-account-id');
+                    if (origAcctSelect) scanPoAccount.innerHTML = origAcctSelect.innerHTML;
+                }
+            });
+        }
+
+        // Form submission in scan modal
+        const scannedInvoiceForm = document.getElementById('scannedInvoiceForm');
+        if (scannedInvoiceForm) {
+            scannedInvoiceForm.onsubmit = async (e) => {
+                e.preventDefault();
+                await this.submitScannedInvoice();
+            };
+        }
     },
 
     initDataTable() {
@@ -372,6 +522,9 @@ const purchase_ordersModule = {
 
             const receiveSelect = document.getElementById('receive-po-account-id');
             if (receiveSelect) receiveSelect.innerHTML = options;
+
+            const scanSelect = document.getElementById('scan-po-account-id');
+            if (scanSelect) scanSelect.innerHTML = options;
         }
 
         // Load product metadata (categories/brands) for the inline product creator
@@ -948,8 +1101,325 @@ const purchase_ordersModule = {
             bootstrap.Modal.getInstance(document.getElementById('purchaseReturnModal')).hide();
             this.table.ajax.reload(null, false);
         }
+    },
+
+    async uploadAndParseInvoice(file) {
+        document.getElementById('scan-step-upload').classList.add('d-none');
+        document.getElementById('scan-step-loading').classList.remove('d-none');
+        document.getElementById('scan-step-edit').classList.add('d-none');
+
+        const formData = new FormData();
+        formData.append('invoice_file', file);
+
+        try {
+            const response = await fetch('api/purchase_orders.php?action=parse_invoice', {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+
+            if (result && result.error_code === 'MISSING_GEMINI_KEY') {
+                bootstrap.Modal.getInstance(document.getElementById('scanInvoiceModal')).hide();
+                const confirm = await Swal.fire({
+                    title: App.t('po.js.err_no_gemini_key') || 'Gemini API Key Missing',
+                    text: App.t('po.js.err_no_gemini_key_text') || 'You need to set a Gemini API key in settings to scan invoices. Would you like to go to settings now?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#00BFA6',
+                    confirmButtonText: App.t('sidebar.settings') || 'Settings',
+                    cancelButtonText: App.t('btn.cancel') || 'Cancel'
+                });
+                if (confirm.isConfirmed) {
+                    window.location.hash = '#settings';
+                }
+                return;
+            }
+
+            if (result && result.error) {
+                App.toast('error', result.error);
+                document.getElementById('scan-step-upload').classList.remove('d-none');
+                document.getElementById('scan-step-loading').classList.add('d-none');
+                return;
+            }
+
+            if (result && result.data) {
+                this.loadScannedData(result.data);
+            } else {
+                App.toast('error', 'Erreur de lecture de la facture.');
+                document.getElementById('scan-step-upload').classList.remove('d-none');
+                document.getElementById('scan-step-loading').classList.add('d-none');
+            }
+        } catch (error) {
+            console.error('Invoice Upload Error:', error);
+            App.toast('error', 'Erreur réseau lors de l\'analyse.');
+            document.getElementById('scan-step-upload').classList.remove('d-none');
+            document.getElementById('scan-step-loading').classList.add('d-none');
+        }
+    },
+
+    loadScannedData(data) {
+        if (data.date) {
+            document.getElementById('scan-invoice-date').value = data.date;
+        } else {
+            document.getElementById('scan-invoice-date').valueAsDate = new Date();
+        }
+
+        const supplierSelect = document.getElementById('scan-supplier-select');
+        const newSupplierContainer = document.getElementById('scan-new-supplier-container');
+        const newSupplierNameInput = document.getElementById('scan-new-supplier-name');
+        const btnToggleNewSupplier = document.getElementById('btn-toggle-new-supplier');
+
+        let matchedSupplier = null;
+        if (data.supplier_name) {
+            const queryName = data.supplier_name.toLowerCase();
+            matchedSupplier = this.suppliers.find(s => 
+                s.name.toLowerCase().includes(queryName) || 
+                queryName.includes(s.name.toLowerCase()) ||
+                (s.company && (s.company.toLowerCase().includes(queryName) || queryName.includes(s.company.toLowerCase())))
+            );
+        }
+
+        if (matchedSupplier) {
+            supplierSelect.value = matchedSupplier.id;
+            newSupplierContainer.classList.add('d-none');
+            newSupplierNameInput.required = false;
+            newSupplierNameInput.value = '';
+            if (btnToggleNewSupplier) {
+                btnToggleNewSupplier.innerHTML = `<i class="fas fa-plus"></i> <span data-i18n="po.scan_modal.new_supplier_btn">Nouveau</span>`;
+                App.translate(btnToggleNewSupplier.parentElement);
+            }
+        } else {
+            supplierSelect.value = '__NEW__';
+            newSupplierContainer.classList.remove('d-none');
+            newSupplierNameInput.required = true;
+            newSupplierNameInput.value = data.supplier_name || '';
+            if (btnToggleNewSupplier) {
+                btnToggleNewSupplier.innerHTML = `<i class="fas fa-list"></i> <span data-i18n="po.scan_modal.existing_supplier_btn">Existant</span>`;
+                App.translate(btnToggleNewSupplier.parentElement);
+            }
+        }
+
+        const tbody = document.querySelector('#scan-items-table tbody');
+        tbody.innerHTML = '';
+
+        if (data.items && data.items.length > 0) {
+            data.items.forEach(item => {
+                this.addScannedItemRow(item);
+            });
+        }
+
+        this.calculateScannedTotals();
+
+        document.getElementById('scan-step-upload').classList.add('d-none');
+        document.getElementById('scan-step-loading').classList.add('d-none');
+        document.getElementById('scan-step-edit').classList.remove('d-none');
+    },
+
+    addScannedItemRow(item) {
+        const tbody = document.querySelector('#scan-items-table tbody');
+        const row = document.createElement('tr');
+
+        let matchedProduct = null;
+        if (item.product_name) {
+            const queryName = item.product_name.toLowerCase();
+            matchedProduct = this.products.find(p => 
+                p.name.toLowerCase().includes(queryName) || 
+                queryName.includes(p.name.toLowerCase()) ||
+                (p.barcode && p.barcode.toLowerCase() === queryName)
+            );
+        }
+
+        const selectedVal = matchedProduct ? matchedProduct.id : '__NEW__';
+        const cost = parseFloat(item.unit_cost) || 0;
+        const qty = parseInt(item.qty) || 1;
+        const sellingPrice = matchedProduct ? matchedProduct.selling_price : (cost * 1.2).toFixed(2);
+
+        row.innerHTML = `
+            <td>
+                <input type="text" class="form-control form-control-sm scan-item-product-name" value="${App.escapeHtml(item.product_name)}" required>
+            </td>
+            <td>
+                <select class="form-select form-select-sm scan-item-product-map" required>
+                    <option value="__NEW__">-- ${App.t('po.modal.btn_create_product') || 'Nouveau'} --</option>
+                    ${this.products.map(p => `<option value="${p.id}" ${p.id == selectedVal ? 'selected' : ''}>${App.escapeHtml(p.name)}</option>`).join('')}
+                </select>
+            </td>
+            <td>
+                <input type="number" class="form-control form-control-sm scan-item-qty text-center" value="${qty}" min="1" required>
+            </td>
+            <td>
+                <input type="number" step="0.01" class="form-control form-control-sm scan-item-cost" value="${cost.toFixed(2)}" min="0" required>
+            </td>
+            <td>
+                <input type="number" step="0.01" class="form-control form-control-sm scan-item-selling" value="${parseFloat(sellingPrice).toFixed(2)}" min="0.01" ${selectedVal !== '__NEW__' ? 'disabled' : ''} required>
+            </td>
+            <td>
+                <input type="date" class="form-control form-control-sm scan-item-expiry" style="font-size: 0.75rem;">
+            </td>
+            <td class="text-end">
+                <button type="button" class="btn btn-sm text-danger btn-remove-scan-item">
+                    <i class="fas fa-times"></i>
+                </button>
+            </td>
+        `;
+
+        const mapSelect = row.querySelector('.scan-item-product-map');
+        const sellingInput = row.querySelector('.scan-item-selling');
+        const costInput = row.querySelector('.scan-item-cost');
+        const qtyInput = row.querySelector('.scan-item-qty');
+
+        mapSelect.onchange = (e) => {
+            if (e.target.value === '__NEW__') {
+                sellingInput.disabled = false;
+                sellingInput.value = (parseFloat(costInput.value) * 1.2).toFixed(2);
+            } else {
+                sellingInput.disabled = true;
+                const pId = e.target.value;
+                const p = this.products.find(prod => prod.id == pId);
+                if (p) {
+                    sellingInput.value = parseFloat(p.selling_price || 0).toFixed(2);
+                    costInput.value = parseFloat(p.purchase_price || 0).toFixed(2);
+                }
+            }
+            this.calculateScannedTotals();
+        };
+
+        costInput.oninput = () => {
+            if (mapSelect.value === '__NEW__') {
+                sellingInput.value = (parseFloat(costInput.value) * 1.2).toFixed(2);
+            }
+            this.calculateScannedTotals();
+        };
+
+        qtyInput.oninput = () => this.calculateScannedTotals();
+
+        row.querySelector('.btn-remove-scan-item').onclick = () => {
+            row.remove();
+            this.calculateScannedTotals();
+        };
+
+        tbody.appendChild(row);
+    },
+
+    calculateScannedTotals() {
+        let total = 0;
+        document.querySelectorAll('#scan-items-table tbody tr').forEach(row => {
+            const qty = parseFloat(row.querySelector('.scan-item-qty').value) || 0;
+            const cost = parseFloat(row.querySelector('.scan-item-cost').value) || 0;
+            total += qty * cost;
+        });
+        document.getElementById('scan-total-display').textContent = App.formatCurrency(total);
+
+        const paidInput = document.getElementById('scan-po-paid-amount');
+        if (paidInput) {
+            paidInput.max = total;
+        }
+    },
+
+    async submitScannedInvoice() {
+        const supplier_id = document.getElementById('scan-supplier-select').value;
+        const new_supplier_name = document.getElementById('scan-new-supplier-name').value;
+        const date = document.getElementById('scan-invoice-date').value;
+        const status = document.getElementById('scan-po-status').value;
+        const purchase_type = document.getElementById('scan-po-purchase-type').value;
+        
+        let paid_amount = 0;
+        let account_id = null;
+        
+        if (status === 'Received') {
+            paid_amount = parseFloat(document.getElementById('scan-po-paid-amount').value) || 0;
+            account_id = document.getElementById('scan-po-account-id').value;
+        }
+
+        const items = [];
+        let error = false;
+
+        document.querySelectorAll('#scan-items-table tbody tr').forEach(row => {
+            const productName = row.querySelector('.scan-item-product-name').value.trim();
+            const productMap = row.querySelector('.scan-item-product-map').value;
+            const qty = parseInt(row.querySelector('.scan-item-qty').value) || 0;
+            const cost = parseFloat(row.querySelector('.scan-item-cost').value) || 0;
+            const selling = parseFloat(row.querySelector('.scan-item-selling').value) || 0;
+            const expiry = row.querySelector('.scan-item-expiry').value || null;
+
+            if (!productName) {
+                App.toast('error', 'Chaque ligne doit avoir un nom de produit.');
+                error = true;
+                return;
+            }
+            if (qty <= 0) {
+                App.toast('error', 'La quantité doit être supérieure à zéro.');
+                error = true;
+                return;
+            }
+
+            items.push({
+                product_id: productMap,
+                new_product_name: productName,
+                qty: qty,
+                unit_cost: cost,
+                selling_price: selling,
+                expiry_date: expiry
+            });
+        });
+
+        if (error) return;
+        if (items.length === 0) {
+            App.toast('error', 'Veuillez ajouter au moins un article.');
+            return;
+        }
+
+        let total = 0;
+        items.forEach(it => total += it.qty * it.unit_cost);
+
+        if (status === 'Received') {
+            if (paid_amount < 0) {
+                App.toast('error', 'Le montant payé ne peut pas être négatif.');
+                return;
+            }
+            if (paid_amount > total) {
+                App.toast('error', 'Le montant payé ne peut pas dépasser le total.');
+                return;
+            }
+            if (account_id && paid_amount > 0) {
+                const balance = this.accountBalances[account_id];
+                if (balance !== undefined && paid_amount > balance) {
+                    App.toast('error', `Solde insuffisant sur ce compte. Disponible : ${App.formatCurrency(balance)}`);
+                    return;
+                }
+            }
+        }
+
+        const confirmed = await App.confirm(
+            App.t('po.js.save_confirm_title') || 'Save Purchase Order?',
+            'Voulez-vous enregistrer cette facture d\'achat en créant automatiquement les produits/fournisseurs manquants ?'
+        );
+        if (!confirmed) return;
+
+        const payload = {
+            supplier_id,
+            new_supplier_name,
+            date,
+            status,
+            purchase_type,
+            paid_amount,
+            account_id,
+            items
+        };
+
+        const result = await App.api('purchase_orders.php?action=save_scanned_invoice', 'POST', payload);
+        if (result && result.success) {
+            App.toast('success', result.success);
+            bootstrap.Modal.getInstance(document.getElementById('scanInvoiceModal')).hide();
+            this.table.ajax.reload();
+            
+            await this.loadMeta();
+        } else if (result && result.error) {
+            App.toast('error', result.error);
+        }
     }
-};
+    // End scanned invoice helper methods
+}
 
 // Initialize
 if (document.getElementById('poTable')) {

@@ -709,6 +709,268 @@ try {
             echo json_encode(['data' => $suppliers]);
             break;
 
+        case 'parse_invoice':
+            if (!in_array($_SESSION['user_role'] ?? '', ['Admin', 'Stock Manager'])) {
+                throw new Exception('Access denied.');
+            }
+            if (!isset($_FILES['invoice_file'])) {
+                throw new Exception("Aucun fichier n'a été fourni.");
+            }
+
+            $stmtKey = $pdo->prepare("SELECT setting_value FROM settings WHERE setting_key = 'gemini_api_key'");
+            $stmtKey->execute();
+            $apiKey = $stmtKey->fetchColumn();
+            if (empty($apiKey)) {
+                echo json_encode(['error_code' => 'MISSING_GEMINI_KEY', 'error' => 'Gemini API key is not configured. Please add it in settings.']);
+                exit;
+            }
+
+            $file = $_FILES['invoice_file'];
+            if ($file['error'] !== UPLOAD_ERR_OK) {
+                throw new Exception("Erreur lors de l'upload du fichier : " . $file['error']);
+            }
+
+            $allowed_mimes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
+            $finfo = new finfo(FILEINFO_MIME_TYPE);
+            $mime = $finfo->file($file['tmp_name']);
+            if (!in_array($mime, $allowed_mimes)) {
+                throw new Exception("Format de fichier non supporté. Veuillez uploader un PDF ou une image (JPG, PNG, WEBP).");
+            }
+
+            $file_data = file_get_contents($file['tmp_name']);
+            $base64_data = base64_encode($file_data);
+
+            $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" . urlencode($apiKey);
+
+            $prompt = "Analyze this purchase invoice. Extract:
+1. The name of the supplier (field 'supplier_name').
+2. The date of the invoice (field 'date' in YYYY-MM-DD format. Use today's date if not found or unclear).
+3. The list of items in the invoice. For each item, extract the product name (field 'product_name'), the quantity (field 'qty'), and the unit purchase price (field 'unit_cost').
+
+You must reply ONLY with a valid JSON object matching the following structure (no markdown formatting, no code blocks):
+{
+  \"supplier_name\": \"...\",
+  \"date\": \"YYYY-MM-DD\",
+  \"items\": [
+    {
+      \"product_name\": \"...\",
+      \"qty\": 123,
+      \"unit_cost\": 45.67
+    }
+  ]
+}";
+
+            $payload = [
+                "contents" => [
+                    [
+                        "parts" => [
+                            [
+                                "text" => $prompt
+                            ],
+                            [
+                                "inlineData" => [
+                                    "mimeType" => $mime,
+                                    "data" => $base64_data
+                                ]
+                            ]
+                        ]
+                    ]
+                ],
+                "generationConfig" => [
+                    "responseMimeType" => "application/json"
+                ]
+            ];
+
+            $ch = curl_init($url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+            curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 45);
+
+            $response = curl_exec($ch);
+            $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+            if ($response === false) {
+                $err = curl_error($ch);
+                curl_close($ch);
+                throw new Exception("Erreur de connexion à l'API Gemini : " . $err);
+            }
+            curl_close($ch);
+
+            if ($http_code !== 200) {
+                $err_data = json_decode($response, true);
+                $err_msg = isset($err_data['error']['message']) ? $err_data['error']['message'] : "HTTP Code " . $http_code;
+                throw new Exception("Erreur API Gemini: " . $err_msg);
+            }
+
+            $res_data = json_decode($response, true);
+            $text_output = $res_data['candidates'][0]['content']['parts'][0]['text'] ?? '';
+            if (empty($text_output)) {
+                throw new Exception("L'API Gemini n'a renvoyé aucun texte.");
+            }
+
+            $invoice_details = json_decode($text_output, true);
+            if (!$invoice_details) {
+                throw new Exception("Impossible de parser la réponse JSON de Gemini.");
+            }
+
+            echo json_encode(['data' => $invoice_details]);
+            break;
+
+        case 'save_scanned_invoice':
+            if (!in_array($_SESSION['user_role'] ?? '', ['Admin', 'Stock Manager'])) {
+                throw new Exception('Access denied.');
+            }
+            $json = file_get_contents('php://input');
+            $data = json_decode($json, true);
+
+            if (!$data || empty($data['items'])) {
+                echo json_encode(['error' => 'Données invalides reçues']);
+                exit;
+            }
+
+            $pdo->beginTransaction();
+
+            $supplier_id = $data['supplier_id'];
+            if ($supplier_id === '__NEW__') {
+                $new_supplier_name = trim($data['new_supplier_name'] ?? '');
+                if (empty($new_supplier_name)) {
+                    throw new Exception("Le nom du nouveau fournisseur est requis.");
+                }
+                $stmtSupplierInsert = $pdo->prepare("INSERT INTO suppliers (name) VALUES (?)");
+                $stmtSupplierInsert->execute([$new_supplier_name]);
+                $supplier_id = $pdo->lastInsertId();
+            }
+
+            $date = $data['date'] ?? date('Y-m-d');
+            $status = $data['status'] ?? 'Received';
+            $purchase_type = $data['purchase_type'] ?? 'BA';
+            $paid_amount = isset($data['paid_amount']) ? (float)$data['paid_amount'] : 0;
+            $account_id = !empty($data['account_id']) ? $data['account_id'] : null;
+            $items = $data['items'];
+
+            $total = 0;
+            $items_clean = [];
+            foreach ($items as $item) {
+                $prod_id = $item['product_id'];
+                $qty = (int)$item['qty'];
+                $cost = (float)$item['unit_cost'];
+
+                if ($qty <= 0) throw new Exception("Quantité invalide.");
+                if ($cost < 0) throw new Exception("Coût unitaire invalide.");
+
+                if ($prod_id === '__NEW__') {
+                    $new_product_name = trim($item['new_product_name'] ?? '');
+                    if (empty($new_product_name)) {
+                        throw new Exception("Le nom du nouveau produit est requis.");
+                    }
+                    $selling_price = isset($item['selling_price']) ? (float)$item['selling_price'] : 0;
+                    if ($selling_price <= 0) {
+                        throw new Exception("Le prix de vente pour un nouveau produit doit être supérieur à zéro.");
+                    }
+
+                    $stmtProductInsert = $pdo->prepare("INSERT INTO products (name, purchase_price, selling_price, stock_qty) VALUES (?, ?, ?, 0)");
+                    $stmtProductInsert->execute([$new_product_name, $cost, $selling_price]);
+                    $prod_id = $pdo->lastInsertId();
+                }
+
+                $total += ($qty * $cost);
+
+                $items_clean[] = [
+                    'product_id' => $prod_id,
+                    'qty' => $qty,
+                    'unit_cost' => $cost,
+                    'expiry_date' => $item['expiry_date'] ?? null
+                ];
+            }
+            $items = $items_clean;
+
+            $payment_status = 'Unpaid';
+            if ($status === 'Received') {
+                if ($paid_amount > $total) {
+                    throw new Exception('Le montant payé ne peut pas dépasser le total de la commande.');
+                }
+
+                if ($account_id && $paid_amount > 0) {
+                    $balStmt = $pdo->prepare("SELECT balance FROM vault_accounts WHERE id = ? FOR UPDATE");
+                    $balStmt->execute([$account_id]);
+                    $acctBalance = (float)($balStmt->fetchColumn() ?? 0);
+                    if ($paid_amount > $acctBalance) {
+                        throw new Exception('Solde de compte insuffisant. Disponible : ' . number_format($acctBalance, 2));
+                    }
+                }
+
+                if ($paid_amount >= $total && $total > 0) {
+                    $payment_status = 'Paid';
+                } elseif ($paid_amount > 0) {
+                    $payment_status = 'Partial';
+                }
+            } else {
+                $paid_amount = 0;
+            }
+
+            $stmtInsertPO = $pdo->prepare("INSERT INTO purchase_orders (supplier_id, date, status, total, paid_amount, payment_status) VALUES (?, ?, ?, ?, ?, ?)");
+            $stmtInsertPO->execute([$supplier_id, $date, $status, $total, $paid_amount, $payment_status]);
+            $po_id = $pdo->lastInsertId();
+
+            $stmtItem = $pdo->prepare("INSERT INTO purchase_order_items (po_id, product_id, qty, received_qty, unit_cost, old_unit_cost) VALUES (?, ?, ?, ?, ?, ?)");
+            $stmtUpdateProduct = $pdo->prepare("UPDATE products SET stock_qty = stock_qty + ?, purchase_price = ? WHERE id = ?");
+            $stmtBatch = $pdo->prepare("INSERT INTO stock_batches (product_id, purchase_type, initial_qty, remaining_qty, expiry_date, purchase_price) VALUES (?, ?, ?, ?, ?, ?)");
+            $stmtGetOldPrice = $pdo->prepare("SELECT purchase_price FROM products WHERE id = ?");
+
+            foreach ($items as $item) {
+                $received_qty = ($status === 'Received') ? $item['qty'] : 0;
+
+                $stmtGetOldPrice->execute([$item['product_id']]);
+                $old_price = $stmtGetOldPrice->fetchColumn() ?: 0;
+
+                $stmtItem->execute([$po_id, $item['product_id'], $item['qty'], $received_qty, $item['unit_cost'], $old_price]);
+
+                if ($status === 'Received') {
+                    $stmtUpdateProduct->execute([$item['qty'], $item['unit_cost'], $item['product_id']]);
+                    $stmtBatch->execute([$item['product_id'], $purchase_type, $item['qty'], $item['qty'], $item['expiry_date'] ?? null, $item['unit_cost']]);
+                }
+            }
+
+            if ($status === 'Received') {
+                $debt = $total - $paid_amount;
+                if ($debt > 0) {
+                    $stmtSupplier = $pdo->prepare("UPDATE suppliers SET balance = balance + ? WHERE id = ?");
+                    $stmtSupplier->execute([$debt, $supplier_id]);
+                }
+
+                if ($account_id && $paid_amount > 0) {
+                    $user_id = $_SESSION['user_id'] ?? 1;
+                    $stmtTx = $pdo->prepare("INSERT INTO vault_transactions (account_id, type, amount, description, related_type, related_id, user_id) VALUES (?, 'Expense', ?, ?, 'PurchaseOrder', ?, ?)");
+                    $stmtTx->execute([
+                        $account_id,
+                        $paid_amount,
+                        "Supplier Order Payment #$po_id (Direct Scanned Receipt)",
+                        $po_id,
+                        $user_id
+                    ]);
+
+                    $pdo->prepare("UPDATE vault_accounts SET balance = balance - ? WHERE id = ?")->execute([$paid_amount, $account_id]);
+                }
+            }
+
+            if ($status === 'Pending') {
+                $stmtSuppName = $pdo->prepare("SELECT name FROM suppliers WHERE id = ?");
+                $stmtSuppName->execute([$supplier_id]);
+                $supplier_name = $stmtSuppName->fetchColumn() ?: 'Unknown';
+
+                $ins_notif = $pdo->prepare("INSERT INTO notifications (role, title, message, type, link) VALUES (?, ?, ?, ?, ?)");
+                $po_msg = "New Purchase Order #$po_id has been created for " . $supplier_name . " (via invoice scan). Status: Pending.";
+                $ins_notif->execute(['Admin', 'New PO: #' . $po_id, $po_msg, 'info', '#purchase_orders']);
+                $ins_notif->execute(['Stock Manager', 'New PO: #' . $po_id, $po_msg, 'info', '#purchase_orders']);
+            }
+
+            $pdo->commit();
+            echo json_encode(['success' => 'Scanned invoice purchase order saved successfully', 'id' => $po_id]);
+            break;
+
         default:
             echo json_encode(['error' => 'Invalid action']);
             break;

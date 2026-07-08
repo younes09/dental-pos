@@ -246,7 +246,7 @@ switch ($method) {
                 'low_stock_threshold', 'receipt_footer',
                 'language', 'timezone', 'date_format', 'theme',
                 'loyalty_earning_rate', 'loyalty_point_value',
-                'store_logo'
+                'store_logo', 'gemini_api_key'
             ];
 
             $pdo->beginTransaction();

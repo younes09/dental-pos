@@ -28,6 +28,14 @@ const settingsModule = {
             };
         }
 
+        const aiForm = document.getElementById('ai-settings-form');
+        if (aiForm) {
+            aiForm.onsubmit = (e) => {
+                e.preventDefault();
+                this.saveAiInfo();
+            };
+        }
+
         const uploadLogoBtn = document.getElementById('btn-upload-logo');
         if (uploadLogoBtn) {
             uploadLogoBtn.onclick = async () => {
@@ -109,6 +117,12 @@ const settingsModule = {
                 if (settings.loyalty_point_value) loyaltyForm.elements['loyalty_point_value'].value = settings.loyalty_point_value;
             }
 
+            // Fill AI Settings Form
+            const aiForm = document.getElementById('ai-settings-form');
+            if (aiForm) {
+                if (settings.gemini_api_key) aiForm.elements['gemini_api_key'].value = settings.gemini_api_key;
+            }
+
             // Fill Logo Preview
             const logoPreview = document.getElementById('store-logo-preview');
             if (logoPreview) {
@@ -162,6 +176,18 @@ const settingsModule = {
             // Immediately update the app state
             if (data.loyalty_earning_rate) App.state.settings.loyalty_earning_rate = data.loyalty_earning_rate;
             if (data.loyalty_point_value) App.state.settings.loyalty_point_value = data.loyalty_point_value;
+        }
+    },
+
+    async saveAiInfo() {
+        const form = document.getElementById('ai-settings-form');
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+
+        const result = await App.api('settings.php', 'POST', data);
+        if (result && result.success) {
+            App.toast('success', App.t('settings.js.ai_saved') || 'AI settings saved successfully');
+            if (data.gemini_api_key) App.state.settings.gemini_api_key = data.gemini_api_key;
         }
     },
 

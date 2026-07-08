@@ -5,9 +5,14 @@
             <p class="text-muted small mb-0" data-i18n="po.page_subtitle">Manage and track your inventory procurement
             </p>
         </div>
-        <button class="btn btn-teal px-4" data-bs-toggle="modal" data-bs-target="#poModal" id="btn-new-po">
-            <i class="fas fa-plus-circle me-2"></i><span data-i18n="po.btn_new">New Purchase Order</span>
-        </button>
+        <div class="d-flex align-items-center">
+            <button class="btn btn-outline-teal px-4 me-2" data-bs-toggle="modal" data-bs-target="#scanInvoiceModal" id="btn-scan-invoice">
+                <i class="fas fa-file-invoice-dollar me-2"></i><span data-i18n="po.btn_scan">Scanner / Importer</span>
+            </button>
+            <button class="btn btn-teal px-4" data-bs-toggle="modal" data-bs-target="#poModal" id="btn-new-po">
+                <i class="fas fa-plus-circle me-2"></i><span data-i18n="po.btn_new">New Purchase Order</span>
+            </button>
+        </div>
     </div>
 
     <!-- PO Stats -->
@@ -561,6 +566,132 @@
                     data-i18n="catalog.modal.btn.cancel">Cancel</button>
                 <button type="submit" form="productForm" class="btn btn-teal px-4"
                     data-i18n="stock.modal.btn.save_product">Save Product</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Scan Invoice Modal -->
+<div class="modal fade" id="scanInvoiceModal" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-bottom-0 p-4">
+                <h5 class="modal-title fw-bold" data-i18n="po.scan_modal.title">Scanner ou Importer une Facture</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4 pt-0">
+                <div id="scan-step-upload">
+                    <p class="text-muted" data-i18n="po.scan_modal.desc">Sélectionnez une image de votre facture ou un fichier PDF. L'intelligence artificielle (Gemini) va extraire automatiquement le fournisseur, les articles, les prix et les quantités pour générer le bon d'achat.</p>
+                    
+                    <div class="border border-2 border-dashed rounded-4 p-5 text-center bg-light pointer" id="drag-drop-zone" style="border-style: dashed !important; border-color: var(--teal) !important;">
+                        <i class="fas fa-cloud-upload-alt text-teal display-4 mb-3" style="font-size: 3.5rem;"></i>
+                        <h6 class="fw-bold" data-i18n="po.scan_modal.drag_drop">Glissez-déposez le fichier ici ou cliquez pour choisir</h6>
+                        <p class="text-muted small">Formats acceptés : JPG, PNG, WEBP, PDF (Max. 10 Mo)</p>
+                        <input type="file" id="invoice-file-input" accept="image/*,application/pdf" capture="environment" class="d-none">
+                    </div>
+                </div>
+
+                <div id="scan-step-loading" class="d-none text-center py-5">
+                    <div class="spinner-border text-teal mb-3" style="width: 3rem; height: 3rem;" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <h5 class="fw-bold" data-i18n="po.scan_modal.loading_title">Analyse de la facture en cours...</h5>
+                    <p class="text-muted" data-i18n="po.scan_modal.loading_desc">L'IA Gemini extrait les données, veuillez patienter quelques secondes.</p>
+                </div>
+
+                <div id="scan-step-edit" class="d-none">
+                    <form id="scannedInvoiceForm">
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold" data-i18n="po.modal.supplier_label">Fournisseur</label>
+                                <div class="input-group">
+                                    <select id="scan-supplier-select" class="form-select rounded-start-3" required>
+                                        <option value="" data-i18n="po.modal.supplier_select">Sélectionner un Fournisseur</option>
+                                    </select>
+                                    <button type="button" class="btn btn-teal" id="btn-toggle-new-supplier">
+                                        <i class="fas fa-plus"></i> <span data-i18n="po.scan_modal.new_supplier_btn">Nouveau</span>
+                                    </button>
+                                </div>
+                                <div class="mt-2 d-none" id="scan-new-supplier-container">
+                                    <input type="text" id="scan-new-supplier-name" class="form-control rounded-3" placeholder="Nom du nouveau fournisseur">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold" data-i18n="po.modal.date_label">Date de Commande</label>
+                                <input type="date" id="scan-invoice-date" class="form-control rounded-3" required>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="fw-bold mb-0" data-i18n="po.scan_modal.items_title">Articles extraits de la facture</h6>
+                            <button type="button" class="btn btn-sm btn-outline-teal" id="scan-btn-add-item">
+                                <i class="fas fa-plus me-1"></i> <span data-i18n="po.modal.btn_add_product">Ajouter</span>
+                            </button>
+                        </div>
+                        
+                        <div class="table-responsive mb-4" style="max-height: 350px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 8px;">
+                            <table class="table table-hover align-middle w-100 mb-0" id="scan-items-table">
+                                <thead class="table-light sticky-top">
+                                    <tr>
+                                        <th style="width: 25%;" data-i18n="po.modal.th_product">Produit Extrait</th>
+                                        <th style="width: 25%;" data-i18n="po.scan_modal.map_product">Association Stock</th>
+                                        <th style="width: 10%;" data-i18n="po.modal.th_qty">Qté</th>
+                                        <th style="width: 15%;" data-i18n="po.modal.th_unit_cost">Coût Unit.</th>
+                                        <th style="width: 15%;" data-i18n="po.scan_modal.selling_price">Prix Vente</th>
+                                        <th style="width: 5%;" class="text-end">Act.</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Dynamic rows loaded from parsing -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="row g-3 mt-3 align-items-center">
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold" data-i18n="po.modal.status_label">Statut</label>
+                                <select id="scan-po-status" class="form-select rounded-3">
+                                    <option value="Pending" data-i18n="po.modal.status_pending">En Attente</option>
+                                    <option value="Received" selected data-i18n="po.modal.status_received">Reçu (Mise à jour du Stock)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 d-none" id="scan-po-purchase-type-container">
+                                <label class="form-label small fw-bold" data-i18n="po.modal.type_label">Type d'Achat</label>
+                                <select id="scan-po-purchase-type" class="form-select rounded-3">
+                                    <option value="BA" selected data-i18n="po.modal.type_ba">Bon de Commande (BC)</option>
+                                    <option value="BL" data-i18n="po.modal.type_bl">Bon de Livraison (BL)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 ms-auto text-end">
+                                <span class="text-muted d-block small" data-i18n="po.modal.estimated_total">Total Estimé</span>
+                                <h4 class="fw-bold text-navy mb-0" id="scan-total-display">0.00 <span class="currency-symbol">$</span></h4>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mt-1 d-none" id="scan-po-finance-container">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold" data-i18n="po.modal.paid_label">Montant Payé</label>
+                                <div class="input-group">
+                                    <input type="number" step="0.01" min="0" id="scan-po-paid-amount" class="form-control rounded-start-3" placeholder="0.00">
+                                    <span class="input-group-text currency-symbol rounded-end-3">$</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold" data-i18n="po.modal.account_label">Compte de Paiement</label>
+                                <select id="scan-po-account-id" class="form-select rounded-3">
+                                    <option value="" data-i18n="po.modal.account_no">-- Aucune Mise à Jour de Trésorerie --</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer border-top-0 px-0 pb-0 mt-4">
+                            <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal" data-i18n="po.modal.btn_cancel">Annuler</button>
+                            <button type="submit" class="btn btn-teal px-4" id="scan-btn-submit">
+                                <i class="fas fa-check-circle me-2"></i><span data-i18n="po.scan_modal.btn_save">Créer le Bon d'Achat</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
