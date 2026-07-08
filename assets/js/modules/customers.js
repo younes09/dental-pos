@@ -225,15 +225,22 @@ const customersModule = {
                 if (result.data.length === 0) {
                     historyBody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">${App.t('customers.js.no_history') || 'No purchase history found'}</td></tr>`;
                 } else {
-                    historyBody.innerHTML = result.data.map(sale => `
-                        <tr>
-                            <td>${new Date(sale.date).toLocaleDateString()}</td>
-                            <td class="fw-medium">#${sale.id}</td>
-                            <td class="fw-bold">${App.formatCurrency(sale.total)}</td>
-                            <td><span class="badge bg-light text-dark border">${App.t(`customers.method.${sale.payment_method.toLowerCase().split(' ')[0]}`) || sale.payment_method}</span></td>
-                            <td><span class="badge bg-success-subtle text-success">${App.t('customers.js.completed') || 'Completed'}</span></td>
-                        </tr>
-                    `).join('');
+                    historyBody.innerHTML = result.data.map(sale => {
+                        const isCancelled = sale.status === 'Cancelled';
+                        const badgeClass = isCancelled ? 'bg-danger-subtle text-danger' : 'bg-success-subtle text-success';
+                        const statusText = isCancelled ? (App.t('customers.js.cancelled') || 'Cancelled') : (App.t('customers.js.completed') || 'Completed');
+                        const rowStyle = isCancelled ? 'style="text-decoration: line-through; opacity: 0.6;"' : '';
+                        
+                        return `
+                            <tr ${rowStyle}>
+                                <td>${new Date(sale.date).toLocaleDateString()}</td>
+                                <td class="fw-medium">#${sale.id}</td>
+                                <td class="fw-bold">${App.formatCurrency(sale.total)}</td>
+                                <td><span class="badge bg-light text-dark border">${App.t(`customers.method.${sale.payment_method.toLowerCase().split(' ')[0]}`) || sale.payment_method}</span></td>
+                                <td><span class="badge ${badgeClass}">${statusText}</span></td>
+                            </tr>
+                        `;
+                    }).join('');
                 }
             }
         } catch (error) {
