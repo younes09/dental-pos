@@ -1051,3 +1051,153 @@ body.dark-mode #btn-view-grid.active, body.dark-mode #btn-view-list.active {
     background-color: var(--primary-teal) !important;
     color: #fff !important;
 }
+
+/* Responsive enhancements for Scan Invoice Modal on smartphones */
+@media (max-width: 767.98px) {
+    #scanInvoiceModal .modal-dialog {
+        margin: 0;
+        max-width: 100%;
+        height: 100%;
+    }
+    
+    #scanInvoiceModal .modal-content {
+        height: 100%;
+        border-radius: 0;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    #scanInvoiceModal .modal-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 15px;
+    }
+    
+    #scanInvoiceModal .modal-header {
+        padding: 15px;
+    }
+    
+    #scanInvoiceModal .modal-footer {
+        position: sticky;
+        bottom: 0;
+        background: var(--bg-light, #f8f9fa);
+        border-top: 1px solid var(--border-color, #e9ecef) !important;
+        margin-top: 20px;
+        padding: 12px 15px;
+        z-index: 10;
+    }
+    
+    body.dark-mode #scanInvoiceModal .modal-footer {
+        background: #0c1a2e;
+        border-color: #1e2d41 !important;
+    }
+
+    #scanInvoiceModal .table-responsive {
+        min-height: auto !important;
+        border: none !important;
+        background: transparent !important;
+        overflow-x: visible !important;
+    }
+
+    #scan-items-table {
+        border-collapse: separate;
+        border-spacing: 0 10px;
+        width: 100% !important;
+    }
+
+    #scan-items-table thead {
+        display: none !important;
+    }
+
+    #scan-items-table, 
+    #scan-items-table tbody, 
+    #scan-items-table tr {
+        display: block !important;
+        width: 100% !important;
+    }
+
+    #scan-items-table tbody tr {
+        background: #ffffff;
+        border: 1px solid var(--border-color, #e2e8f0);
+        border-radius: 12px;
+        padding: 12px;
+        margin-bottom: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        display: grid !important;
+        grid-template-columns: repeat(6, 1fr) !important;
+        gap: 6px 8px;
+    }
+
+    body.dark-mode #scan-items-table tbody tr {
+        background: #0f172a;
+        border-color: #1e293b;
+    }
+
+    #scan-items-table td {
+        display: block !important;
+        width: 100% !important;
+        padding: 0 !important;
+        border: none !important;
+    }
+
+    #scan-items-table td::before {
+        content: attr(data-label);
+        display: block;
+        font-size: 0.65rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: #64748b;
+        margin-bottom: 2px;
+        letter-spacing: 0.5px;
+    }
+
+    body.dark-mode #scan-items-table td::before {
+        color: #94a3b8;
+    }
+
+    #scan-items-table td:nth-child(1) {
+        grid-column: span 6 !important;
+    }
+
+    #scan-items-table td:nth-child(2) {
+        grid-column: span 6 !important;
+    }
+
+    #scan-items-table td:nth-child(3) {
+        grid-column: span 2 !important;
+    }
+
+    #scan-items-table td:nth-child(4) {
+        grid-column: span 2 !important;
+    }
+
+    #scan-items-table td:nth-child(5) {
+        grid-column: span 2 !important;
+    }
+
+    #scan-items-table td:nth-child(6) {
+        grid-column: span 5 !important;
+    }
+
+    #scan-items-table td:nth-child(7) {
+        grid-column: span 1 !important;
+        display: flex !important;
+        align-items: flex-end;
+        justify-content: flex-end;
+        padding-bottom: 4px !important;
+    }
+
+    #scan-items-table td:nth-child(7)::before {
+        display: none !important;
+    }
+
+    #scan-items-table td:nth-child(7) button {
+        padding: 6px 10px;
+        border-radius: 8px;
+        background-color: rgba(220, 53, 69, 0.05);
+    }
+    
+    #drag-drop-zone {
+        padding: 30px 15px !important;
+    }
+}

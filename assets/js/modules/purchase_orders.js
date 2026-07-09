@@ -1235,25 +1235,25 @@ const purchase_ordersModule = {
         const sellingPrice = matchedProduct ? matchedProduct.selling_price : (cost * 1.2).toFixed(2);
 
         row.innerHTML = `
-            <td>
+            <td data-label="${App.t('po.modal.th_product') || 'Produit'}">
                 <input type="text" class="form-control form-control-sm scan-item-product-name" value="${App.escapeHtml(item.product_name)}" required>
             </td>
-            <td>
+            <td data-label="${App.t('po.scan_modal.map_product') || 'Association'}">
                 <select class="form-select form-select-sm scan-item-product-map" required>
                     <option value="__NEW__">-- ${App.t('po.modal.btn_create_product') || 'Nouveau'} --</option>
                     ${this.products.map(p => `<option value="${p.id}" ${p.id == selectedVal ? 'selected' : ''}>${App.escapeHtml(p.name)}</option>`).join('')}
                 </select>
             </td>
-            <td>
+            <td data-label="${App.t('po.modal.th_qty') || 'Qté'}">
                 <input type="number" class="form-control form-control-sm scan-item-qty text-center" value="${qty}" min="1" required>
             </td>
-            <td>
+            <td data-label="${App.t('po.modal.th_unit_cost') || 'Coût Unit.'}">
                 <input type="number" step="0.01" class="form-control form-control-sm scan-item-cost" value="${cost.toFixed(2)}" min="0" required>
             </td>
-            <td>
+            <td data-label="${App.t('po.scan_modal.selling_price') || 'Prix Vente'}">
                 <input type="number" step="0.01" class="form-control form-control-sm scan-item-selling" value="${parseFloat(sellingPrice).toFixed(2)}" min="0.01" ${selectedVal !== '__NEW__' ? 'disabled' : ''} required>
             </td>
-            <td>
+            <td data-label="${App.t('po.modal.th_expiry') || 'Expiration'}">
                 <input type="date" class="form-control form-control-sm scan-item-expiry" style="font-size: 0.75rem;">
             </td>
             <td class="text-end">
