@@ -96,14 +96,27 @@ try {
             $stmtItem = $pdo->prepare("INSERT INTO purchase_order_items (po_id, product_id, qty, received_qty, unit_cost, old_unit_cost) VALUES (?, ?, ?, ?, ?, ?)");
             $stmtUpdateProduct = $pdo->prepare("UPDATE products SET stock_qty = stock_qty + ?, purchase_price = ? WHERE id = ?");
             $stmtBatch = $pdo->prepare("INSERT INTO stock_batches (product_id, purchase_type, initial_qty, remaining_qty, expiry_date, purchase_price) VALUES (?, ?, ?, ?, ?, ?)");
-            $stmtGetOldPrice = $pdo->prepare("SELECT purchase_price FROM products WHERE id = ?");
+
+            // Pre-fetch old prices in bulk to avoid N+1 queries.
+            $old_prices_map = [];
+            $product_ids_for_query = array_unique(array_column($items, 'product_id'));
+            if (!empty($product_ids_for_query)) {
+                // Batch queries to avoid placeholder limits
+                $chunks = array_chunk($product_ids_for_query, 500);
+                foreach ($chunks as $chunk) {
+                    $placeholders = implode(',', array_fill(0, count($chunk), '?'));
+                    $stmtGetOldPrices = $pdo->prepare("SELECT id, purchase_price FROM products WHERE id IN ($placeholders)");
+                    $stmtGetOldPrices->execute($chunk);
+                    while ($row = $stmtGetOldPrices->fetch(PDO::FETCH_ASSOC)) {
+                        $old_prices_map[$row['id']] = $row['purchase_price'];
+                    }
+                }
+            }
 
             foreach ($items as $item) {
                 $received_qty = ($status === 'Received') ? $item['qty'] : 0;
                 
-                // Get old purchase price
-                $stmtGetOldPrice->execute([$item['product_id']]);
-                $old_price = $stmtGetOldPrice->fetchColumn() ?: 0;
+                $old_price = isset($old_prices_map[$item['product_id']]) ? $old_prices_map[$item['product_id']] : 0;
                 
                 $stmtItem->execute([$po_id, $item['product_id'], $item['qty'], $received_qty, $item['unit_cost'], $old_price]);
                 
@@ -918,13 +931,26 @@ You must reply ONLY with a valid JSON object matching the following structure (n
             $stmtItem = $pdo->prepare("INSERT INTO purchase_order_items (po_id, product_id, qty, received_qty, unit_cost, old_unit_cost) VALUES (?, ?, ?, ?, ?, ?)");
             $stmtUpdateProduct = $pdo->prepare("UPDATE products SET stock_qty = stock_qty + ?, purchase_price = ? WHERE id = ?");
             $stmtBatch = $pdo->prepare("INSERT INTO stock_batches (product_id, purchase_type, initial_qty, remaining_qty, expiry_date, purchase_price) VALUES (?, ?, ?, ?, ?, ?)");
-            $stmtGetOldPrice = $pdo->prepare("SELECT purchase_price FROM products WHERE id = ?");
+
+            // Pre-fetch old prices in bulk to avoid N+1 queries.
+            $old_prices_map = [];
+            $product_ids_for_query = array_unique(array_column($items, 'product_id'));
+            if (!empty($product_ids_for_query)) {
+                $chunks = array_chunk($product_ids_for_query, 500);
+                foreach ($chunks as $chunk) {
+                    $placeholders = implode(',', array_fill(0, count($chunk), '?'));
+                    $stmtGetOldPrices = $pdo->prepare("SELECT id, purchase_price FROM products WHERE id IN ($placeholders)");
+                    $stmtGetOldPrices->execute($chunk);
+                    while ($row = $stmtGetOldPrices->fetch(PDO::FETCH_ASSOC)) {
+                        $old_prices_map[$row['id']] = $row['purchase_price'];
+                    }
+                }
+            }
 
             foreach ($items as $item) {
                 $received_qty = ($status === 'Received') ? $item['qty'] : 0;
 
-                $stmtGetOldPrice->execute([$item['product_id']]);
-                $old_price = $stmtGetOldPrice->fetchColumn() ?: 0;
+                $old_price = isset($old_prices_map[$item['product_id']]) ? $old_prices_map[$item['product_id']] : 0;
 
                 $stmtItem->execute([$po_id, $item['product_id'], $item['qty'], $received_qty, $item['unit_cost'], $old_price]);
 
