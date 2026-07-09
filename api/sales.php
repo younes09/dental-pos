@@ -584,9 +584,20 @@ try {
             $return_id = $pdo->lastInsertId();
 
             // Insert into sale_return_items
-            $stmt = $pdo->prepare("INSERT INTO sale_return_items (return_id, product_id, qty, unit_price) VALUES (?, ?, ?, ?)");
-            foreach ($return_items as $ri) {
-                $stmt->execute([$return_id, $ri['product_id'], $ri['qty'], $ri['unit_price']]);
+            $chunks = array_chunk($return_items, 500);
+            foreach ($chunks as $chunk) {
+                $placeholders = [];
+                $params = [];
+                foreach ($chunk as $ri) {
+                    $placeholders[] = '(?, ?, ?, ?)';
+                    $params[] = $return_id;
+                    $params[] = $ri['product_id'];
+                    $params[] = $ri['qty'];
+                    $params[] = $ri['unit_price'];
+                }
+                $sql = "INSERT INTO sale_return_items (return_id, product_id, qty, unit_price) VALUES " . implode(', ', $placeholders);
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute($params);
             }
 
             // Adjust customer balance (decrease debt, can become negative representing a store credit)
