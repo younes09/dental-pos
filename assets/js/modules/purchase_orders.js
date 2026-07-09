@@ -1265,7 +1265,7 @@ const purchase_ordersModule = {
             <td data-label="${App.t('po.modal.th_expiry') || 'Expiration'}">
                 <input type="date" class="form-control form-control-sm scan-item-expiry" style="font-size: 0.75rem;">
             </td>
-            <td class="text-end">
+            <td class="text-end mt-3">
                 <button type="button" class="btn btn-sm text-danger btn-remove-scan-item">
                     <i class="fas fa-times"></i>
                 </button>
