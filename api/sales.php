@@ -482,15 +482,25 @@ try {
             $restore_stmt = $pdo->prepare("UPDATE products SET stock_qty = stock_qty + ? WHERE id = ?");
             $batch_stmt = $pdo->prepare("INSERT INTO stock_batches (product_id, purchase_type, initial_qty, remaining_qty, purchase_price) VALUES (?, ?, ?, ?, ?)");
             
-            // Helper statement to find the most recent batch type for a product to keep fiscal nature
-            $type_stmt = $pdo->prepare("SELECT purchase_type FROM stock_batches WHERE product_id = ? ORDER BY id DESC LIMIT 1");
+            // Helper to pre-fetch the most recent batch type for products to keep fiscal nature
+            $product_ids = array_unique(array_column($items, 'product_id'));
+            $purchase_types = [];
+            if (!empty($product_ids)) {
+                $in_clause = implode(',', array_fill(0, count($product_ids), '?'));
+                $sql = "SELECT product_id, purchase_type FROM stock_batches WHERE id IN (
+                            SELECT MAX(id) FROM stock_batches WHERE product_id IN ($in_clause) GROUP BY product_id
+                        )";
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute(array_values($product_ids));
+                // fetchAll(PDO::FETCH_KEY_PAIR) returns associative array directly
+                $purchase_types = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+            }
             
             foreach ($items as $item) {
                 // M7: Only restore stock that hasn't already been returned
                 $net_qty = $item['qty'] - ($item['returned_qty'] ?? 0);
                 if ($net_qty > 0) {
-                    $type_stmt->execute([$item['product_id']]);
-                    $purchase_type = $type_stmt->fetchColumn() ?: 'BA';
+                    $purchase_type = $purchase_types[$item['product_id']] ?? 'BA';
 
                     $restore_stmt->execute([$net_qty, $item['product_id']]);
                     $batch_stmt->execute([$item['product_id'], $purchase_type, $net_qty, $net_qty, $item['cost_price']]);
@@ -532,6 +542,20 @@ try {
             $original_taxable  = max(0, $original_subtotal - $total_discount);
             $effective_tax_rate = ($original_taxable > 0) ? ((float)$sale['tax'] / $original_taxable) : 0;
 
+            // Pre-fetch batch types to avoid N+1 queries
+            $product_ids = array_unique(array_column($data['items'], 'product_id'));
+            $purchase_types = [];
+            if (!empty($product_ids)) {
+                $in_clause = implode(',', array_fill(0, count($product_ids), '?'));
+                $sql = "SELECT product_id, purchase_type FROM stock_batches WHERE id IN (
+                            SELECT MAX(id) FROM stock_batches WHERE product_id IN ($in_clause) GROUP BY product_id
+                        )";
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute(array_values($product_ids));
+                // fetchAll(PDO::FETCH_KEY_PAIR) returns associative array directly
+                $purchase_types = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+            }
+
             foreach ($data['items'] as $item) {
                 $product_id = (int)$item['product_id'];
                 $qty_to_return = (int)$item['qty'];
@@ -561,9 +585,7 @@ try {
                 $pdo->prepare("UPDATE products SET stock_qty = stock_qty + ? WHERE id = ?")->execute([$qty_to_return, $product_id]);
                 
                 // Retrieve the most recent batch type for this product to keep fiscal nature
-                $type_stmt = $pdo->prepare("SELECT purchase_type FROM stock_batches WHERE product_id = ? ORDER BY id DESC LIMIT 1");
-                $type_stmt->execute([$product_id]);
-                $purchase_type = $type_stmt->fetchColumn() ?: 'BA';
+                $purchase_type = $purchase_types[$product_id] ?? 'BA';
 
                 // Create stock batch for returned items
                 $pdo->prepare("INSERT INTO stock_batches (product_id, purchase_type, initial_qty, remaining_qty, purchase_price) VALUES (?, ?, ?, ?, ?)")
