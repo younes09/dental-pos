@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="assets/vendor/css/all.min.css">
     <link rel="stylesheet" href="assets/vendor/css/bootstrap-icons.css">
     <link href="assets/vendor/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/style.css?v=<?php echo filemtime('assets/css/style.css'); ?>">
     
     <style>
         :root {

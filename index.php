@@ -34,7 +34,7 @@ if (!isset($_SESSION['user_id'])) {
     <link rel="stylesheet" href="assets/vendor/css/sweetalert2.min.css">
     
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/style.css?v=<?php echo filemtime('assets/css/style.css'); ?>">
 
     <!-- Early Theme Load -->
     <script>

@@ -579,12 +579,12 @@
                 <h5 class="modal-title fw-bold" data-i18n="po.scan_modal.title">Scanner ou Importer une Facture</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body p-4 pt-0">
+            <div class="modal-body p-4">
                 <div id="scan-step-upload">
                     <p class="text-muted" data-i18n="po.scan_modal.desc">Sélectionnez une image de votre facture ou un fichier PDF. L'intelligence artificielle (Gemini) va extraire automatiquement le fournisseur, les articles, les prix et les quantités pour générer le bon d'achat.</p>
                     
                     <div class="border border-2 border-dashed rounded-4 p-5 text-center bg-light pointer" id="drag-drop-zone" style="border-style: dashed !important; border-color: var(--teal) !important;">
-                        <i class="fas fa-cloud-upload-alt text-teal display-4 mb-3" style="font-size: 3.5rem;"></i>
+                        <i class="fas fa-cloud-upload-alt text-teal mb-3" style="font-size: 3.5rem;"></i>
                         <h6 class="fw-bold" data-i18n="po.scan_modal.drag_drop">Glissez-déposez le fichier ici ou cliquez pour choisir</h6>
                         <p class="text-muted small">Formats acceptés : JPG, PNG, WEBP, PDF (Max. 10 Mo)</p>
                         <input type="file" id="invoice-file-input" accept="image/*,application/pdf" capture="environment" class="d-none">
@@ -638,6 +638,7 @@
                                         <th style="width: 10%;" data-i18n="po.modal.th_qty">Qté</th>
                                         <th style="width: 15%;" data-i18n="po.modal.th_unit_cost">Coût Unit.</th>
                                         <th style="width: 15%;" data-i18n="po.scan_modal.selling_price">Prix Vente</th>
+                                        <th style="width: 10%;" data-i18n="po.modal.th_expiry">Date d'Expiration</th>
                                         <th style="width: 5%;" class="text-end">Act.</th>
                                     </tr>
                                 </thead>
