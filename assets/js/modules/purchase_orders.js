@@ -353,7 +353,7 @@ const purchase_ordersModule = {
                 
                 // Repopulate supplier dropdowns just in case meta loaded/changed
                 const scanSupplierSelect = document.getElementById('scan-supplier-select');
-                if (scanSupplierSelect) {
+                if (scanSupplierSelect && this.suppliers) {
                     scanSupplierSelect.innerHTML = `<option value="">${App.t('po.modal.supplier_select')}</option>` +
                         `<option value="__NEW__">${App.t('po.scan_modal.new_supplier_option') || 'Créer nouveau fournisseur'}</option>` +
                         this.suppliers.map(s => `<option value="${s.id}">${s.name} (${s.company})</option>`).join('');
@@ -495,8 +495,17 @@ const purchase_ordersModule = {
         if (supplierRes) {
             this.suppliers = supplierRes.data;
             const select = document.getElementById('po-supplier-select');
-            select.innerHTML = `<option value="">${App.t('po.modal.supplier_select')}</option>` +
-                this.suppliers.map(s => `<option value="${s.id}">${s.name} (${s.company})</option>`).join('');
+            if (select) {
+                select.innerHTML = `<option value="">${App.t('po.modal.supplier_select')}</option>` +
+                    this.suppliers.map(s => `<option value="${s.id}">${s.name} (${s.company})</option>`).join('');
+            }
+            
+            const scanSupplierSelect = document.getElementById('scan-supplier-select');
+            if (scanSupplierSelect) {
+                scanSupplierSelect.innerHTML = `<option value="">${App.t('po.modal.supplier_select')}</option>` +
+                    `<option value="__NEW__">${App.t('po.scan_modal.new_supplier_option') || 'Créer nouveau fournisseur'}</option>` +
+                    this.suppliers.map(s => `<option value="${s.id}">${s.name} (${s.company})</option>`).join('');
+            }
         }
 
         // Load products for item selectors
