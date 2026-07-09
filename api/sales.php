@@ -22,11 +22,44 @@ try {
             $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
             // Fetch batches separately for compatibility instead of JSON_ARRAYAGG
-            $batch_stmt = $pdo->prepare("SELECT purchase_type as type, remaining_qty as qty FROM stock_batches WHERE product_id = ? AND remaining_qty > 0 ORDER BY created_at ASC");
+            // Fix N+1 Query: Fetch batches in bulk by chunking product IDs
+            $product_ids = array_column($products, 'id');
             
+            // Initialize batches to empty JSON arrays initially
             foreach ($products as &$product) {
-                $batch_stmt->execute([$product['id']]);
-                $product['batches'] = json_encode($batch_stmt->fetchAll(PDO::FETCH_ASSOC));
+                $product['batches'] = '[]';
+            }
+            unset($product); // break reference
+
+            if (!empty($product_ids)) {
+                $batches_by_product = [];
+                $chunks = array_chunk($product_ids, 500);
+
+                foreach ($chunks as $chunk) {
+                    $placeholders = implode(',', array_fill(0, count($chunk), '?'));
+                    $batch_stmt = $pdo->prepare("
+                        SELECT product_id, purchase_type as type, remaining_qty as qty
+                        FROM stock_batches
+                        WHERE product_id IN ($placeholders) AND remaining_qty > 0
+                        ORDER BY created_at ASC
+                    ");
+                    $batch_stmt->execute($chunk);
+                    $all_batches = $batch_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                    foreach ($all_batches as $batch) {
+                        $pid = $batch['product_id'];
+                        unset($batch['product_id']); // remove product_id so it matches the original format
+                        $batches_by_product[$pid][] = $batch;
+                    }
+                }
+
+                // Re-assign batches back to products
+                foreach ($products as &$product) {
+                    if (isset($batches_by_product[$product['id']])) {
+                        $product['batches'] = json_encode($batches_by_product[$product['id']]);
+                    }
+                }
+                unset($product); // break reference
             }
             
             echo json_encode(['products' => $products]);
