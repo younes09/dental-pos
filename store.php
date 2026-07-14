@@ -271,7 +271,7 @@
             
             <div class="d-flex align-items-center ms-auto">
                 <!-- Theme toggle -->
-                <button id="darkModeToggle" class="btn btn-link text-white p-2 me-3 border-0">
+                <button id="darkModeToggle" class="btn btn-link text-white p-2 me-3 border-0" aria-label="Toggle Dark Mode">
                     <i class="fas fa-moon"></i>
                 </button>
                 

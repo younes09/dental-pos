@@ -259,7 +259,7 @@ if (!isset($_SESSION['user_id'])) {
         <!-- Top Navbar -->
         <nav class="navbar navbar-expand-lg sticky-top">
             <div class="container-fluid">
-                <button type="button" id="sidebarToggle" class="btn btn-teal-outline me-3" aria-label="Toggle Menu">
+                <button type="button" id="sidebarToggle" class="btn btn-teal-outline me-3" aria-label="Toggle Sidebar Menu">
                     <i class="fas fa-align-left"></i>
                 </button>
                 
@@ -279,7 +279,7 @@ if (!isset($_SESSION['user_id'])) {
                         <!-- Flag will be injected by app.js -->
                     </div>
 
-                    <button id="fullscreenToggle" class="btn btn-link text-dark p-2 me-2" title="Toggle Fullscreen" data-i18n="topbar.fullscreen" data-i18n-target="title">
+                    <button id="fullscreenToggle" class="btn btn-link text-dark p-2 me-2" title="Toggle Fullscreen" data-i18n="topbar.fullscreen" data-i18n-target="title" aria-label="Toggle Fullscreen">
                         <i class="fas fa-expand"></i>
                     </button>
                     
