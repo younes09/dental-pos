@@ -1,3 +1,3 @@
-## 2024-07-10 - Missing ARIA Labels on Icon-Only Buttons
-**Learning:** Found several icon-only buttons in the main application layout (`index.php`) missing `aria-label` attributes. This makes navigation and interaction difficult for screen reader users as they hear "button" without context for what the button does. Adding `aria-label` is a quick, low-impact accessibility win that provides significant value to assistive technology users.
-**Action:** Implemented `aria-label` attributes on primary layout toggles (sidebar, dark mode, notifications). Future PRs should check for and include `aria-label` on any new icon-only buttons introduced.
+## 2026-07-09 - Adding loading states to async form submissions
+**Learning:** Users lack visual feedback and might double-click submit buttons on async auth forms.
+**Action:** Always disable buttons and show spinners during async operations, and ensure icon-only buttons have aria-labels.

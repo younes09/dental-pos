@@ -118,10 +118,10 @@ if (isset($_SESSION['user_id'])) {
             
             <!-- Language Switcher -->
             <div class="text-center mt-3 border-top pt-3">
-                <button onclick="setLang('en')" class="btn btn-sm btn-outline-secondary rounded-circle px-2 py-1 mx-1 border-0" title="English">
+                <button onclick="setLang('en')" class="btn btn-sm btn-outline-secondary rounded-circle px-2 py-1 mx-1 border-0" title="English" aria-label="Switch language to English">
                     <img src="assets/vendor/img/flags/us.png" width="20" alt="EN">
                 </button>
-                <button onclick="setLang('fr')" class="btn btn-sm btn-outline-secondary rounded-circle px-2 py-1 mx-1 border-0" title="Français">
+                <button onclick="setLang('fr')" class="btn btn-sm btn-outline-secondary rounded-circle px-2 py-1 mx-1 border-0" title="Français" aria-label="Passer en français">
                     <img src="assets/vendor/img/flags/fr.png" width="20" alt="FR">
                 </button>
             </div>
@@ -158,7 +158,15 @@ if (isset($_SESSION['user_id'])) {
 
         document.getElementById('loginForm').onsubmit = async (e) => {
             e.preventDefault();
-            const formData = new FormData(e.target);
+            const form = e.target;
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalBtnHtml = submitBtn.innerHTML;
+
+            // Set loading state
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading...`;
+
+            const formData = new FormData(form);
             
             try {
                 const response = await fetch('api/auth.php?action=login', {
@@ -170,6 +178,10 @@ if (isset($_SESSION['user_id'])) {
                 if (result.success) {
                     window.location.href = 'index.php';
                 } else {
+                    // Restore button state on error
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalBtnHtml;
+
                     Swal.fire({
                         icon: 'error',
                         title: t('login.failed_title'),
@@ -178,6 +190,10 @@ if (isset($_SESSION['user_id'])) {
                     });
                 }
             } catch (error) {
+                // Restore button state on network error
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnHtml;
+
                 // Fix #17: Show user-visible feedback on network/fetch error
                 Swal.fire({
                     icon: 'error',
