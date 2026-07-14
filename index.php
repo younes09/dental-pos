@@ -58,7 +58,7 @@ if (!isset($_SESSION['user_id'])) {
             <button id="sidebarCollapseDesktop" class="btn btn-link d-none d-md-block text-white p-0" aria-label="Toggle Sidebar">
                 <i class="fas fa-angles-left"></i>
             </button>
-            <button id="sidebarCollapse" class="btn btn-link d-md-none text-white p-0" aria-label="Toggle Sidebar">
+            <button id="sidebarCollapse" class="btn btn-link d-md-none text-white p-0" aria-label="Toggle Sidebar Menu">
                 <i class="fas fa-bars"></i>
             </button>
         </div>
@@ -259,7 +259,7 @@ if (!isset($_SESSION['user_id'])) {
         <!-- Top Navbar -->
         <nav class="navbar navbar-expand-lg sticky-top">
             <div class="container-fluid">
-                <button type="button" id="sidebarToggle" class="btn btn-teal-outline me-3" aria-label="Toggle Sidebar">
+                <button type="button" id="sidebarToggle" class="btn btn-teal-outline me-3" aria-label="Toggle Sidebar Menu">
                     <i class="fas fa-align-left"></i>
                 </button>
                 
