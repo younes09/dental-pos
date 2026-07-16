@@ -582,11 +582,11 @@ const posModule = {
                         </div>
                         <div class="d-flex align-items-center gap-2">
                             ${badges}
-                            <button class="btn btn-sm btn-light rounded-circle" title="Details" onclick="event.stopPropagation(); posModule.showProductDetails(${p.id})" style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center;">
-                                <i class="fas fa-circle-info text-muted"></i>
+                            <button type="button" aria-label="Details" class="btn btn-sm btn-light rounded-circle" title="Details" onclick="event.stopPropagation(); posModule.showProductDetails(${p.id})" style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-circle-info text-muted" aria-hidden="true"></i>
                             </button>
-                            <button class="btn btn-sm btn-light-primary rounded-circle" style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center;">
-                                <i class="fas fa-plus"></i>
+                            <button type="button" aria-label="Add to cart" class="btn btn-sm btn-light-primary rounded-circle" style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-plus" aria-hidden="true"></i>
                             </button>
                         </div>
                     </div>
@@ -602,8 +602,8 @@ const posModule = {
                         <div class="position-absolute top-0 end-0 m-3 d-flex flex-column gap-1 align-items-end">
                             ${badges}
                         </div>
-                        <button class="btn btn-sm btn-light rounded-circle position-absolute top-0 start-0 m-2" title="Details" onclick="event.stopPropagation(); posModule.showProductDetails(${p.id})" style="width: 28px; height: 28px; padding: 0; display: flex; align-items: center; justify-content: center; opacity: 0.85;">
-                            <i class="fas fa-circle-info text-muted" style="font-size:0.75rem;"></i>
+                        <button type="button" aria-label="Details" class="btn btn-sm btn-light rounded-circle position-absolute top-0 start-0 m-2" title="Details" onclick="event.stopPropagation(); posModule.showProductDetails(${p.id})" style="width: 28px; height: 28px; padding: 0; display: flex; align-items: center; justify-content: center; opacity: 0.85;">
+                            <i class="fas fa-circle-info text-muted" style="font-size:0.75rem;" aria-hidden="true"></i>
                         </button>
                     </div>
                     <div class="card-body pt-0 text-center">
@@ -925,16 +925,16 @@ const posModule = {
                     <span class="text-teal fw-bold">${App.formatCurrency(item.price)}</span>
                 </div>
                 <div class="d-flex align-items-center me-3">
-                    <button class="btn btn-sm btn-white border-0 shadow-none p-1" onclick="posModule.updateQty(${item.id}, -1)">
-                        <i class="fas fa-circle-minus text-muted"></i>
+                    <button type="button" aria-label="Decrease quantity" title="Decrease quantity" class="btn btn-sm btn-white border-0 shadow-none p-1" onclick="posModule.updateQty(${item.id}, -1)">
+                        <i class="fas fa-circle-minus text-muted" aria-hidden="true"></i>
                     </button>
-                    <span class="mx-2 fw-bold">${item.qty}</span>
-                    <button class="btn btn-sm btn-white border-0 shadow-none p-1" onclick="posModule.updateQty(${item.id}, 1)">
-                        <i class="fas fa-circle-plus text-teal"></i>
+                    <span class="mx-2 fw-bold" aria-live="polite" aria-atomic="true">${item.qty}</span>
+                    <button type="button" aria-label="Increase quantity" title="Increase quantity" class="btn btn-sm btn-white border-0 shadow-none p-1" onclick="posModule.updateQty(${item.id}, 1)">
+                        <i class="fas fa-circle-plus text-teal" aria-hidden="true"></i>
                     </button>
                 </div>
-                <button class="btn btn-sm text-danger" onclick="posModule.removeFromCart(${item.id})">
-                    <i class="fas fa-xmark"></i>
+                <button type="button" aria-label="Remove item" title="Remove item" class="btn btn-sm text-danger" onclick="posModule.removeFromCart(${item.id})">
+                    <i class="fas fa-xmark" aria-hidden="true"></i>
                 </button>
             </div>
         `).join('');
