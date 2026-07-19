@@ -98,8 +98,13 @@ if (isset($_SESSION['user_id'])) {
                     <input type="email" name="email" id="emailInput" class="form-control" placeholder="admin@dentalpos.com" required autocomplete="email" autofocus>
                 </div>
                 <div class="mb-3">
-                    <label for="passwordInput" class="form-label small fw-bold" data-i18n="login.password">Password</label>
-                    <input type="password" name="password" id="passwordInput" class="form-control" placeholder="••••••••" required autocomplete="current-password">
+                    <label class="form-label small fw-bold" data-i18n="login.password">Password</label>
+                    <div class="position-relative">
+                        <input type="password" name="password" id="passwordInput" class="form-control pe-5" placeholder="••••••••" required>
+                        <button type="button" id="togglePasswordBtn" class="btn border-0 position-absolute end-0 top-0 h-100 text-muted px-3" aria-label="Toggle password visibility" style="z-index: 10;">
+                            <i class="far fa-eye" id="togglePasswordIcon"></i>
+                        </button>
+                    </div>
                 </div>
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <div class="form-check">
@@ -155,6 +160,19 @@ if (isset($_SESSION['user_id'])) {
 
         // Run on load
         translate();
+
+        // Password visibility toggle
+        document.getElementById('togglePasswordBtn').addEventListener('click', function() {
+            const pwdInput = document.getElementById('passwordInput');
+            const icon = document.getElementById('togglePasswordIcon');
+            if (pwdInput.type === 'password') {
+                pwdInput.type = 'text';
+                icon.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                pwdInput.type = 'password';
+                icon.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        });
 
         document.getElementById('loginForm').onsubmit = async (e) => {
             e.preventDefault();
