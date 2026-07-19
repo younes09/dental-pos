@@ -53,6 +53,14 @@ const profileModule = {
 
             newForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
+
+                const submitBtn = newForm.querySelector('button[type="submit"]');
+                const originalBtnHtml = submitBtn ? submitBtn.innerHTML : '';
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...`;
+                }
+
                 const formData = new FormData(newForm);
                 const data = {
                     name: formData.get('name'),
@@ -60,15 +68,22 @@ const profileModule = {
                     phone: formData.get('phone')
                 };
 
-                const response = await App.api('profile.php?action=update', 'POST', data);
-                if (response && response.success) {
-                    if (App.state.user) App.state.user.name = data.name; // Sync local state
-                    // Update sidebar if visible
-                    const sidebarName = document.querySelector('.sidebar-footer .user-info p');
-                    if (sidebarName) sidebarName.textContent = data.name;
+                try {
+                    const response = await App.api('profile.php?action=update', 'POST', data);
+                    if (response && response.success) {
+                        if (App.state.user) App.state.user.name = data.name; // Sync local state
+                        // Update sidebar if visible
+                        const sidebarName = document.querySelector('.sidebar-footer .user-info p');
+                        if (sidebarName) sidebarName.textContent = data.name;
 
-                    App.toast('success', response.message);
-                    this.loadProfile(); // Refresh UI
+                        App.toast('success', response.message);
+                        this.loadProfile(); // Refresh UI
+                    }
+                } finally {
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalBtnHtml;
+                    }
                 }
             });
         }
@@ -79,6 +94,10 @@ const profileModule = {
 
             newPassForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
+
+                const submitBtn = newPassForm.querySelector('button[type="submit"]');
+                const originalBtnHtml = submitBtn ? submitBtn.innerHTML : '';
+
                 const currentPass = document.getElementById('currentPassword').value;
                 const newPass = document.getElementById('newPassword').value;
                 const confirmPass = document.getElementById('confirmPassword').value;
@@ -86,6 +105,11 @@ const profileModule = {
                 if (newPass !== confirmPass) {
                     App.toast('error', App.t('profile.js.pwd_mismatch'));
                     return;
+                }
+
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Updating...`;
                 }
 
                 const data = {
@@ -96,10 +120,17 @@ const profileModule = {
                     new_password: newPass
                 };
 
-                const response = await App.api('profile.php?action=update', 'POST', data);
-                if (response && response.success) {
-                    App.toast('success', App.t('profile.js.pwd_success'));
-                    newPassForm.reset();
+                try {
+                    const response = await App.api('profile.php?action=update', 'POST', data);
+                    if (response && response.success) {
+                        App.toast('success', App.t('profile.js.pwd_success'));
+                        newPassForm.reset();
+                    }
+                } finally {
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalBtnHtml;
+                    }
                 }
             });
         }

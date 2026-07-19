@@ -95,14 +95,14 @@ if (isset($_SESSION['user_id'])) {
             <form id="loginForm">
                 <div class="mb-3">
                     <label for="emailInput" class="form-label small fw-bold" data-i18n="login.email">Email Address</label>
-                    <input type="email" name="email" id="emailInput" class="form-control" placeholder="admin@dentalpos.com" required>
+                    <input type="email" name="email" id="emailInput" class="form-control" placeholder="admin@dentalpos.com" required autocomplete="email" autofocus>
                 </div>
                 <div class="mb-3">
-                    <label for="passwordInput" class="form-label small fw-bold" data-i18n="login.password">Password</label>
+                    <label class="form-label small fw-bold" data-i18n="login.password">Password</label>
                     <div class="position-relative">
                         <input type="password" name="password" id="passwordInput" class="form-control pe-5" placeholder="••••••••" required>
-                        <button type="button" id="togglePassword" class="btn btn-link position-absolute end-0 top-50 translate-middle-y text-muted text-decoration-none px-3 py-0 border-0" aria-label="Toggle password visibility" style="z-index: 10;">
-                            <i class="fas fa-eye" aria-hidden="true"></i>
+                        <button type="button" id="togglePasswordBtn" class="btn border-0 position-absolute end-0 top-0 h-100 text-muted px-3" aria-label="Toggle password visibility" style="z-index: 10;">
+                            <i class="far fa-eye" id="togglePasswordIcon"></i>
                         </button>
                     </div>
                 </div>
@@ -162,17 +162,15 @@ if (isset($_SESSION['user_id'])) {
         translate();
 
         // Password visibility toggle
-        document.getElementById('togglePassword')?.addEventListener('click', function() {
+        document.getElementById('togglePasswordBtn').addEventListener('click', function() {
             const pwdInput = document.getElementById('passwordInput');
-            const icon = this.querySelector('i');
+            const icon = document.getElementById('togglePasswordIcon');
             if (pwdInput.type === 'password') {
                 pwdInput.type = 'text';
-                icon.classList.remove('fa-eye');
-                icon.classList.add('fa-eye-slash');
+                icon.classList.replace('fa-eye', 'fa-eye-slash');
             } else {
                 pwdInput.type = 'password';
-                icon.classList.remove('fa-eye-slash');
-                icon.classList.add('fa-eye');
+                icon.classList.replace('fa-eye-slash', 'fa-eye');
             }
         });
 
