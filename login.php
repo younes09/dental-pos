@@ -94,8 +94,8 @@ if (isset($_SESSION['user_id'])) {
         <div class="card-body p-4">
             <form id="loginForm">
                 <div class="mb-3">
-                    <label class="form-label small fw-bold" data-i18n="login.email">Email Address</label>
-                    <input type="email" name="email" id="emailInput" class="form-control" placeholder="admin@dentalpos.com" required>
+                    <label for="emailInput" class="form-label small fw-bold" data-i18n="login.email">Email Address</label>
+                    <input type="email" name="email" id="emailInput" class="form-control" placeholder="admin@dentalpos.com" required autocomplete="email" autofocus>
                 </div>
                 <div class="mb-3">
                     <label class="form-label small fw-bold" data-i18n="login.password">Password</label>
