@@ -23,13 +23,15 @@ try {
         FROM sales s
         LEFT JOIN (
             SELECT 
-                sale_id,
-                SUM((qty - returned_qty) * unit_price) as net_subtotal,
-                SUM((qty - returned_qty) * cost_price) as net_cogs
-            FROM sale_items
-            GROUP BY sale_id
+                si.sale_id,
+                SUM((si.qty - si.returned_qty) * si.unit_price) as net_subtotal,
+                SUM((si.qty - si.returned_qty) * si.cost_price) as net_cogs
+            FROM sale_items si
+            JOIN sales s2 ON si.sale_id = s2.id
+            WHERE s2.date >= CURDATE() AND s2.date < DATE_ADD(CURDATE(), INTERVAL 1 DAY)
+            GROUP BY si.sale_id
         ) si ON si.sale_id = s.id
-        WHERE DATE(s.date) = CURDATE() AND s.status = 'Completed'
+        WHERE s.date >= CURDATE() AND s.date < DATE_ADD(CURDATE(), INTERVAL 1 DAY) AND s.status = 'Completed'
     ");
     $stmt->execute();
     $today_data = $stmt->fetch();
@@ -54,13 +56,15 @@ try {
         FROM sales s
         LEFT JOIN (
             SELECT 
-                sale_id,
-                SUM((qty - returned_qty) * unit_price) as net_subtotal,
-                SUM((qty - returned_qty) * cost_price) as net_cogs
-            FROM sale_items
-            GROUP BY sale_id
+                si.sale_id,
+                SUM((si.qty - si.returned_qty) * si.unit_price) as net_subtotal,
+                SUM((si.qty - si.returned_qty) * si.cost_price) as net_cogs
+            FROM sale_items si
+            JOIN sales s2 ON si.sale_id = s2.id
+            WHERE s2.date >= DATE_SUB(CURDATE(), INTERVAL 1 DAY) AND s2.date < CURDATE()
+            GROUP BY si.sale_id
         ) si ON si.sale_id = s.id
-        WHERE DATE(s.date) = DATE_SUB(CURDATE(), INTERVAL 1 DAY) AND s.status = 'Completed'
+        WHERE s.date >= DATE_SUB(CURDATE(), INTERVAL 1 DAY) AND s.date < CURDATE() AND s.status = 'Completed'
     ");
     $stmt->execute();
     $yesterday_data = $stmt->fetch();
@@ -68,12 +72,12 @@ try {
     $yesterday_profit = (float)($yesterday_data['profit'] ?? 0);
 
     // Monthly Sales Count (This Month)
-    $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM sales WHERE MONTH(date) = MONTH(CURDATE()) AND YEAR(date) = YEAR(CURDATE()) AND status = 'Completed'");
+    $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM sales WHERE date >= DATE_FORMAT(CURDATE(), '%Y-%m-01') AND date < DATE_ADD(DATE_FORMAT(CURDATE(), '%Y-%m-01'), INTERVAL 1 MONTH) AND status = 'Completed'");
     $stmt->execute();
     $monthly_sales = $stmt->fetch()['count'] ?? 0;
 
     // Last Month's Sales Count
-    $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM sales WHERE MONTH(date) = MONTH(DATE_SUB(CURDATE(), INTERVAL 1 MONTH)) AND YEAR(date) = YEAR(DATE_SUB(CURDATE(), INTERVAL 1 MONTH)) AND status = 'Completed'");
+    $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM sales WHERE date >= DATE_SUB(DATE_FORMAT(CURDATE(), '%Y-%m-01'), INTERVAL 1 MONTH) AND date < DATE_FORMAT(CURDATE(), '%Y-%m-01') AND status = 'Completed'");
     $stmt->execute();
     $last_month_sales = $stmt->fetch()['count'] ?? 0;
 
@@ -130,10 +134,12 @@ try {
                 FROM sales s
                 LEFT JOIN (
                     SELECT 
-                        sale_id,
-                        SUM((qty - returned_qty) * unit_price) as net_subtotal
-                    FROM sale_items
-                    GROUP BY sale_id
+                        si.sale_id,
+                        SUM((si.qty - si.returned_qty) * si.unit_price) as net_subtotal
+                    FROM sale_items si
+                    JOIN sales s2 ON si.sale_id = s2.id
+                    WHERE s2.date >= DATE_SUB(CURDATE(), INTERVAL 4 WEEK)
+                    GROUP BY si.sale_id
                 ) si ON si.sale_id = s.id
                 WHERE s.date >= DATE_SUB(CURDATE(), INTERVAL 4 WEEK) AND s.status = 'Completed'
                 GROUP BY YEARWEEK(s.date, 1)
@@ -154,10 +160,12 @@ try {
                 FROM sales s
                 LEFT JOIN (
                     SELECT 
-                        sale_id,
-                        SUM((qty - returned_qty) * unit_price) as net_subtotal
-                    FROM sale_items
-                    GROUP BY sale_id
+                        si.sale_id,
+                        SUM((si.qty - si.returned_qty) * si.unit_price) as net_subtotal
+                    FROM sale_items si
+                    JOIN sales s2 ON si.sale_id = s2.id
+                    WHERE s2.date >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+                    GROUP BY si.sale_id
                 ) si ON si.sale_id = s.id
                 WHERE s.date >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH) AND s.status = 'Completed'
                 GROUP BY YEAR(s.date), MONTH(s.date)
@@ -179,10 +187,12 @@ try {
                 FROM sales s
                 LEFT JOIN (
                     SELECT 
-                        sale_id,
-                        SUM((qty - returned_qty) * unit_price) as net_subtotal
-                    FROM sale_items
-                    GROUP BY sale_id
+                        si.sale_id,
+                        SUM((si.qty - si.returned_qty) * si.unit_price) as net_subtotal
+                    FROM sale_items si
+                    JOIN sales s2 ON si.sale_id = s2.id
+                    WHERE s2.date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+                    GROUP BY si.sale_id
                 ) si ON si.sale_id = s.id
                 WHERE s.date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY) AND s.status = 'Completed'
                 GROUP BY DATE(s.date)
