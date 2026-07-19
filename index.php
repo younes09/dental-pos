@@ -55,11 +55,11 @@ if (!isset($_SESSION['user_id'])) {
                 <i class="fas fa-tooth text-teal"></i>
                 <span>Dental<span>POS</span></span>
             </div>
-            <button id="sidebarCollapseDesktop" class="btn btn-link d-none d-md-block text-white p-0" aria-label="Collapse sidebar on desktop">
-                <i class="fas fa-angles-left" aria-hidden="true"></i>
+            <button id="sidebarCollapseDesktop" class="btn btn-link d-none d-md-block text-white p-0" aria-label="Toggle Sidebar">
+                <i class="fas fa-angles-left"></i>
             </button>
-            <button id="sidebarCollapse" class="btn btn-link d-md-none text-white p-0" aria-label="Toggle sidebar on mobile">
-                <i class="fas fa-bars" aria-hidden="true"></i>
+            <button id="sidebarCollapse" class="btn btn-link d-md-none text-white p-0" aria-label="Toggle Sidebar Menu">
+                <i class="fas fa-bars"></i>
             </button>
         </div>
         
@@ -259,8 +259,8 @@ if (!isset($_SESSION['user_id'])) {
         <!-- Top Navbar -->
         <nav class="navbar navbar-expand-lg sticky-top">
             <div class="container-fluid">
-                <button type="button" id="sidebarToggle" class="btn btn-teal-outline me-3" aria-label="Toggle sidebar">
-                    <i class="fas fa-align-left" aria-hidden="true"></i>
+                <button type="button" id="sidebarToggle" class="btn btn-teal-outline me-3" aria-label="Toggle Sidebar Menu">
+                    <i class="fas fa-align-left"></i>
                 </button>
                 
                 <h4 class="mb-0 page-title d-none d-sm-block" id="currentViewTitle">Dashboard</h4>
@@ -280,16 +280,16 @@ if (!isset($_SESSION['user_id'])) {
                     </div>
 
                     <button id="fullscreenToggle" class="btn btn-link text-dark p-2 me-2" title="Toggle Fullscreen" data-i18n="topbar.fullscreen" data-i18n-target="title" aria-label="Toggle Fullscreen">
-                        <i class="fas fa-expand" aria-hidden="true"></i>
+                        <i class="fas fa-expand"></i>
                     </button>
                     
-                    <button id="darkModeToggle" class="btn btn-link text-dark p-2 me-2" aria-label="Toggle dark mode">
-                        <i class="fas fa-moon" aria-hidden="true"></i>
+                    <button id="darkModeToggle" class="btn btn-link text-dark p-2 me-2" aria-label="Toggle Dark Mode">
+                        <i class="fas fa-moon"></i>
                     </button>
                     
                     <div class="dropdown">
                         <button class="btn btn-link text-dark p-2 position-relative" type="button" data-bs-toggle="dropdown" aria-label="Notifications">
-                            <i class="fas fa-bell" aria-hidden="true"></i>
+                            <i class="fas fa-bell"></i>
                             <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notificationCount" style="display: none;">
                                 0
                             </span>

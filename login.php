@@ -94,12 +94,17 @@ if (isset($_SESSION['user_id'])) {
         <div class="card-body p-4">
             <form id="loginForm">
                 <div class="mb-3">
-                    <label class="form-label small fw-bold" data-i18n="login.email">Email Address</label>
-                    <input type="email" name="email" id="emailInput" class="form-control" placeholder="admin@dentalpos.com" required>
+                    <label for="emailInput" class="form-label small fw-bold" data-i18n="login.email">Email Address</label>
+                    <input type="email" name="email" id="emailInput" class="form-control" placeholder="admin@dentalpos.com" required autocomplete="email" autofocus>
                 </div>
                 <div class="mb-3">
                     <label class="form-label small fw-bold" data-i18n="login.password">Password</label>
-                    <input type="password" name="password" id="passwordInput" class="form-control" placeholder="••••••••" required>
+                    <div class="position-relative">
+                        <input type="password" name="password" id="passwordInput" class="form-control pe-5" placeholder="••••••••" required>
+                        <button type="button" id="togglePasswordBtn" class="btn border-0 position-absolute end-0 top-0 h-100 text-muted px-3" aria-label="Toggle password visibility" style="z-index: 10;">
+                            <i class="far fa-eye" id="togglePasswordIcon"></i>
+                        </button>
+                    </div>
                 </div>
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <div class="form-check">
@@ -118,10 +123,10 @@ if (isset($_SESSION['user_id'])) {
             
             <!-- Language Switcher -->
             <div class="text-center mt-3 border-top pt-3">
-                <button onclick="setLang('en')" class="btn btn-sm btn-outline-secondary rounded-circle px-2 py-1 mx-1 border-0" title="English">
+                <button onclick="setLang('en')" class="btn btn-sm btn-outline-secondary rounded-circle px-2 py-1 mx-1 border-0" title="English" aria-label="Switch language to English">
                     <img src="assets/vendor/img/flags/us.png" width="20" alt="EN">
                 </button>
-                <button onclick="setLang('fr')" class="btn btn-sm btn-outline-secondary rounded-circle px-2 py-1 mx-1 border-0" title="Français">
+                <button onclick="setLang('fr')" class="btn btn-sm btn-outline-secondary rounded-circle px-2 py-1 mx-1 border-0" title="Français" aria-label="Passer en français">
                     <img src="assets/vendor/img/flags/fr.png" width="20" alt="FR">
                 </button>
             </div>
@@ -156,9 +161,30 @@ if (isset($_SESSION['user_id'])) {
         // Run on load
         translate();
 
+        // Password visibility toggle
+        document.getElementById('togglePasswordBtn').addEventListener('click', function() {
+            const pwdInput = document.getElementById('passwordInput');
+            const icon = document.getElementById('togglePasswordIcon');
+            if (pwdInput.type === 'password') {
+                pwdInput.type = 'text';
+                icon.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                pwdInput.type = 'password';
+                icon.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        });
+
         document.getElementById('loginForm').onsubmit = async (e) => {
             e.preventDefault();
-            const formData = new FormData(e.target);
+            const form = e.target;
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalBtnHtml = submitBtn.innerHTML;
+
+            // Set loading state
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading...`;
+
+            const formData = new FormData(form);
             
             try {
                 const response = await fetch('api/auth.php?action=login', {
@@ -170,6 +196,10 @@ if (isset($_SESSION['user_id'])) {
                 if (result.success) {
                     window.location.href = 'index.php';
                 } else {
+                    // Restore button state on error
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalBtnHtml;
+
                     Swal.fire({
                         icon: 'error',
                         title: t('login.failed_title'),
@@ -178,6 +208,10 @@ if (isset($_SESSION['user_id'])) {
                     });
                 }
             } catch (error) {
+                // Restore button state on network error
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnHtml;
+
                 // Fix #17: Show user-visible feedback on network/fetch error
                 Swal.fire({
                     icon: 'error',

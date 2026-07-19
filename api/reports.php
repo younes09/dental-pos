@@ -21,7 +21,7 @@ try {
                 SELECT s.id, s.invoice_number, c.name as customer, s.date, s.subtotal, s.discount, s.tax, s.total, s.payment_method
                 FROM sales s
                 LEFT JOIN customers c ON s.customer_id = c.id
-                WHERE DATE(s.date) BETWEEN ? AND ? AND s.status = 'Completed'
+                WHERE s.date >= ? AND s.date < ? + INTERVAL 1 DAY AND s.status = 'Completed'
                 ORDER BY s.date DESC
             ");
             $stmt->execute([$from, $to]);
