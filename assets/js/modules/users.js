@@ -81,10 +81,10 @@ const usersModule = {
                     orderable: false,
                     className: 'text-end',
                     render: (data) => `
-                        <button class="btn btn-sm btn-light-primary me-2" onclick="usersModule.editUser(${data.id})">
+                        <button class="btn btn-sm btn-light-primary me-2" onclick="usersModule.editUser(${data.id})" title="${App.t('btn.edit') || 'Edit'}" aria-label="${App.t('btn.edit') || 'Edit'}">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button class="btn btn-sm btn-light-danger" onclick="usersModule.deleteUser(${data.id})">
+                        <button class="btn btn-sm btn-light-danger" onclick="usersModule.deleteUser(${data.id})" title="${App.t('btn.delete') || 'Delete'}" aria-label="${App.t('btn.delete') || 'Delete'}">
                             <i class="fas fa-trash"></i>
                         </button>
                     `
