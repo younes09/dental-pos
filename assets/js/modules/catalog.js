@@ -24,10 +24,10 @@ const catalogModule = {
                     className: 'text-end',
                     orderable: false,
                     render: (data) => `
-                        <button class="btn btn-sm btn-light-primary me-2" onclick="catalogModule.editItem('categories', ${data.id}, this)" data-name="${App.escapeHtml(data.name)}">
+                        <button class="btn btn-sm btn-light-primary me-2" onclick="catalogModule.editItem('categories', ${data.id}, this)" data-name="${App.escapeHtml(data.name)}" title="${App.t('btn.edit') || 'Edit'}" aria-label="${App.t('btn.edit') || 'Edit'}">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button class="btn btn-sm btn-light-danger" onclick="catalogModule.deleteItem('categories', ${data.id})">
+                        <button class="btn btn-sm btn-light-danger" onclick="catalogModule.deleteItem('categories', ${data.id})" title="${App.t('btn.delete') || 'Delete'}" aria-label="${App.t('btn.delete') || 'Delete'}">
                             <i class="fas fa-trash"></i>
                         </button>
                     `
@@ -48,10 +48,10 @@ const catalogModule = {
                     className: 'text-end',
                     orderable: false,
                     render: (data) => `
-                        <button class="btn btn-sm btn-light-primary me-2" onclick="catalogModule.editItem('brands', ${data.id}, this)" data-name="${App.escapeHtml(data.name)}">
+                        <button class="btn btn-sm btn-light-primary me-2" onclick="catalogModule.editItem('brands', ${data.id}, this)" data-name="${App.escapeHtml(data.name)}" title="${App.t('btn.edit') || 'Edit'}" aria-label="${App.t('btn.edit') || 'Edit'}">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button class="btn btn-sm btn-light-danger" onclick="catalogModule.deleteItem('brands', ${data.id})">
+                        <button class="btn btn-sm btn-light-danger" onclick="catalogModule.deleteItem('brands', ${data.id})" title="${App.t('btn.delete') || 'Delete'}" aria-label="${App.t('btn.delete') || 'Delete'}">
                             <i class="fas fa-trash"></i>
                         </button>
                     `
