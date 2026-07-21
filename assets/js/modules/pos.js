@@ -143,9 +143,21 @@ const posModule = {
         document.getElementById('pos-customer-search').oninput = (e) => this.searchCustomers(e.target.value);
 
         // Quick add customer form
-        document.getElementById('pos-quick-customer-form').onsubmit = (e) => {
+        document.getElementById('pos-quick-customer-form').onsubmit = async (e) => {
             e.preventDefault();
-            this.saveQuickCustomer(new FormData(e.target));
+            const form = e.target;
+            const submitBtn = form.querySelector('button:not([type="button"])');
+            const originalText = submitBtn.innerHTML;
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving...';
+
+            try {
+                await this.saveQuickCustomer(new FormData(form));
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            }
         };
 
         // Invoice type change handler
