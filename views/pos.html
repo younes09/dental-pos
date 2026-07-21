@@ -10,8 +10,8 @@
                             <i class="fas fa-search"></i>
                             <input type="text" id="pos-search" class="form-control"
                                 placeholder="Search by name, barcode or category..." data-i18n="pos.search_placeholder" data-i18n-target="placeholder">
-                            <button type="button" id="btn-clear-pos-search" class="btn btn-link text-muted position-absolute end-0 top-50 translate-middle-y border-0 p-0 me-3" style="display: none; z-index: 5; text-decoration: none;">
-                                <i class="fas fa-times" style=" left: -15px; " title="vider le champ de recherche"></i>
+                            <button type="button" id="btn-clear-pos-search" class="btn btn-link text-muted position-absolute end-0 top-50 translate-middle-y border-0 p-0 me-3" style="display: none; z-index: 5; text-decoration: none;" aria-label="Clear search">
+                                <i class="fas fa-times" style=" left: -15px; " title="vider le champ de recherche" aria-hidden="true"></i>
                             </button>
                         </div>
                     </div>
@@ -22,11 +22,11 @@
                     </div>
                     <div class="col-md-3 d-flex justify-content-end">
                         <div class="btn-group border rounded-pill p-1 bg-light shadow-sm" role="group" aria-label="View Toggler">
-                            <button type="button" class="btn btn-sm rounded-pill px-3 active" id="btn-view-grid" data-toggle="tooltip" data-placement="top" title="Grid View" data-i18n="pos.grid_view" data-i18n-target="title">
-                                <i class="fas fa-th"></i>
+                            <button type="button" class="btn btn-sm rounded-pill px-3 active" id="btn-view-grid" data-toggle="tooltip" data-placement="top" title="Grid View" aria-label="Grid View" data-i18n="pos.grid_view" data-i18n-target="title, aria-label">
+                                <i class="fas fa-th" aria-hidden="true"></i>
                             </button>
-                            <button type="button" class="btn btn-sm rounded-pill px-3" id="btn-view-list" data-toggle="tooltip" data-placement="top" title="List View" data-i18n="pos.list_view" data-i18n-target="title">
-                                <i class="fas fa-list"></i>
+                            <button type="button" class="btn btn-sm rounded-pill px-3" id="btn-view-list" data-toggle="tooltip" data-placement="top" title="List View" aria-label="List View" data-i18n="pos.list_view" data-i18n-target="title, aria-label">
+                                <i class="fas fa-list" aria-hidden="true"></i>
                             </button>
                         </div>
                     </div>
@@ -193,20 +193,20 @@
 
                     <div class="row g-2 mt-2">
                         <div class="col-4">
-                            <button class="btn btn-light w-100 py-2 px-1" id="btn-hold-sale" data-toggle="tooltip" data-placement="top" title="Hold Sale" data-i18n="pos.btn.hold" data-i18n-target="title">
-                                <i class="fas fa-pause"></i>
+                            <button class="btn btn-light w-100 py-2 px-1" id="btn-hold-sale" data-toggle="tooltip" data-placement="top" title="Hold Sale" aria-label="Hold Sale" data-i18n="pos.btn.hold" data-i18n-target="title, aria-label">
+                                <i class="fas fa-pause" aria-hidden="true"></i>
                             </button>
                         </div>
                         <div class="col-4">
                             <button class="btn btn-light w-100 py-2 px-1" id="btn-recent-sales" data-bs-toggle="modal"
-                                data-bs-target="#posHeldSalesModal" data-toggle="tooltip" data-placement="top" title="Recent" data-i18n="pos.btn.recent" data-i18n-target="title">
-                                <i class="fas fa-receipt"></i>
+                                data-bs-target="#posHeldSalesModal" data-toggle="tooltip" data-placement="top" title="Recent" aria-label="Recent Sales" data-i18n="pos.btn.recent" data-i18n-target="title, aria-label">
+                                <i class="fas fa-receipt" aria-hidden="true"></i>
                             </button>
                         </div>
                         <div class="col-4">
                             <button class="btn btn-light w-100 py-2 px-1" id="btn-load-quote" data-bs-toggle="modal"
-                                data-bs-target="#posQuotationsModal" data-toggle="tooltip" data-placement="top" title="Load Quote" data-i18n="pos.btn.load_quote" data-i18n-target="title">
-                                <i class="fas fa-file-invoice"></i>
+                                data-bs-target="#posQuotationsModal" data-toggle="tooltip" data-placement="top" title="Load Quote" aria-label="Load Quote" data-i18n="pos.btn.load_quote" data-i18n-target="title, aria-label">
+                                <i class="fas fa-file-invoice" aria-hidden="true"></i>
                             </button>
                         </div>
                     </div>
