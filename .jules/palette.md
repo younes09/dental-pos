@@ -1,0 +1,3 @@
+## 2024-07-23 - Accessible Tooltips for Icon-only Buttons
+**Learning:** Hardcoded text within tooltips or elements bypasses the application's i18n system, causing confusing experiences for users in different locales. Furthermore, relying only on tooltips (via `title` attribute on an inner element like `<i>`) for icon-only buttons leaves screen readers without a direct description on the interactive element itself.
+**Action:** When adding or updating icon-only buttons, always apply an `aria-label` directly on the `<button>` element for screen readers. Ensure tooltips use `data-i18n` (and `data-i18n-target="title"` in this framework) instead of hardcoded strings to ensure full localization coverage.
