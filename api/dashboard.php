@@ -150,7 +150,7 @@ try {
             // Last 6 months, grouped by month
             $stmt = $pdo->prepare("
                 SELECT 
-                    DATE_FORMAT(s.date, '%b %Y') as day,
+                    DATE_FORMAT(MIN(s.date), '%b %Y') as day,
                     COALESCE(SUM(
                         CASE 
                             WHEN s.subtotal > 0 THEN si.net_subtotal * (1 - (s.discount / s.subtotal))
@@ -177,7 +177,7 @@ try {
             // Last 7 days, grouped by day (original behavior)
             $stmt = $pdo->prepare("
                 SELECT 
-                    DATE_FORMAT(s.date, '%b %d') as day,
+                    DATE_FORMAT(MIN(s.date), '%b %d') as day,
                     COALESCE(SUM(
                         CASE 
                             WHEN s.subtotal > 0 THEN si.net_subtotal * (1 - (s.discount / s.subtotal))
@@ -211,7 +211,7 @@ try {
         JOIN products p ON si.product_id = p.id
         JOIN sales s ON si.sale_id = s.id
         WHERE s.status = 'Completed'
-        GROUP BY si.product_id
+        GROUP BY si.product_id, p.name
         ORDER BY total_sold DESC
         LIMIT 5
     ");
