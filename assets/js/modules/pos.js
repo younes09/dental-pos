@@ -119,7 +119,17 @@ const posModule = {
         document.getElementById('pos-category-filter').onchange = (e) => this.filterProducts(document.getElementById('pos-search').value, e.target.value);
 
         // Cart controls
-        document.getElementById('btn-clear-cart').onclick = () => this.clearCart();
+        document.getElementById('btn-clear-cart').onclick = async () => {
+            if (this.cart.length > 0) {
+                const confirmed = await App.confirm(
+                    App.t('pos.msg.clear_cart_title') || 'Clear Cart?',
+                    App.t('pos.msg.clear_cart_desc') || 'Are you sure you want to clear the current order?',
+                    'warning'
+                );
+                if (!confirmed) return;
+            }
+            this.clearCart();
+        };
         document.getElementById('cart-discount').oninput = () => { this.fixedDiscountAmount = null; this.calculateTotals(); };
         document.getElementById('cart-points-redeem').oninput = () => this.calculateTotals();
         document.getElementById('cart-paid-amount').oninput = () => this.calculateTotals();
