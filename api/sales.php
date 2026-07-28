@@ -235,6 +235,9 @@ try {
 
             $paid_amount = (float)($data['paid_amount'] ?? $total);
             if ($paid_amount < 0) throw new Exception('Paid amount cannot be negative');
+            if ($paid_amount > $total) {
+                $paid_amount = $total;
+            }
             $payment_status = 'Paid';
             if ($paid_amount < $total) {
                 $payment_status = ($paid_amount > 0) ? 'Partial' : 'Unpaid';
@@ -417,6 +420,13 @@ try {
             if (!$sale) throw new Exception('Sale not found');
             if ($sale['status'] === 'Cancelled') throw new Exception('Sale is already cancelled');
             
+            // Prevent cancellation if the sale has existing returns
+            $check_returns = $pdo->prepare("SELECT COUNT(*) FROM sale_returns WHERE sale_id = ?");
+            $check_returns->execute([$sale_id]);
+            if ($check_returns->fetchColumn() > 0) {
+                throw new Exception('Cannot cancel a sale that has processed returns. Please use the return system for further adjustments.');
+            }
+
             // Mark as cancelled
             $pdo->prepare("UPDATE sales SET status = 'Cancelled' WHERE id = ?")->execute([$sale_id]);
             
@@ -431,7 +441,8 @@ try {
                 }
                 
                 // Reverse debt balance
-                $debt_initial = $sale['total'] - $sale['paid_amount'];
+                $effective_paid = min($sale['paid_amount'], $sale['total']);
+                $debt_initial = $sale['total'] - $effective_paid;
                 if ($debt_initial > 0) {
                     $cust_stmt = $pdo->prepare("SELECT balance FROM customers WHERE id = ? FOR UPDATE");
                     $cust_stmt->execute([$sale['customer_id']]);
@@ -442,12 +453,12 @@ try {
                     $bal_stmt = $pdo->prepare("UPDATE customers SET balance = balance - ? WHERE id = ?");
                     $bal_stmt->execute([$debt_to_reduce, $sale['customer_id']]);
                     
-                    $net_refund = $sale['paid_amount'] + ($debt_initial - $debt_to_reduce);
+                    $net_refund = $effective_paid + ($debt_initial - $debt_to_reduce);
                 } else {
-                    $net_refund = $sale['paid_amount'];
+                    $net_refund = $effective_paid;
                 }
             } else {
-                $net_refund = $sale['paid_amount'];
+                $net_refund = min($sale['paid_amount'], $sale['total']);
             }
 
             // Refund logic
@@ -667,21 +678,29 @@ try {
             $customer_id = $_GET['customer_id'] ?? null;
             $query = "
                 SELECT s.*, c.name as customer_name, u.name as user_name,
-                       (SELECT COUNT(*) FROM sale_returns WHERE sale_id = s.id) as has_returns,
-                       (
-                           SELECT COALESCE(
-                               CASE
-                                   WHEN s.subtotal > 0 THEN (SUM((si.qty - si.returned_qty) * si.unit_price) * (1 - (s.discount / s.subtotal))) - SUM((si.qty - si.returned_qty) * si.cost_price)
-                                   ELSE -SUM((si.qty - si.returned_qty) * si.cost_price)
-                               END,
-                               0
-                           )
-                           FROM sale_items si
-                           WHERE si.sale_id = s.id
+                       COALESCE(r.return_count, 0) as has_returns,
+                       COALESCE(
+                           CASE
+                               WHEN s.subtotal > 0 THEN (si_agg.total_revenue * (1 - (s.discount / s.subtotal))) - si_agg.total_cost
+                               ELSE -si_agg.total_cost
+                           END,
+                           0
                        ) as profit
                 FROM sales s
                 LEFT JOIN customers c ON s.customer_id = c.id
                 LEFT JOIN users u ON s.user_id = u.id
+                LEFT JOIN (
+                    SELECT sale_id, COUNT(*) as return_count
+                    FROM sale_returns
+                    GROUP BY sale_id
+                ) r ON s.id = r.sale_id
+                LEFT JOIN (
+                    SELECT sale_id,
+                           SUM((qty - returned_qty) * unit_price) as total_revenue,
+                           SUM((qty - returned_qty) * cost_price) as total_cost
+                    FROM sale_items
+                    GROUP BY sale_id
+                ) si_agg ON s.id = si_agg.sale_id
             ";
             
             if ($customer_id) {
