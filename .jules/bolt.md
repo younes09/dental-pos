@@ -1,0 +1,3 @@
+## 2024-06-25 - Avoid Non-SARGable DATE() functions in SQL queries
+**Learning:** Found a specific performance anti-pattern in `api/analytics.php` where queries wrapped date columns in the `DATE()` function within `WHERE` clauses (e.g. `DATE(date) BETWEEN ? AND ?`). This prevents MySQL from using indexes on those columns, forcing a full table scan.
+**Action:** When filtering by date ranges on a datetime or timestamp column, construct the exact start and end timestamps in PHP (`00:00:00` and `23:59:59`) and use raw comparison operators (`>=` and `<=`) against the original column. Also apply this to `GROUP BY` expressions when querying against a single day period.
