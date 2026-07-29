@@ -22,52 +22,39 @@ try {
         // 1. KPI Summary
         // ---------------------------------------------------------------
         case 'summary':
+            $fromDate = $from . ' 00:00:00';
+            $toDate = $to . ' 23:59:59';
+
             // Revenue & profit in range (deducting returns)
             $stmt = $pdo->prepare("
                 SELECT
                     COALESCE(SUM(
                         CASE 
-                            WHEN s.subtotal > 0 THEN si.net_subtotal * (1 - (s.discount / s.subtotal))
+                            WHEN s.subtotal > 0 THEN (si.qty - si.returned_qty) * si.unit_price * (1 - (s.discount / s.subtotal))
                             ELSE 0 
                         END
                     ), 0) as revenue,
-                    COUNT(s.id)               as sales_count,
-                    COALESCE(AVG(
-                        CASE 
-                            WHEN s.subtotal > 0 THEN si.net_subtotal * (1 - (s.discount / s.subtotal))
-                            ELSE 0 
-                        END
-                    ), 0) as avg_order
+                    COUNT(DISTINCT s.id)      as sales_count,
+                    COALESCE(SUM((si.qty - si.returned_qty) * si.cost_price), 0) as cogs
                 FROM sales s
-                LEFT JOIN (
-                    SELECT 
-                        sale_id,
-                        SUM((qty - returned_qty) * unit_price) as net_subtotal
-                    FROM sale_items
-                    GROUP BY sale_id
-                ) si ON si.sale_id = s.id
-                WHERE DATE(s.date) BETWEEN ? AND ? AND s.status = 'Completed'
+                LEFT JOIN sale_items si ON si.sale_id = s.id
+                WHERE s.date >= ? AND s.date <= ? AND s.status = 'Completed'
             ");
-            $stmt->execute([$from, $to]);
+            $stmt->execute([$fromDate, $toDate]);
             $rev = $stmt->fetch();
 
-            // COGS for profit
-            $stmt = $pdo->prepare("
-                SELECT COALESCE(SUM((si.qty - si.returned_qty) * si.cost_price), 0) as cogs
-                FROM sale_items si
-                JOIN sales s ON si.sale_id = s.id
-                WHERE DATE(s.date) BETWEEN ? AND ? AND s.status = 'Completed'
-            ");
-            $stmt->execute([$from, $to]);
-            $cogs = $stmt->fetch()['cogs'];
+            $revenue = (float)$rev['revenue'];
+            $cogs = (float)$rev['cogs'];
+            $sales_count = (int)$rev['sales_count'];
+            $avg_order = $sales_count > 0 ? $revenue / $sales_count : 0;
 
             // New customers in range
             $stmt = $pdo->prepare("
                 SELECT COUNT(*) as new_customers
                 FROM customers
-                WHERE DATE(created_at) BETWEEN ? AND ?
+                WHERE created_at >= ? AND created_at <= ?
             ");
-            $stmt->execute([$from, $to]);
+            $stmt->execute([$fromDate, $toDate]);
             $newCust = $stmt->fetch()['new_customers'] ?? 0;
 
             // Bug #11 Fix: Use item-level revenue to avoid double-counting multi-item sales
@@ -77,19 +64,19 @@ try {
                 JOIN sales s ON si.sale_id = s.id
                 JOIN products p ON si.product_id = p.id
                 LEFT JOIN categories c ON p.category_id = c.id
-                WHERE DATE(s.date) BETWEEN ? AND ? AND s.status = 'Completed'
+                WHERE s.date >= ? AND s.date <= ? AND s.status = 'Completed'
                 GROUP BY c.id
                 ORDER BY cat_revenue DESC
                 LIMIT 1
             ");
-            $stmt->execute([$from, $to]);
+            $stmt->execute([$fromDate, $toDate]);
             $topCat = $stmt->fetch()['name'] ?? 'N/A';
 
             echo json_encode([
-                'revenue'       => (float)$rev['revenue'],
-                'profit'        => (float)($rev['revenue'] - $cogs),
-                'sales_count'   => (int)$rev['sales_count'],
-                'avg_order'     => (float)$rev['avg_order'],
+                'revenue'       => $revenue,
+                'profit'        => $revenue - $cogs,
+                'sales_count'   => $sales_count,
+                'avg_order'     => (float)$avg_order,
                 'new_customers' => (int)$newCust,
                 'top_category'  => $topCat
             ]);
@@ -99,14 +86,16 @@ try {
         // 2. Revenue & Profit Trend
         // ---------------------------------------------------------------
         case 'revenue_trend':
+            $fromDate = $from . ' 00:00:00';
+            $toDate = $to . ' 23:59:59';
             $groupExpr = "DATE(s.date)";
-            $labelExpr = "DATE_FORMAT(s.date, '%b %d')";
+            $labelExpr = "DATE_FORMAT(MIN(s.date), '%b %d')";
             if ($period === 'weekly') {
                 $groupExpr = "YEARWEEK(s.date, 1)";
                 $labelExpr = "DATE_FORMAT(MIN(s.date), 'Wk %u %Y')";
             } elseif ($period === 'monthly') {
                 $groupExpr = "DATE_FORMAT(s.date, '%Y-%m')";
-                $labelExpr = "DATE_FORMAT(s.date, '%b %Y')";
+                $labelExpr = "DATE_FORMAT(MIN(s.date), '%b %Y')";
             }
 
             $stmt = $pdo->prepare("
@@ -114,30 +103,23 @@ try {
                     $labelExpr as label,
                     COALESCE(SUM(
                         CASE 
-                            WHEN s.subtotal > 0 THEN si.net_subtotal * (1 - (s.discount / s.subtotal))
+                            WHEN s.subtotal > 0 THEN (si.qty - si.returned_qty) * si.unit_price * (1 - (s.discount / s.subtotal))
                             ELSE 0 
                         END
                     ), 0) as revenue,
                     COALESCE(SUM(
                         CASE 
-                            WHEN s.subtotal > 0 THEN si.net_subtotal * (1 - (s.discount / s.subtotal))
-                            ELSE 0 
-                        END - si.net_cogs
+                            WHEN s.subtotal > 0 THEN ((si.qty - si.returned_qty) * si.unit_price * (1 - (s.discount / s.subtotal))) - ((si.qty - si.returned_qty) * si.cost_price)
+                            ELSE -((si.qty - si.returned_qty) * si.cost_price)
+                        END
                     ), 0) as profit
                 FROM sales s
-                LEFT JOIN (
-                    SELECT 
-                        sale_id,
-                        SUM((qty - returned_qty) * unit_price) as net_subtotal,
-                        SUM((qty - returned_qty) * cost_price) as net_cogs
-                    FROM sale_items
-                    GROUP BY sale_id
-                ) si ON si.sale_id = s.id
-                WHERE DATE(s.date) BETWEEN ? AND ? AND s.status = 'Completed'
+                LEFT JOIN sale_items si ON si.sale_id = s.id
+                WHERE s.date >= ? AND s.date <= ? AND s.status = 'Completed'
                 GROUP BY $groupExpr
                 ORDER BY MIN(s.date) ASC
             ");
-            $stmt->execute([$from, $to]);
+            $stmt->execute([$fromDate, $toDate]);
             echo json_encode(['data' => $stmt->fetchAll()]);
             break;
 
@@ -145,6 +127,8 @@ try {
         // 3. Top Products Performance
         // ---------------------------------------------------------------
         case 'product_performance':
+            $fromDate = $from . ' 00:00:00';
+            $toDate = $to . ' 23:59:59';
             $stmt = $pdo->prepare("
                 SELECT
                     p.name,
@@ -153,12 +137,12 @@ try {
                 FROM sale_items si
                 JOIN products p ON si.product_id = p.id
                 JOIN sales s ON si.sale_id = s.id
-                WHERE DATE(s.date) BETWEEN ? AND ? AND s.status = 'Completed'
+                WHERE s.date >= ? AND s.date <= ? AND s.status = 'Completed'
                 GROUP BY si.product_id
                 ORDER BY revenue DESC
                 LIMIT 10
             ");
-            $stmt->execute([$from, $to]);
+            $stmt->execute([$fromDate, $toDate]);
             echo json_encode(['data' => $stmt->fetchAll()]);
             break;
 
@@ -166,17 +150,19 @@ try {
         // 4. Payment Methods Breakdown
         // ---------------------------------------------------------------
         case 'payment_methods':
+            $fromDate = $from . ' 00:00:00';
+            $toDate = $to . ' 23:59:59';
             $stmt = $pdo->prepare("
                 SELECT
                     payment_method as method,
                     COUNT(*)       as count,
                     SUM(total)     as total
                 FROM sales
-                WHERE DATE(date) BETWEEN ? AND ? AND status = 'Completed'
+                WHERE date >= ? AND date <= ? AND status = 'Completed'
                 GROUP BY payment_method
                 ORDER BY total DESC
             ");
-            $stmt->execute([$from, $to]);
+            $stmt->execute([$fromDate, $toDate]);
             echo json_encode(['data' => $stmt->fetchAll()]);
             break;
 
@@ -184,28 +170,30 @@ try {
         // 5. Customer Insights (New vs Returning)
         // ---------------------------------------------------------------
         case 'customer_insights':
+            $fromDate = $from . ' 00:00:00';
+            $toDate = $to . ' 23:59:59';
             $groupExpr = "DATE(s.date)";
-            $labelExpr = "DATE_FORMAT(s.date, '%b %d')";
+            $labelExpr = "DATE_FORMAT(MIN(s.date), '%b %d')";
             if ($period === 'weekly') {
                 $groupExpr = "YEARWEEK(s.date, 1)";
                 $labelExpr = "DATE_FORMAT(MIN(s.date), 'Wk %u %Y')";
             } elseif ($period === 'monthly') {
                 $groupExpr = "DATE_FORMAT(s.date, '%Y-%m')";
-                $labelExpr = "DATE_FORMAT(s.date, '%b %Y')";
+                $labelExpr = "DATE_FORMAT(MIN(s.date), '%b %Y')";
             }
 
             $stmt = $pdo->prepare("
                 SELECT
                     $labelExpr as label,
-                    SUM(CASE WHEN c.created_at >= s.date - INTERVAL 1 DAY THEN 1 ELSE 0 END) as new_customers,
-                    SUM(CASE WHEN c.created_at <  s.date - INTERVAL 1 DAY THEN 1 ELSE 0 END) as returning_customers
+                    COUNT(DISTINCT CASE WHEN c.created_at >= s.date - INTERVAL 1 DAY THEN s.customer_id ELSE NULL END) as new_customers,
+                    COUNT(DISTINCT CASE WHEN c.created_at <  s.date - INTERVAL 1 DAY THEN s.customer_id ELSE NULL END) as returning_customers
                 FROM sales s
                 LEFT JOIN customers c ON s.customer_id = c.id
-                WHERE DATE(s.date) BETWEEN ? AND ? AND s.status = 'Completed' AND s.customer_id IS NOT NULL
+                WHERE s.date >= ? AND s.date <= ? AND s.status = 'Completed' AND s.customer_id IS NOT NULL
                 GROUP BY $groupExpr
                 ORDER BY MIN(s.date) ASC
             ");
-            $stmt->execute([$from, $to]);
+            $stmt->execute([$fromDate, $toDate]);
             echo json_encode(['data' => $stmt->fetchAll()]);
             break;
 
@@ -213,17 +201,19 @@ try {
         // 6. Hourly Heatmap (hour × day-of-week)
         // ---------------------------------------------------------------
         case 'hourly_heatmap':
+            $fromDate = $from . ' 00:00:00';
+            $toDate = $to . ' 23:59:59';
             $stmt = $pdo->prepare("
                 SELECT
                     HOUR(date)        as hour,
                     DAYOFWEEK(date)   as dow,
                     COUNT(*)          as sales_count
                 FROM sales
-                WHERE DATE(date) BETWEEN ? AND ? AND status = 'Completed'
+                WHERE date >= ? AND date <= ? AND status = 'Completed'
                 GROUP BY HOUR(date), DAYOFWEEK(date)
                 ORDER BY dow ASC, hour ASC
             ");
-            $stmt->execute([$from, $to]);
+            $stmt->execute([$fromDate, $toDate]);
             echo json_encode(['data' => $stmt->fetchAll()]);
             break;
             
@@ -231,6 +221,8 @@ try {
         // 7. Sales by Wilaya
         // ---------------------------------------------------------------
         case 'sales_by_wilaya':
+            $fromDate = $from . ' 00:00:00';
+            $toDate = $to . ' 23:59:59';
             $stmt = $pdo->prepare("
                 SELECT 
                     COALESCE(c.wilaya, 'N/A') as wilaya,
@@ -238,11 +230,11 @@ try {
                     COUNT(s.id) as sales_count
                 FROM sales s
                 LEFT JOIN customers c ON s.customer_id = c.id
-                WHERE DATE(s.date) BETWEEN ? AND ? AND s.status = 'Completed'
+                WHERE s.date >= ? AND s.date <= ? AND s.status = 'Completed'
                 GROUP BY c.wilaya
                 ORDER BY revenue DESC
             ");
-            $stmt->execute([$from, $to]);
+            $stmt->execute([$fromDate, $toDate]);
             echo json_encode(['data' => $stmt->fetchAll()]);
             break;
 
