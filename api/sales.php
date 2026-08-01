@@ -126,7 +126,7 @@ try {
             $product_ids = array_column($data['items'], 'id');
             if (empty($product_ids)) throw new Exception('No items provided');
             $placeholders = str_repeat('?,', count($product_ids) - 1) . '?';
-            $prod_stmt = $pdo->prepare("SELECT id, name, selling_price, purchase_price, stock_qty FROM products WHERE id IN ($placeholders) FOR UPDATE");
+            $prod_stmt = $pdo->prepare("SELECT id, name, selling_price, purchase_price, stock_qty, min_stock FROM products WHERE id IN ($placeholders) FOR UPDATE");
             $prod_stmt->execute($product_ids);
             
             $db_products = [];
@@ -202,9 +202,13 @@ try {
 
                 // Cap points to prevent total discount from exceeding subtotal
                 $max_allowed_points_discount = max(0, $subtotal - $manual_discount);
-                $max_allowed_points = floor($max_allowed_points_discount / $point_value);
-                if ($points_redeemed > $max_allowed_points) {
-                    $points_redeemed = $max_allowed_points;
+                if ($point_value > 0) {
+                    $max_allowed_points = floor($max_allowed_points_discount / $point_value);
+                    if ($points_redeemed > $max_allowed_points) {
+                        $points_redeemed = $max_allowed_points;
+                    }
+                } else {
+                    $points_redeemed = 0;
                 }
 
                 $points_discount = $points_redeemed * $point_value;
@@ -342,11 +346,15 @@ try {
                 $stock_stmt->execute([$item['qty'], $item['id']]);
                 
                 // M11: Notification Trigger - Low Stock
-                $check_low_stmt = $pdo->prepare("SELECT name, stock_qty, min_stock FROM products WHERE id = ?");
-                $check_low_stmt->execute([$item['id']]);
-                $prod_status = $check_low_stmt->fetch();
+                $db_prod = $db_products[$item['id']];
+                $new_stock_qty = $db_prod['stock_qty'] - $item['qty'];
+                $prod_status = [
+                    'name' => $db_prod['name'],
+                    'stock_qty' => $new_stock_qty,
+                    'min_stock' => $db_prod['min_stock']
+                ];
                 
-                if ($prod_status && $prod_status['stock_qty'] <= $prod_status['min_stock']) {
+                if ($prod_status['stock_qty'] <= $prod_status['min_stock']) {
                     // Check if an unread notification already exists for this product
                     $notif_exists = $pdo->prepare("SELECT id FROM notifications WHERE title LIKE ? AND is_read = 0");
                     $notif_exists->execute(["%Low stock: " . $prod_status['name'] . "%"]);
