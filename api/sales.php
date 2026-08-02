@@ -25,9 +25,10 @@ try {
             // Fix N+1 Query: Fetch batches in bulk by chunking product IDs
             $product_ids = array_column($products, 'id');
             
-            // Initialize batches to empty JSON arrays initially
+            $products_by_id = [];
             foreach ($products as &$product) {
                 $product['batches'] = '[]';
+                $products_by_id[$product['id']] = &$product;
             }
             unset($product); // break reference
 
@@ -54,12 +55,11 @@ try {
                 }
 
                 // Re-assign batches back to products
-                foreach ($products as &$product) {
-                    if (isset($batches_by_product[$product['id']])) {
-                        $product['batches'] = json_encode($batches_by_product[$product['id']]);
+                foreach ($batches_by_product as $pid => $b) {
+                    if (isset($products_by_id[$pid])) {
+                        $products_by_id[$pid]['batches'] = json_encode($b);
                     }
                 }
-                unset($product); // break reference
             }
             
             echo json_encode(['products' => $products]);
@@ -87,6 +87,7 @@ try {
             foreach ($batches as &$b) {
                 $b['batch_number'] = 'BT-' . str_pad($b['id'], 4, '0', STR_PAD_LEFT);
             }
+            unset($b); // Prevent memory pointer bugs in subsequent code
 
             echo json_encode(['success' => true, 'batches' => $batches]);
             break;
@@ -283,14 +284,19 @@ try {
             ");
             $stock_stmt = $pdo->prepare("UPDATE products SET stock_qty = stock_qty - ? WHERE id = ?");
 
+            $batches_stmt = $pdo->prepare("SELECT id, remaining_qty, purchase_price FROM stock_batches WHERE product_id = ? AND remaining_qty > 0 ORDER BY created_at ASC FOR UPDATE");
+            $update_batch_stmt = $pdo->prepare("UPDATE stock_batches SET remaining_qty = ? WHERE id = ?");
+            $adj_batch_stmt = $pdo->prepare("INSERT INTO stock_batches (product_id, purchase_type, initial_qty, remaining_qty, purchase_price) VALUES (?, 'BA', ?, ?, ?)");
+            $check_low_stmt = $pdo->prepare("SELECT name, stock_qty, min_stock FROM products WHERE id = ?");
+            $notif_exists = $pdo->prepare("SELECT id FROM notifications WHERE title LIKE ? AND is_read = 0");
+            $ins_notif = $pdo->prepare("INSERT INTO notifications (role, title, message, type, link) VALUES (?, ?, ?, ?, ?)");
+
             foreach ($processed_items as $item) {
                 // FIFO Batch Deduction & Cost calculation
                 $remaining_to_deduct = $item['qty'];
-                $batches_stmt = $pdo->prepare("SELECT id, remaining_qty, purchase_price FROM stock_batches WHERE product_id = ? AND remaining_qty > 0 ORDER BY created_at ASC FOR UPDATE");
+
                 $batches_stmt->execute([$item['id']]);
                 $batches = $batches_stmt->fetchAll();
-                
-                $update_batch_stmt = $pdo->prepare("UPDATE stock_batches SET remaining_qty = ? WHERE id = ?");
                 
                 $total_item_cost = 0.00;
                 $deducted_qty = 0;
@@ -323,7 +329,6 @@ try {
                     $total_item_cost += $remaining_to_deduct * $fallback_price;
                     $deducted_qty += $remaining_to_deduct;
                     
-                    $adj_batch_stmt = $pdo->prepare("INSERT INTO stock_batches (product_id, purchase_type, initial_qty, remaining_qty, purchase_price) VALUES (?, 'BA', ?, ?, ?)");
                     $adj_batch_stmt->execute([$item['id'], -$remaining_to_deduct, -$remaining_to_deduct, $fallback_price]);
                 }
 
@@ -342,17 +347,14 @@ try {
                 $stock_stmt->execute([$item['qty'], $item['id']]);
                 
                 // M11: Notification Trigger - Low Stock
-                $check_low_stmt = $pdo->prepare("SELECT name, stock_qty, min_stock FROM products WHERE id = ?");
                 $check_low_stmt->execute([$item['id']]);
                 $prod_status = $check_low_stmt->fetch();
                 
                 if ($prod_status && $prod_status['stock_qty'] <= $prod_status['min_stock']) {
                     // Check if an unread notification already exists for this product
-                    $notif_exists = $pdo->prepare("SELECT id FROM notifications WHERE title LIKE ? AND is_read = 0");
                     $notif_exists->execute(["%Low stock: " . $prod_status['name'] . "%"]);
                     
                     if (!$notif_exists->fetch()) {
-                        $ins_notif = $pdo->prepare("INSERT INTO notifications (role, title, message, type, link) VALUES (?, ?, ?, ?, ?)");
                         $ins_notif->execute([
                             'Stock Manager', 
                             'Low stock: ' . $prod_status['name'], 
