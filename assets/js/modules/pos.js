@@ -938,6 +938,14 @@ const posModule = {
                 </button>
             </div>
         `).join('');
+
+        const isCartEmpty = this.cart.length === 0;
+        const clearCartBtn = document.getElementById('btn-clear-cart');
+        const checkoutBtn = document.getElementById('btn-checkout');
+        const holdSaleBtn = document.getElementById('btn-hold-sale');
+        if (clearCartBtn) clearCartBtn.disabled = isCartEmpty;
+        if (checkoutBtn) checkoutBtn.disabled = isCartEmpty;
+        if (holdSaleBtn) holdSaleBtn.disabled = isCartEmpty;
     },
 
     calculateTotals() {
@@ -1184,8 +1192,8 @@ const posModule = {
                 }
             }
         } finally {
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-check-circle me-2"></i>Complete Sale';
+            btn.disabled = this.cart.length === 0;
+            btn.innerHTML = '<i class="fas fa-check-circle me-2"></i><span data-i18n="pos.btn.complete">COMPLETE SALE</span>';
         }
     },
 
