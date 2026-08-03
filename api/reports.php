@@ -6,6 +6,8 @@ header('Content-Type: application/json');
 $type = $_GET['type'] ?? 'sales';
 $from = $_GET['from'] ?? date('Y-m-d', strtotime('-30 days'));
 $to = $_GET['to'] ?? date('Y-m-d');
+$fromDate = $from . ' 00:00:00';
+$toDate = $to . ' 23:59:59';
 
 // F4.1: Only Admin can access reports
 if (($_SESSION['user_role'] ?? '') !== 'Admin') {
@@ -21,10 +23,10 @@ try {
                 SELECT s.id, s.invoice_number, c.name as customer, s.date, s.subtotal, s.discount, s.tax, s.total, s.payment_method
                 FROM sales s
                 LEFT JOIN customers c ON s.customer_id = c.id
-                WHERE s.date >= ? AND s.date < ? + INTERVAL 1 DAY AND s.status = 'Completed'
+                WHERE s.date >= ? AND s.date <= ? AND s.status = 'Completed'
                 ORDER BY s.date DESC
             ");
-            $stmt->execute([$from, $to]);
+            $stmt->execute([$fromDate, $toDate]);
             echo json_encode(['data' => $stmt->fetchAll()]);
             break;
 
