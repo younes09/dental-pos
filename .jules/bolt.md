@@ -1,0 +1,3 @@
+## 2025-02-18 - Replacing non-SARGable DATE() function with index-friendly boundaries
+**Learning:** Using `DATE(column) BETWEEN ? AND ?` prevents MySQL from utilizing indexes on the date column, leading to full table scans. While fixing this for filtering with exact ranges (`>=` and `<=`), we must ensure date logic in aggregations (like `GROUP BY DATE(column)`) isn't improperly modified because that handles period-based grouping.
+**Action:** Always prepare start (e.g., `00:00:00`) and end (e.g., `23:59:59`) boundary strings in PHP for datetime filtering queries and use `>=` and `<=` logic over non-sargable functions in `WHERE` clauses to optimize index usage.
