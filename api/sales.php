@@ -11,10 +11,16 @@ try {
             $stmt = $pdo->prepare("
                 SELECT p.id, p.name, p.selling_price, p.purchase_price, p.stock_qty, p.min_stock, p.barcode, p.image, p.category_id, p.brand_id,
                        c.name as category_name, b.name as brand_name,
-                       (SELECT MIN(expiry_date) FROM stock_batches WHERE product_id = p.id AND remaining_qty > 0) as expiry_date
+                       sb.expiry_date
                 FROM products p
                 LEFT JOIN categories c ON p.category_id = c.id
                 LEFT JOIN brands b ON p.brand_id = b.id
+                LEFT JOIN (
+                    SELECT product_id, MIN(expiry_date) as expiry_date
+                    FROM stock_batches
+                    WHERE remaining_qty > 0
+                    GROUP BY product_id
+                ) sb ON p.id = sb.product_id
                 WHERE p.status = 'Active' 
                 ORDER BY p.name ASC
             ");
@@ -134,17 +140,13 @@ try {
                 $db_products[$row['id']] = $row;
             }
 
-            // Calculate subtotal
-            // Validate prices against frontend to prevent desynchronization (Issue 8)
+            // Calculate subtotal and validate prices against frontend to prevent desynchronization (Issue 8)
             $frontend_total_price = 0;
-            foreach ($data['items'] as $item) {
-                $frontend_total_price += (float)($item['price'] ?? 0) * (int)($item['qty'] ?? 0);
-            }
-
-            // Calculate subtotal
             $db_total_price = 0;
             $processed_items = [];
             foreach ($data['items'] as $item) {
+                $frontend_total_price += (float)($item['price'] ?? 0) * (int)($item['qty'] ?? 0);
+
                 $qty = (int)$item['qty'];
                 $item_id = (int)$item['id'];
                 
@@ -282,15 +284,18 @@ try {
                 VALUES (?, ?, ?, ?, ?, ?)
             ");
             $stock_stmt = $pdo->prepare("UPDATE products SET stock_qty = stock_qty - ? WHERE id = ?");
+            $batches_stmt = $pdo->prepare("SELECT id, remaining_qty, purchase_price FROM stock_batches WHERE product_id = ? AND remaining_qty > 0 ORDER BY created_at ASC FOR UPDATE");
+            $update_batch_stmt = $pdo->prepare("UPDATE stock_batches SET remaining_qty = ? WHERE id = ?");
+            $adj_batch_stmt = $pdo->prepare("INSERT INTO stock_batches (product_id, purchase_type, initial_qty, remaining_qty, purchase_price) VALUES (?, 'BA', ?, ?, ?)");
+            $check_low_stmt = $pdo->prepare("SELECT name, stock_qty, min_stock FROM products WHERE id = ?");
+            $notif_exists = $pdo->prepare("SELECT id FROM notifications WHERE title LIKE ? AND is_read = 0");
+            $ins_notif = $pdo->prepare("INSERT INTO notifications (role, title, message, type, link) VALUES (?, ?, ?, ?, ?)");
 
             foreach ($processed_items as $item) {
                 // FIFO Batch Deduction & Cost calculation
                 $remaining_to_deduct = $item['qty'];
-                $batches_stmt = $pdo->prepare("SELECT id, remaining_qty, purchase_price FROM stock_batches WHERE product_id = ? AND remaining_qty > 0 ORDER BY created_at ASC FOR UPDATE");
                 $batches_stmt->execute([$item['id']]);
                 $batches = $batches_stmt->fetchAll();
-                
-                $update_batch_stmt = $pdo->prepare("UPDATE stock_batches SET remaining_qty = ? WHERE id = ?");
                 
                 $total_item_cost = 0.00;
                 $deducted_qty = 0;
@@ -323,7 +328,6 @@ try {
                     $total_item_cost += $remaining_to_deduct * $fallback_price;
                     $deducted_qty += $remaining_to_deduct;
                     
-                    $adj_batch_stmt = $pdo->prepare("INSERT INTO stock_batches (product_id, purchase_type, initial_qty, remaining_qty, purchase_price) VALUES (?, 'BA', ?, ?, ?)");
                     $adj_batch_stmt->execute([$item['id'], -$remaining_to_deduct, -$remaining_to_deduct, $fallback_price]);
                 }
 
@@ -342,17 +346,14 @@ try {
                 $stock_stmt->execute([$item['qty'], $item['id']]);
                 
                 // M11: Notification Trigger - Low Stock
-                $check_low_stmt = $pdo->prepare("SELECT name, stock_qty, min_stock FROM products WHERE id = ?");
                 $check_low_stmt->execute([$item['id']]);
                 $prod_status = $check_low_stmt->fetch();
                 
                 if ($prod_status && $prod_status['stock_qty'] <= $prod_status['min_stock']) {
                     // Check if an unread notification already exists for this product
-                    $notif_exists = $pdo->prepare("SELECT id FROM notifications WHERE title LIKE ? AND is_read = 0");
                     $notif_exists->execute(["%Low stock: " . $prod_status['name'] . "%"]);
                     
                     if (!$notif_exists->fetch()) {
-                        $ins_notif = $pdo->prepare("INSERT INTO notifications (role, title, message, type, link) VALUES (?, ?, ?, ?, ?)");
                         $ins_notif->execute([
                             'Stock Manager', 
                             'Low stock: ' . $prod_status['name'], 
@@ -556,6 +557,11 @@ try {
                 $purchase_types = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
             }
 
+            $item_stmt = $pdo->prepare("SELECT id, qty, returned_qty, unit_price, cost_price FROM sale_items WHERE sale_id = ? AND product_id = ? FOR UPDATE");
+            $update_item_stmt = $pdo->prepare("UPDATE sale_items SET returned_qty = returned_qty + ? WHERE id = ?");
+            $stock_upd_stmt = $pdo->prepare("UPDATE products SET stock_qty = stock_qty + ? WHERE id = ?");
+            $batch_ins_stmt = $pdo->prepare("INSERT INTO stock_batches (product_id, purchase_type, initial_qty, remaining_qty, purchase_price) VALUES (?, ?, ?, ?, ?)");
+
             foreach ($data['items'] as $item) {
                 $product_id = (int)$item['product_id'];
                 $qty_to_return = (int)$item['qty'];
@@ -563,7 +569,6 @@ try {
                 if ($qty_to_return <= 0) continue;
 
                 // Validate against sale items
-                $item_stmt = $pdo->prepare("SELECT id, qty, returned_qty, unit_price, cost_price FROM sale_items WHERE sale_id = ? AND product_id = ? FOR UPDATE");
                 $item_stmt->execute([$sale_id, $product_id]);
                 $sale_item = $item_stmt->fetch();
 
@@ -578,18 +583,16 @@ try {
                 $item_return_value_ht = round($qty_to_return * $sale_item['unit_price'] * $discount_ratio, 2);
                 $item_return_value_ttc = round($item_return_value_ht * (1 + $effective_tax_rate), 2);
                 $total_return_amount += $item_return_value_ttc;
-                $update_item_stmt = $pdo->prepare("UPDATE sale_items SET returned_qty = returned_qty + ? WHERE id = ?");
                 $update_item_stmt->execute([$qty_to_return, $sale_item['id']]);
 
                 // Increase stock
-                $pdo->prepare("UPDATE products SET stock_qty = stock_qty + ? WHERE id = ?")->execute([$qty_to_return, $product_id]);
+                $stock_upd_stmt->execute([$qty_to_return, $product_id]);
                 
                 // Retrieve the most recent batch type for this product to keep fiscal nature
                 $purchase_type = $purchase_types[$product_id] ?? 'BA';
 
                 // Create stock batch for returned items
-                $pdo->prepare("INSERT INTO stock_batches (product_id, purchase_type, initial_qty, remaining_qty, purchase_price) VALUES (?, ?, ?, ?, ?)")
-                    ->execute([$product_id, $purchase_type, $qty_to_return, $qty_to_return, $sale_item['cost_price']]);
+                $batch_ins_stmt->execute([$product_id, $purchase_type, $qty_to_return, $qty_to_return, $sale_item['cost_price']]);
 
                 $return_items[] = [
                     'product_id' => $product_id,
@@ -667,21 +670,29 @@ try {
             $customer_id = $_GET['customer_id'] ?? null;
             $query = "
                 SELECT s.*, c.name as customer_name, u.name as user_name,
-                       (SELECT COUNT(*) FROM sale_returns WHERE sale_id = s.id) as has_returns,
-                       (
-                           SELECT COALESCE(
-                               CASE
-                                   WHEN s.subtotal > 0 THEN (SUM((si.qty - si.returned_qty) * si.unit_price) * (1 - (s.discount / s.subtotal))) - SUM((si.qty - si.returned_qty) * si.cost_price)
-                                   ELSE -SUM((si.qty - si.returned_qty) * si.cost_price)
-                               END,
-                               0
-                           )
-                           FROM sale_items si
-                           WHERE si.sale_id = s.id
+                       COALESCE(sr.returns_count, 0) as has_returns,
+                       COALESCE(
+                           CASE
+                               WHEN s.subtotal > 0 THEN (si_agg.total_revenue * (1 - (s.discount / s.subtotal))) - si_agg.total_cost
+                               ELSE -si_agg.total_cost
+                           END,
+                           0
                        ) as profit
                 FROM sales s
                 LEFT JOIN customers c ON s.customer_id = c.id
                 LEFT JOIN users u ON s.user_id = u.id
+                LEFT JOIN (
+                    SELECT sale_id, COUNT(*) as returns_count
+                    FROM sale_returns
+                    GROUP BY sale_id
+                ) sr ON s.id = sr.sale_id
+                LEFT JOIN (
+                    SELECT sale_id,
+                           SUM((qty - returned_qty) * unit_price) as total_revenue,
+                           SUM((qty - returned_qty) * cost_price) as total_cost
+                    FROM sale_items
+                    GROUP BY sale_id
+                ) si_agg ON s.id = si_agg.sale_id
             ";
             
             if ($customer_id) {
@@ -695,7 +706,7 @@ try {
                 $stmt->execute();
             }
             
-            $sales = $stmt->fetchAll();
+            $sales = $stmt->fetchAll(PDO::FETCH_ASSOC);
             echo json_encode(['data' => $sales]);
             break;
 
