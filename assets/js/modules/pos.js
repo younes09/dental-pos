@@ -907,6 +907,16 @@ const posModule = {
 
     renderCart() {
         const cartList = document.getElementById('pos-cart-items');
+        const isEmpty = this.cart.length === 0;
+
+        const btnCheckout = document.getElementById('btn-checkout');
+        const btnClearCart = document.getElementById('btn-clear-cart');
+        const btnHoldSale = document.getElementById('btn-hold-sale');
+
+        if (btnCheckout) btnCheckout.disabled = isEmpty;
+        if (btnClearCart) btnClearCart.disabled = isEmpty;
+        if (btnHoldSale) btnHoldSale.disabled = isEmpty;
+
         if (this.cart.length === 0) {
             cartList.innerHTML = `
                 <div class="text-center py-5 text-muted">
