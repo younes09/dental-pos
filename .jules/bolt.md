@@ -1,0 +1,3 @@
+## 2024-05-24 - Correlated Subqueries in SELECT Clause (N+1 Anti-Pattern)
+**Learning:** Found a specific N+1 performance bottleneck where correlated subqueries within the `SELECT` clause (e.g., `(SELECT ... WHERE customer_id = c.id)`) degrade performance linearly as data grows.
+**Action:** Instead of inline subqueries per row, refactor these by aggregating data in a derived table first, and then joining it to the main query using `LEFT JOIN`. Apply conditional aggregation (`SUM(CASE WHEN ...)`) inside the derived table for specific column constraints to avoid filtering out all aggregated data.
