@@ -40,11 +40,17 @@ try {
             break;
 
         case 'customers':
+            // Fix N+1 Query: Used LEFT JOIN on derived table for total orders and total spent
             $stmt = $pdo->prepare("
                 SELECT name, phone, email, balance, loyalty_points, 
-                (SELECT COUNT(*) FROM sales WHERE customer_id = customers.id) as total_orders,
-                (SELECT SUM(total) FROM sales WHERE customer_id = customers.id) as total_spent
+                       COALESCE(s.total_orders, 0) as total_orders,
+                       COALESCE(s.total_spent, 0) as total_spent
                 FROM customers
+                LEFT JOIN (
+                    SELECT customer_id, COUNT(*) as total_orders, SUM(total) as total_spent
+                    FROM sales
+                    GROUP BY customer_id
+                ) s ON customers.id = s.customer_id
                 ORDER BY total_spent DESC
             ");
             $stmt->execute();
@@ -52,11 +58,17 @@ try {
             break;
 
         case 'suppliers':
+            // Fix N+1 Query: Used LEFT JOIN on derived table for total orders and total purchases
             $stmt = $pdo->prepare("
                 SELECT name, company, email, 
-                (SELECT COUNT(*) FROM purchase_orders WHERE supplier_id = suppliers.id) as total_orders,
-                (SELECT SUM(total) FROM purchase_orders WHERE supplier_id = suppliers.id) as total_purchases
+                       COALESCE(po.total_orders, 0) as total_orders,
+                       COALESCE(po.total_purchases, 0) as total_purchases
                 FROM suppliers
+                LEFT JOIN (
+                    SELECT supplier_id, COUNT(*) as total_orders, SUM(total) as total_purchases
+                    FROM purchase_orders
+                    GROUP BY supplier_id
+                ) po ON suppliers.id = po.supplier_id
                 ORDER BY total_purchases DESC
             ");
             $stmt->execute();
