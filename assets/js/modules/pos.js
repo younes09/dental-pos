@@ -914,8 +914,24 @@ const posModule = {
                     <p>${App.t('pos.cart_empty') || 'Cart is empty'}</p>
                 </div>
             `;
+            const btnCheckout = document.getElementById('btn-checkout');
+            const btnClearCart = document.getElementById('btn-clear-cart');
+            const btnHoldSale = document.getElementById('btn-hold-sale');
+
+            if (btnCheckout) btnCheckout.disabled = true;
+            if (btnClearCart) btnClearCart.disabled = true;
+            if (btnHoldSale) btnHoldSale.disabled = true;
+
             return;
         }
+
+        const btnCheckout = document.getElementById('btn-checkout');
+        const btnClearCart = document.getElementById('btn-clear-cart');
+        const btnHoldSale = document.getElementById('btn-hold-sale');
+
+        if (btnCheckout) btnCheckout.disabled = false;
+        if (btnClearCart) btnClearCart.disabled = false;
+        if (btnHoldSale) btnHoldSale.disabled = false;
 
         cartList.innerHTML = this.cart.map(item => `
             <div class="cart-item d-flex align-items-center mb-3 p-2 bg-light rounded-4">
