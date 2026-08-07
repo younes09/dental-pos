@@ -1,0 +1,3 @@
+## 2025-02-12 - Avoid DATE() in WHERE clauses for SARGability
+**Learning:** Using functions like `DATE()` on indexed database columns (e.g., `date` or `created_at`) in `WHERE` clauses (like `DATE(date) BETWEEN ? AND ?`) prevents MySQL from using indexes (SARGability), forcing full table scans and severely degrading performance.
+**Action:** Replace function-wrapped column queries with exact range queries like `date >= ? AND date <= ?`, and explicitly define boundary limits at the variable level (e.g., appending ' 00:00:00' to the start date and ' 23:59:59' to the end date in PHP before executing the query).
