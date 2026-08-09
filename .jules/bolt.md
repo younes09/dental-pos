@@ -1,0 +1,3 @@
+## 2024-08-09 - N+1 Issue in Derived Selects
+**Learning:** Using correlated subqueries within a SELECT clause (like `(SELECT MAX(date) FROM sales WHERE customer_id = c.id)`) forces the database to execute the subquery for every row returned, leading to an N+1 performance bottleneck that scales poorly with database size.
+**Action:** Replace correlated subqueries with a `LEFT JOIN` on a derived table that pre-aggregates the necessary data (e.g., `LEFT JOIN (SELECT customer_id, MAX(date) FROM sales GROUP BY customer_id) s ON s.customer_id = c.id`), which allows the database to resolve the data in a single pass.
