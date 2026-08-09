@@ -914,6 +914,12 @@ const posModule = {
                     <p>${App.t('pos.cart_empty') || 'Cart is empty'}</p>
                 </div>
             `;
+
+            ['btn-clear-cart', 'btn-checkout', 'btn-hold-sale'].forEach(id => {
+                const btn = document.getElementById(id);
+                if (btn) btn.disabled = true;
+            });
+
             return;
         }
 
@@ -938,6 +944,11 @@ const posModule = {
                 </button>
             </div>
         `).join('');
+
+        ['btn-clear-cart', 'btn-checkout', 'btn-hold-sale'].forEach(id => {
+            const btn = document.getElementById(id);
+            if (btn) btn.disabled = false;
+        });
     },
 
     calculateTotals() {
