@@ -940,7 +940,16 @@ const posModule = {
         `).join('');
     },
 
+    updateActionButtonsState() {
+        const isEmpty = this.cart.length === 0;
+        ['btn-checkout', 'btn-clear-cart', 'btn-hold-sale'].forEach(id => {
+            const btn = document.getElementById(id);
+            if (btn) btn.disabled = isEmpty;
+        });
+    },
+
     calculateTotals() {
+        this.updateActionButtonsState();
         const subtotal = this.cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
 
         // Manual Discount
