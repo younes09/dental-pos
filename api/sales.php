@@ -665,23 +665,32 @@ try {
                 throw new Exception('Only Admins and Cashiers can view sales history.');
             }
             $customer_id = $_GET['customer_id'] ?? null;
+            // ⚡ Bolt: Removed N+1 correlated subqueries in SELECT and replaced with derived LEFT JOINs for performance
             $query = "
                 SELECT s.*, c.name as customer_name, u.name as user_name,
-                       (SELECT COUNT(*) FROM sale_returns WHERE sale_id = s.id) as has_returns,
-                       (
-                           SELECT COALESCE(
-                               CASE
-                                   WHEN s.subtotal > 0 THEN (SUM((si.qty - si.returned_qty) * si.unit_price) * (1 - (s.discount / s.subtotal))) - SUM((si.qty - si.returned_qty) * si.cost_price)
-                                   ELSE -SUM((si.qty - si.returned_qty) * si.cost_price)
-                               END,
-                               0
-                           )
-                           FROM sale_items si
-                           WHERE si.sale_id = s.id
+                       COALESCE(sr.has_returns, 0) as has_returns,
+                       COALESCE(
+                           CASE
+                               WHEN s.subtotal > 0 THEN (si.net_revenue * (1 - (s.discount / s.subtotal))) - si.net_cogs
+                               ELSE -si.net_cogs
+                           END,
+                           0
                        ) as profit
                 FROM sales s
                 LEFT JOIN customers c ON s.customer_id = c.id
                 LEFT JOIN users u ON s.user_id = u.id
+                LEFT JOIN (
+                    SELECT sale_id, COUNT(*) as has_returns
+                    FROM sale_returns
+                    GROUP BY sale_id
+                ) sr ON sr.sale_id = s.id
+                LEFT JOIN (
+                    SELECT sale_id,
+                           SUM((qty - returned_qty) * unit_price) as net_revenue,
+                           SUM((qty - returned_qty) * cost_price) as net_cogs
+                    FROM sale_items
+                    GROUP BY sale_id
+                ) si ON si.sale_id = s.id
             ";
             
             if ($customer_id) {
