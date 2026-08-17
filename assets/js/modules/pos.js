@@ -907,6 +907,14 @@ const posModule = {
 
     renderCart() {
         const cartList = document.getElementById('pos-cart-items');
+
+        // Update button states
+        const hasItems = this.cart.length > 0;
+        document.getElementById('btn-clear-cart').disabled = !hasItems;
+        document.getElementById('btn-checkout').disabled = !hasItems;
+        const btnHold = document.getElementById('btn-hold-sale');
+        if (btnHold) btnHold.disabled = !hasItems;
+
         if (this.cart.length === 0) {
             cartList.innerHTML = `
                 <div class="text-center py-5 text-muted">
@@ -1184,8 +1192,9 @@ const posModule = {
                 }
             }
         } finally {
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-check-circle me-2"></i>Complete Sale';
+            btn.disabled = this.cart.length === 0;
+            // Preserve i18n span when restoring button text
+            btn.innerHTML = `<i class="fas fa-check-circle me-2"></i><span data-i18n="pos.btn.complete">${App.t('pos.btn.complete') || 'COMPLETE SALE'}</span>`;
         }
     },
 
