@@ -389,3 +389,5 @@ CREATE TABLE notifications (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+-- Indexes for Performance
+CREATE INDEX idx_sales_date_status ON sales (date, status);
