@@ -907,7 +907,18 @@ const posModule = {
 
     renderCart() {
         const cartList = document.getElementById('pos-cart-items');
-        if (this.cart.length === 0) {
+
+        // Disable checkout, clear, and hold buttons if cart is empty
+        const isCartEmpty = this.cart.length === 0;
+        const btnCheckout = document.getElementById('btn-checkout');
+        const btnClearCart = document.getElementById('btn-clear-cart');
+        const btnHoldSale = document.getElementById('btn-hold-sale');
+
+        if (btnCheckout) btnCheckout.disabled = isCartEmpty;
+        if (btnClearCart) btnClearCart.disabled = isCartEmpty;
+        if (btnHoldSale) btnHoldSale.disabled = isCartEmpty;
+
+        if (isCartEmpty) {
             cartList.innerHTML = `
                 <div class="text-center py-5 text-muted">
                     <i class="fas fa-basket-shopping mb-3 opacity-25" style="font-size: calc(1.575rem + 3.9vw);"></i>
@@ -1120,7 +1131,7 @@ const posModule = {
         const btn = document.getElementById('btn-checkout');
         if (btn.disabled) return;
         btn.disabled = true;
-        btn.innerHTML = `<i class="fas fa-spinner fa-spin me-2"></i>${App.t('pos.msg.processing') || 'Processing...'}`;
+        btn.innerHTML = `<i class="fas fa-spinner fa-spin me-2"></i><span data-i18n="pos.msg.processing">${App.t('pos.msg.processing') || 'Processing...'}</span>`;
 
         try {
             const totals = this.calculateTotals();
@@ -1184,8 +1195,8 @@ const posModule = {
                 }
             }
         } finally {
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-check-circle me-2"></i>Complete Sale';
+            btn.disabled = this.cart.length === 0;
+            btn.innerHTML = `<i class="fas fa-check-circle me-2"></i><span data-i18n="pos.btn.complete">${App.t('pos.btn.complete') || 'COMPLETE SALE'}</span>`;
         }
     },
 

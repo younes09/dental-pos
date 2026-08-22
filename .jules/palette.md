@@ -1,0 +1,3 @@
+## 2024-08-22 - Disabling action buttons on empty states
+**Learning:** Users can encounter a poor UX or bugs if action buttons (like checkout or clear cart) are clickable while a collection/cart is empty. Additionally, dynamic updates to these buttons using `innerHTML` can unintentionally destroy client-side i18n translation spans if not properly preserved.
+**Action:** Always default empty-state action buttons to disabled in the HTML template. Dynamically enable/disable them based on collection length (`array.length === 0`). When toggling button text (e.g., to loading states), explicitly wrap strings in `<span data-i18n="...">` to maintain translations.
