@@ -1,0 +1,3 @@
+## 2024-08-23 - Optimizing Derived Table LEFT JOIN Queries
+**Learning:** In MySQL, performing a `LEFT JOIN` on a derived table (e.g., `sale_items`) that aggregates the entire table without filtering causes a full table scan, severely impacting performance for large datasets. This is because the aggregation computes values for every single record before applying the outer query's filters.
+**Action:** When optimizing SQL queries involving `LEFT JOIN`s on aggregated derived tables, ensure the derived table includes its own filtering `WHERE` clause (mirroring the outer query) and `JOIN`s to the relevant outer tables (e.g., `sales`) to prevent full table scans and eliminate severe performance regressions.
