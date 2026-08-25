@@ -1,0 +1,3 @@
+## 2024-11-20 - Derived Tables for N+1 Queries
+**Learning:** Correlated subqueries in `SELECT` clauses (e.g., fetching a customer's total purchases and last visit directly inline) cause severe N+1 performance bottlenecks because they run the subqueries for every row returned by the outer query. This resulted in execution times taking noticeably longer as data scaled.
+**Action:** Always refactor such queries to use `LEFT JOIN`s on derived tables grouped by the foreign key (e.g., `LEFT JOIN (SELECT customer_id, MAX(date), SUM(total) FROM sales GROUP BY customer_id) s ON c.id = s.customer_id`). Use `COALESCE` to handle cases where there are no related records (mapping `NULL` to `0`).
