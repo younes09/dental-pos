@@ -906,6 +906,14 @@ const posModule = {
     },
 
     renderCart() {
+        const isEmpty = this.cart.length === 0;
+        const btnClear = document.getElementById('btn-clear-cart');
+        const btnCheckout = document.getElementById('btn-checkout');
+        const btnHold = document.getElementById('btn-hold-sale');
+        if (btnClear) btnClear.disabled = isEmpty;
+        if (btnCheckout) btnCheckout.disabled = isEmpty;
+        if (btnHold) btnHold.disabled = isEmpty;
+
         const cartList = document.getElementById('pos-cart-items');
         if (this.cart.length === 0) {
             cartList.innerHTML = `
