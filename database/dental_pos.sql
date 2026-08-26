@@ -210,6 +210,8 @@ CREATE TABLE sales (
     points_earned INT NOT NULL DEFAULT 0,
     points_redeemed INT NOT NULL DEFAULT 0,
     invoice_number VARCHAR(50) DEFAULT NULL,
+    -- Optimization: Added composite index to speed up dashboard queries filtering by date and status
+    INDEX idx_sales_date_status (date, status),
     FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE SET NULL,
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (cash_session_id) REFERENCES cash_sessions(id) ON DELETE SET NULL
