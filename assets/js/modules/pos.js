@@ -119,7 +119,18 @@ const posModule = {
         document.getElementById('pos-category-filter').onchange = (e) => this.filterProducts(document.getElementById('pos-search').value, e.target.value);
 
         // Cart controls
-        document.getElementById('btn-clear-cart').onclick = () => this.clearCart();
+        document.getElementById('btn-clear-cart').onclick = async () => {
+            if (this.cart.length > 0) {
+                const confirmed = await App.confirm(
+                    App.t('pos.msg.clear_confirm_title') || 'Clear Cart?',
+                    App.t('pos.msg.clear_confirm_text') || 'Are you sure you want to remove all items from the current order?',
+                    'warning'
+                );
+                if (confirmed) {
+                    this.clearCart();
+                }
+            }
+        };
         document.getElementById('cart-discount').oninput = () => { this.fixedDiscountAmount = null; this.calculateTotals(); };
         document.getElementById('cart-points-redeem').oninput = () => this.calculateTotals();
         document.getElementById('cart-paid-amount').oninput = () => this.calculateTotals();
@@ -907,6 +918,16 @@ const posModule = {
 
     renderCart() {
         const cartList = document.getElementById('pos-cart-items');
+
+        // F4.1: Update button states based on cart contents
+        const isCartEmpty = this.cart.length === 0;
+        const btnClear = document.getElementById('btn-clear-cart');
+        const btnCheckout = document.getElementById('btn-checkout');
+        const btnHold = document.getElementById('btn-hold-sale');
+
+        if (btnClear) btnClear.disabled = isCartEmpty;
+        if (btnCheckout) btnCheckout.disabled = isCartEmpty;
+        if (btnHold) btnHold.disabled = isCartEmpty;
         if (this.cart.length === 0) {
             cartList.innerHTML = `
                 <div class="text-center py-5 text-muted">
