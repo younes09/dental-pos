@@ -1,0 +1,3 @@
+## 2024-05-24 - Automated aria-label mapping for translated titles
+**Learning:** Developers often forget to add `aria-label` to icon-only buttons, relying solely on `title` attributes for tooltips, which screen readers may not reliably read depending on configuration. Even when `aria-label` is added, keeping it synced with dynamic, translated `title` attributes requires extra boilerplate.
+**Action:** The i18n translation function (`App.translate`) was updated to automatically set the `aria-label` attribute whenever a translation target is set to `title`. This ensures all icon-only buttons using localized tooltips are automatically accessible without requiring developers to explicitly define and translate an `aria-label` separately.
