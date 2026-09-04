@@ -10,7 +10,7 @@
                             <i class="fas fa-search"></i>
                             <input type="text" id="pos-search" class="form-control"
                                 placeholder="Search by name, barcode or category..." data-i18n="pos.search_placeholder" data-i18n-target="placeholder">
-                            <button type="button" id="btn-clear-pos-search" class="btn btn-link text-muted position-absolute end-0 top-50 translate-middle-y border-0 p-0 me-3" style="display: none; z-index: 5; text-decoration: none;">
+                            <button type="button" id="btn-clear-pos-search" class="btn btn-link text-muted position-absolute end-0 top-50 translate-middle-y border-0 p-0 me-3" style="display: none; z-index: 5; text-decoration: none;" aria-label="Clear Search">
                                 <i class="fas fa-times" style=" left: -15px; " title="vider le champ de recherche"></i>
                             </button>
                         </div>
@@ -22,10 +22,10 @@
                     </div>
                     <div class="col-md-3 d-flex justify-content-end">
                         <div class="btn-group border rounded-pill p-1 bg-light shadow-sm" role="group" aria-label="View Toggler">
-                            <button type="button" class="btn btn-sm rounded-pill px-3 active" id="btn-view-grid" data-toggle="tooltip" data-placement="top" title="Grid View" data-i18n="pos.grid_view" data-i18n-target="title">
+                            <button type="button" class="btn btn-sm rounded-pill px-3 active" id="btn-view-grid" aria-label="Grid View" data-toggle="tooltip" data-placement="top" title="Grid View" data-i18n="pos.grid_view" data-i18n-target="title">
                                 <i class="fas fa-th"></i>
                             </button>
-                            <button type="button" class="btn btn-sm rounded-pill px-3" id="btn-view-list" data-toggle="tooltip" data-placement="top" title="List View" data-i18n="pos.list_view" data-i18n-target="title">
+                            <button type="button" class="btn btn-sm rounded-pill px-3" id="btn-view-list" aria-label="List View" data-toggle="tooltip" data-placement="top" title="List View" data-i18n="pos.list_view" data-i18n-target="title">
                                 <i class="fas fa-list"></i>
                             </button>
                         </div>
@@ -193,18 +193,18 @@
 
                     <div class="row g-2 mt-2">
                         <div class="col-4">
-                            <button class="btn btn-light w-100 py-2 px-1" id="btn-hold-sale" data-toggle="tooltip" data-placement="top" title="Hold Sale" data-i18n="pos.btn.hold" data-i18n-target="title">
+                            <button class="btn btn-light w-100 py-2 px-1" id="btn-hold-sale" aria-label="Hold Sale" data-toggle="tooltip" data-placement="top" title="Hold Sale" data-i18n="pos.btn.hold" data-i18n-target="title">
                                 <i class="fas fa-pause"></i>
                             </button>
                         </div>
                         <div class="col-4">
-                            <button class="btn btn-light w-100 py-2 px-1" id="btn-recent-sales" data-bs-toggle="modal"
+                            <button class="btn btn-light w-100 py-2 px-1" id="btn-recent-sales" aria-label="Recent Sales" data-bs-toggle="modal"
                                 data-bs-target="#posHeldSalesModal" data-toggle="tooltip" data-placement="top" title="Recent" data-i18n="pos.btn.recent" data-i18n-target="title">
                                 <i class="fas fa-receipt"></i>
                             </button>
                         </div>
                         <div class="col-4">
-                            <button class="btn btn-light w-100 py-2 px-1" id="btn-load-quote" data-bs-toggle="modal"
+                            <button class="btn btn-light w-100 py-2 px-1" id="btn-load-quote" aria-label="Load Quotation" data-bs-toggle="modal"
                                 data-bs-target="#posQuotationsModal" data-toggle="tooltip" data-placement="top" title="Load Quote" data-i18n="pos.btn.load_quote" data-i18n-target="title">
                                 <i class="fas fa-file-invoice"></i>
                             </button>
@@ -222,7 +222,7 @@
         <div class="modal-content border-0 rounded-4">
             <div class="modal-header border-0 p-4">
                 <h5 class="modal-title fw-bold" data-i18n="pos.modal.customer.title">Select Customer</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-4 pt-0">
                 <p class="text-muted small" data-i18n="pos.modal.customer.desc">Search registered customers or leave empty for walking customer.</p>
@@ -259,7 +259,7 @@
         <div class="modal-content border-0 rounded-4">
             <div class="modal-header border-0 p-4">
                 <h5 class="modal-title fw-bold" data-i18n="pos.modal.held.title">Held Sales</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-4 pt-0">
                 <p class="text-muted small" data-i18n="pos.modal.held.desc">Resume or delete previously held sales.</p>
@@ -280,7 +280,7 @@
         <div class="modal-content border-0 rounded-4">
             <div class="modal-header border-0 p-4 pb-0">
                 <h5 class="modal-title fw-bold text-teal" data-i18n="pos.modal.quick.title">Quick Add Customer</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-4">
                 <form id="pos-quick-customer-form">
@@ -323,7 +323,7 @@
         <div class="modal-content border-0 rounded-4">
             <div class="modal-header border-0 p-4">
                 <h5 class="modal-title fw-bold" data-i18n="pos.modal.quote.title">Load Quotation</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-4 pt-0">
                 <p class="text-muted small" data-i18n="pos.modal.quote.desc">Select a pending quotation to load into the cart.</p>
@@ -359,7 +359,7 @@
                         <div class="d-flex gap-2 flex-wrap mt-1" id="pdm-badges"></div>
                     </div>
                 </div>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
             <div class="modal-body px-4 pb-2">
