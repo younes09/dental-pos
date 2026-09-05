@@ -667,21 +667,29 @@ try {
             $customer_id = $_GET['customer_id'] ?? null;
             $query = "
                 SELECT s.*, c.name as customer_name, u.name as user_name,
-                       (SELECT COUNT(*) FROM sale_returns WHERE sale_id = s.id) as has_returns,
-                       (
-                           SELECT COALESCE(
-                               CASE
-                                   WHEN s.subtotal > 0 THEN (SUM((si.qty - si.returned_qty) * si.unit_price) * (1 - (s.discount / s.subtotal))) - SUM((si.qty - si.returned_qty) * si.cost_price)
-                                   ELSE -SUM((si.qty - si.returned_qty) * si.cost_price)
-                               END,
-                               0
-                           )
-                           FROM sale_items si
-                           WHERE si.sale_id = s.id
+                       COALESCE(sr.has_returns, 0) as has_returns,
+                       COALESCE(
+                           CASE
+                               WHEN s.subtotal > 0 THEN (si.total_sale_price * (1 - (s.discount / s.subtotal))) - si.total_cost_price
+                               ELSE -si.total_cost_price
+                           END,
+                           0
                        ) as profit
                 FROM sales s
                 LEFT JOIN customers c ON s.customer_id = c.id
                 LEFT JOIN users u ON s.user_id = u.id
+                LEFT JOIN (
+                    SELECT sale_id, COUNT(*) as has_returns
+                    FROM sale_returns
+                    GROUP BY sale_id
+                ) sr ON s.id = sr.sale_id
+                LEFT JOIN (
+                    SELECT sale_id,
+                           SUM((qty - returned_qty) * unit_price) as total_sale_price,
+                           SUM((qty - returned_qty) * cost_price) as total_cost_price
+                    FROM sale_items
+                    GROUP BY sale_id
+                ) si ON s.id = si.sale_id
             ";
             
             if ($customer_id) {
