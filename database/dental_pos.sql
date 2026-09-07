@@ -204,6 +204,7 @@ CREATE TABLE sales (
     total DECIMAL(10, 2) NOT NULL,
     paid_amount DECIMAL(10, 2) DEFAULT 0.00,
     payment_status ENUM('Unpaid', 'Partial', 'Paid') DEFAULT 'Paid',
+    paid_at TIMESTAMP NULL DEFAULT NULL,
     payment_method ENUM('Cash', 'Card', 'Insurance') DEFAULT 'Cash',
     invoice_type ENUM('BV', 'BL') DEFAULT 'BV',
     status ENUM('Completed', 'Hold', 'Cancelled') DEFAULT 'Completed',
@@ -373,6 +374,21 @@ CREATE TABLE IF NOT EXISTS customer_payments (
     date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     user_id INT,
     FOREIGN KEY (customer_id) REFERENCES customers(id),
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+-- Sale Payments table (Tracks all payments and settlements per sale voucher)
+CREATE TABLE IF NOT EXISTS sale_payments (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    sale_id INT NOT NULL,
+    customer_payment_id INT NULL,
+    amount DECIMAL(10, 2) NOT NULL,
+    payment_method ENUM('Cash', 'Card', 'Bank Transfer', 'Cheque', 'Insurance') DEFAULT 'Cash',
+    notes TEXT,
+    user_id INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (sale_id) REFERENCES sales(id) ON DELETE CASCADE,
+    FOREIGN KEY (customer_payment_id) REFERENCES customer_payments(id) ON DELETE SET NULL,
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 

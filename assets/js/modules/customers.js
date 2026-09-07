@@ -208,13 +208,16 @@ const customersModule = {
         }
     },
 
+    currentHistoryCustomerId: null,
+
     async viewHistory(id) {
+        this.currentHistoryCustomerId = id;
         const customer = this.table.rows().data().toArray().find(c => c.id == id);
         if (!customer) return;
 
         document.getElementById('historyCustomerName').textContent = customer.name;
         const historyBody = document.getElementById('historyBody');
-        historyBody.innerHTML = `<tr><td colspan="5" class="text-center"><div class="spinner-border spinner-border-sm text-teal"></div> ${App.t('customers.js.loading') || 'Loading...'}</td></tr>`;
+        historyBody.innerHTML = `<tr><td colspan="7" class="text-center py-4"><div class="spinner-border spinner-border-sm text-teal"></div> ${App.t('customers.js.loading') || 'Loading...'}</td></tr>`;
 
         const modal = new bootstrap.Modal(document.getElementById('historyModal'));
         modal.show();
@@ -223,32 +226,118 @@ const customersModule = {
             const result = await App.api(`sales.php?action=history&customer_id=${id}`);
             if (result && result.data) {
                 if (result.data.length === 0) {
-                    historyBody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">${App.t('customers.js.no_history') || 'No purchase history found'}</td></tr>`;
+                    historyBody.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-4">${App.t('customers.js.no_history') || 'No purchase history found'}</td></tr>`;
                 } else {
                     historyBody.innerHTML = result.data.map(sale => {
                         const isCancelled = sale.status === 'Cancelled';
-                        const badgeClass = isCancelled ? 'bg-danger-subtle text-danger' : 'bg-success-subtle text-success';
-                        const statusText = isCancelled ? (App.t('customers.js.cancelled') || 'Cancelled') : (App.t('customers.js.completed') || 'Completed');
                         const rowStyle = isCancelled ? 'style="text-decoration: line-through; opacity: 0.6;"' : '';
-                        
+                        const totalVal = parseFloat(sale.total) || 0;
+                        const paidVal = parseFloat(sale.paid_amount) || 0;
+                        const remainingVal = Math.max(0, totalVal - paidVal);
+                        const refCode = sale.invoice_number || ('#' + sale.id);
+
+                        let pStatus = sale.payment_status;
+                        if (!pStatus) {
+                            pStatus = (remainingVal <= 0.001) ? 'Paid' : (paidVal > 0 ? 'Partial' : 'Unpaid');
+                        }
+
+                        let statusBadgeHtml = '';
+                        if (isCancelled) {
+                            statusBadgeHtml = `<span class="badge bg-secondary-subtle text-secondary">${App.t('customers.js.cancelled') || 'Cancelled'}</span>`;
+                        } else if (pStatus === 'Paid') {
+                            let settledNote = '';
+                            if (sale.paid_at) {
+                                const d = new Date(sale.paid_at);
+                                const dFormatted = isNaN(d) ? sale.paid_at : d.toLocaleDateString();
+                                settledNote = `<div class="text-success small mt-1" style="font-size: 0.72rem;"><i class="fas fa-calendar-check me-1"></i>${App.t('customers.status.settled_on') || 'Settled:'} ${dFormatted}</div>`;
+                            }
+                            statusBadgeHtml = `<span class="badge bg-success-subtle text-success px-2 py-1"><i class="fas fa-check-circle me-1"></i>${App.t('customers.status.paid') || 'Paid'}</span>${settledNote}`;
+                        } else if (pStatus === 'Partial') {
+                            statusBadgeHtml = `<span class="badge bg-warning-subtle text-warning-emphasis px-2 py-1"><i class="fas fa-clock me-1"></i>${App.t('customers.status.partial') || 'Partial'}</span>`;
+                        } else {
+                            statusBadgeHtml = `<span class="badge bg-danger-subtle text-danger px-2 py-1"><i class="fas fa-exclamation-circle me-1"></i>${App.t('customers.status.unpaid') || 'Unpaid'}</span>`;
+                        }
+
+                        const remainingHtml = (remainingVal > 0 && !isCancelled)
+                            ? `<span class="text-danger fw-bold">${App.formatCurrency(remainingVal)}</span>`
+                            : `<span class="text-muted small">0.00</span>`;
+
+                        const settleBtnHtml = (!isCancelled && remainingVal > 0)
+                            ? `<button type="button" class="btn btn-sm btn-outline-teal px-2 py-1 ms-1" onclick="customersModule.openSettleDebt(${id}, ${sale.id}, ${remainingVal}, '${refCode}')" title="${App.t('customers.js.settle_this_voucher') || 'Settle this voucher'}">
+                                 <i class="fas fa-hand-holding-usd me-1"></i>${App.t('customers.js.action.settle') || 'Settle'}
+                               </button>`
+                            : '';
+
+                        const safeRef = refCode.replace(/'/g, "\\'");
                         return `
                             <tr ${rowStyle}>
                                 <td>${new Date(sale.date).toLocaleDateString()}</td>
-                                <td class="fw-medium">#${sale.id}</td>
-                                <td class="fw-bold">${App.formatCurrency(sale.total)}</td>
-                                <td><span class="badge bg-light text-dark border">${App.t(`customers.method.${sale.payment_method.toLowerCase().split(' ')[0]}`) || sale.payment_method}</span></td>
-                                <td><span class="badge ${badgeClass}">${statusText}</span></td>
+                                <td class="fw-semibold text-teal">${refCode}</td>
+                                <td class="fw-bold">${App.formatCurrency(totalVal)}</td>
+                                <td class="text-success fw-medium">${App.formatCurrency(paidVal)}</td>
+                                <td>${remainingHtml}</td>
+                                <td>${statusBadgeHtml}</td>
+                                <td class="text-end text-nowrap">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary px-2 py-1" onclick="customersModule.viewSalePayments(${sale.id}, '${safeRef}', ${totalVal}, ${paidVal}, ${remainingVal})" title="${App.t('customers.js.view_payments') || 'Payment timeline'}">
+                                        <i class="fas fa-history me-1"></i>${App.t('customers.js.payments_btn') || 'Payments'}
+                                    </button>
+                                    ${settleBtnHtml}
+                                </td>
                             </tr>
                         `;
                     }).join('');
                 }
             }
         } catch (error) {
-            historyBody.innerHTML = `<tr><td colspan="5" class="text-center text-danger">${App.t('customers.js.history_fail') || 'Failed to load history'}</td></tr>`;
+            historyBody.innerHTML = `<tr><td colspan="7" class="text-center text-danger py-4">${App.t('customers.js.history_fail') || 'Failed to load history'}</td></tr>`;
         }
     },
 
-    async openSettleDebt(id) {
+    async viewSalePayments(saleId, invoiceNumber, total, paid, remaining) {
+        document.getElementById('salePaymentsInvoiceNumber').textContent = invoiceNumber;
+        document.getElementById('salePaymentsTotal').textContent = App.formatCurrency(total);
+        document.getElementById('salePaymentsPaid').textContent = App.formatCurrency(paid);
+        document.getElementById('salePaymentsRemaining').textContent = App.formatCurrency(remaining);
+
+        const body = document.getElementById('salePaymentsBody');
+        body.innerHTML = `<tr><td colspan="4" class="text-center py-3"><div class="spinner-border spinner-border-sm text-teal"></div> ${App.t('customers.js.loading') || 'Loading...'}</td></tr>`;
+
+        const modal = new bootstrap.Modal(document.getElementById('salePaymentsModal'));
+        modal.show();
+
+        try {
+            const result = await App.api(`sales.php?action=sale_payments&sale_id=${saleId}`);
+            if (result && result.data) {
+                if (result.data.length === 0) {
+                    body.innerHTML = `<tr><td colspan="4" class="text-center text-muted py-3">${App.t('customers.js.no_payments_logged') || 'No individual payment records found'}</td></tr>`;
+                } else {
+                    body.innerHTML = result.data.map(p => {
+                        const d = new Date(p.created_at);
+                        const dateStr = isNaN(d) ? p.created_at : d.toLocaleString();
+                        const noteText = p.notes ? `<div class="text-muted small">${p.notes}</div>` : '';
+                        const methodKey = p.payment_method ? p.payment_method.toLowerCase().split(' ')[0] : 'cash';
+                        const methodLabel = App.t(`customers.method.${methodKey}`) || p.payment_method;
+
+                        return `
+                            <tr>
+                                <td>
+                                    <div class="fw-medium">${dateStr}</div>
+                                    ${noteText}
+                                </td>
+                                <td class="fw-bold text-success">${App.formatCurrency(p.amount)}</td>
+                                <td><span class="badge bg-light text-dark border">${methodLabel}</span></td>
+                                <td class="small text-muted">${p.user_name || 'System'}</td>
+                            </tr>
+                        `;
+                    }).join('');
+                }
+            }
+        } catch (error) {
+            body.innerHTML = `<tr><td colspan="4" class="text-center text-danger py-3">${App.t('customers.js.payments_fail') || 'Failed to load payments'}</td></tr>`;
+        }
+    },
+
+    async openSettleDebt(id, saleId = null, saleRemaining = null, saleRef = '') {
         const customer = this.table.rows().data().toArray().find(c => c.id == id);
         if (!customer) return;
 
@@ -256,10 +345,28 @@ const customersModule = {
         document.getElementById('debt-customer-name').value = customer.name;
         document.getElementById('debt-current-balance').textContent = App.formatCurrency(customer.balance || 0);
 
+        const saleIdInput = document.getElementById('debt-sale-id');
+        if (saleIdInput) saleIdInput.value = saleId || '';
+
+        const saleAlert = document.getElementById('debt-sale-alert');
+        const saleAlertText = document.getElementById('debt-sale-alert-text');
         const amountInput = document.getElementById('debt-payment-amount');
-        amountInput.value = '';
-        amountInput.max = customer.balance || 0;
-        amountInput.dataset.max = customer.balance || 0;
+
+        if (saleId && saleRemaining !== null) {
+            if (saleAlert && saleAlertText) {
+                saleAlertText.textContent = `${App.t('customers.js.settling_specific_voucher') || 'Settling voucher:'} ${saleRef} (${App.t('customers.modaltable.remaining') || 'Remaining'}: ${App.formatCurrency(saleRemaining)})`;
+                saleAlert.classList.remove('d-none');
+            }
+            const defaultAmt = Math.min(saleRemaining, customer.balance || saleRemaining);
+            amountInput.value = defaultAmt.toFixed(2);
+            amountInput.max = defaultAmt;
+            amountInput.dataset.max = defaultAmt;
+        } else {
+            if (saleAlert) saleAlert.classList.add('d-none');
+            amountInput.value = '';
+            amountInput.max = customer.balance || 0;
+            amountInput.dataset.max = customer.balance || 0;
+        }
 
         // Load accounts for treasury integration
         const accountSelect = document.getElementById('debt-account-id');
@@ -279,8 +386,8 @@ const customersModule = {
         const amount = parseFloat(amountInput.value) || 0;
         const maxAmount = parseFloat(amountInput.dataset.max) || 0;
 
-        if (amount > maxAmount) {
-            App.toast('error', (App.t('customers.js.error_exceed') || `Payment cannot exceed the current debt of `) + App.formatCurrency(maxAmount));
+        if (amount > maxAmount + 0.001) {
+            App.toast('error', (App.t('customers.js.error_exceed') || `Payment cannot exceed the allowed amount of `) + App.formatCurrency(maxAmount));
             amountInput.classList.add('is-invalid');
             return;
         }
@@ -301,6 +408,11 @@ const customersModule = {
                 App.toast('success', result.success);
                 bootstrap.Modal.getInstance(document.getElementById('settleDebtModal')).hide();
                 this.table.ajax.reload();
+                
+                // If purchase history modal is currently active, reload its data too
+                if (this.currentHistoryCustomerId) {
+                    this.viewHistory(this.currentHistoryCustomerId);
+                }
             } else {
                 App.toast('error', result.error);
             }

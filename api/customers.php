@@ -113,6 +113,82 @@ try {
             $stmtUpdate = $pdo->prepare("UPDATE customers SET balance = balance - ? WHERE id = ?");
             $stmtUpdate->execute([$amount, $customer_id]);
 
+            // FIFO / Specific Sale Allocation of payment to unpaid/partial sales
+            $specific_sale_id = !empty($_POST['sale_id']) ? (int)$_POST['sale_id'] : null;
+            $remainingPayment = $amount;
+            
+            $salesToPay = [];
+            if ($specific_sale_id) {
+                $stmtSpec = $pdo->prepare("
+                    SELECT id, total, paid_amount, payment_status, date 
+                    FROM sales 
+                    WHERE id = ? AND customer_id = ? 
+                      AND (status != 'Cancelled' OR status IS NULL)
+                      AND (payment_status IN ('Unpaid', 'Partial') OR paid_amount < total)
+                    FOR UPDATE
+                ");
+                $stmtSpec->execute([$specific_sale_id, $customer_id]);
+                $specSale = $stmtSpec->fetch();
+                if ($specSale) {
+                    $salesToPay[] = $specSale;
+                }
+            }
+
+            // Retrieve other unpaid sales in chronological order (FIFO)
+            $specClause = $specific_sale_id ? " AND id != " . (int)$specific_sale_id : "";
+            $stmtSales = $pdo->prepare("
+                SELECT id, total, paid_amount, payment_status, date 
+                FROM sales 
+                WHERE customer_id = ? $specClause
+                  AND (status != 'Cancelled' OR status IS NULL)
+                  AND (payment_status IN ('Unpaid', 'Partial') OR paid_amount < total)
+                ORDER BY date ASC, id ASC
+                FOR UPDATE
+            ");
+            $stmtSales->execute([$customer_id]);
+            $otherSales = $stmtSales->fetchAll();
+            $salesToPay = array_merge($salesToPay, $otherSales);
+
+            $updateSaleStmt = $pdo->prepare("
+                UPDATE sales 
+                SET paid_amount = ?, 
+                    payment_status = ?, 
+                    paid_at = ? 
+                WHERE id = ?
+            ");
+
+            $insertSalePaymentStmt = $pdo->prepare("
+                INSERT INTO sale_payments (sale_id, customer_payment_id, amount, payment_method, notes, user_id, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, NOW())
+            ");
+
+            foreach ($salesToPay as $sale) {
+                if ($remainingPayment <= 0.0001) break;
+
+                $due = round((float)$sale['total'] - (float)$sale['paid_amount'], 2);
+                if ($due <= 0) continue;
+
+                $allocated = min($remainingPayment, $due);
+                $newPaidAmount = round((float)$sale['paid_amount'] + $allocated, 2);
+                $isFullyPaid = ($newPaidAmount >= (float)$sale['total']);
+                $newStatus = $isFullyPaid ? 'Paid' : 'Partial';
+                $newPaidAt = $isFullyPaid ? date('Y-m-d H:i:s') : null;
+
+                $updateSaleStmt->execute([$newPaidAmount, $newStatus, $newPaidAt, $sale['id']]);
+
+                $payNote = "Debt settlement" . ($notes ? " ($notes)" : "");
+                $insertSalePaymentStmt->execute([
+                    $sale['id'],
+                    $payment_id,
+                    $allocated,
+                    $method,
+                    $payNote,
+                    $user_id
+                ]);
+
+                $remainingPayment = round($remainingPayment - $allocated, 2);
+            }
+
             // F10.2: Vault Integration - Record Income if account is specified
             if ($account_id) {
                 $stmtTx = $pdo->prepare("INSERT INTO vault_transactions (account_id, type, amount, description, related_type, related_id, user_id) VALUES (?, 'Income', ?, ?, 'CustomerPayment', ?, ?)");

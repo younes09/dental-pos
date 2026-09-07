@@ -87,11 +87,14 @@
 
 <!-- Purchase History Modal -->
 <div class="modal fade" id="historyModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4">
             <div class="modal-header border-bottom-0 p-4">
-                <h5 class="modal-title fw-bold"><span data-i18n="customers.modal.history_title">Purchase History: </span><span id="historyCustomerName"
-                        class="text-teal"></span></h5>
+                <div>
+                    <h5 class="modal-title fw-bold"><span data-i18n="customers.modal.history_title">Purchase History: </span><span id="historyCustomerName"
+                            class="text-teal"></span></h5>
+                    <p class="text-muted small mb-0" data-i18n="customers.modal.history_subtitle">Track voucher payment status, settled dates, and debt details</p>
+                </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-4 pt-0">
@@ -102,8 +105,10 @@
                                 <th data-i18n="customers.modaltable.date">Date</th>
                                 <th data-i18n="customers.modaltable.ref">Ref #</th>
                                 <th data-i18n="customers.modaltable.total">Total</th>
-                                <th data-i18n="customers.modaltable.payment">Payment</th>
-                                <th data-i18n="customers.modaltable.status">Status</th>
+                                <th data-i18n="customers.modaltable.paid">Paid</th>
+                                <th data-i18n="customers.modaltable.remaining">Remaining</th>
+                                <th data-i18n="customers.modaltable.payment_status">Payment Status</th>
+                                <th class="text-end" data-i18n="customers.modaltable.actions">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="historyBody">
@@ -111,6 +116,56 @@
                         </tbody>
                     </table>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sale Payments Timeline Modal -->
+<div class="modal fade" id="salePaymentsModal" tabindex="-1" aria-hidden="true" style="z-index: 1065;">
+    <div class="modal-dialog modal-md modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-bottom-0 p-4">
+                <div>
+                    <h5 class="modal-title fw-bold" data-i18n="customers.modal.payments_title">Payment Timeline</h5>
+                    <p class="text-muted small mb-0"><span data-i18n="customers.modaltable.ref">Ref: </span><span id="salePaymentsInvoiceNumber" class="fw-bold text-teal"></span></p>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4 pt-0">
+                <div class="d-flex justify-content-between p-3 bg-light rounded-3 mb-3 text-center">
+                    <div>
+                        <span class="text-muted small d-block" data-i18n="customers.modaltable.total">Total</span>
+                        <strong id="salePaymentsTotal" class="fs-6">0.00 $</strong>
+                    </div>
+                    <div>
+                        <span class="text-muted small d-block" data-i18n="customers.modaltable.paid">Paid</span>
+                        <strong id="salePaymentsPaid" class="fs-6 text-success">0.00 $</strong>
+                    </div>
+                    <div>
+                        <span class="text-muted small d-block" data-i18n="customers.modaltable.remaining">Remaining</span>
+                        <strong id="salePaymentsRemaining" class="fs-6 text-danger">0.00 $</strong>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover align-middle mb-0">
+                        <thead class="table-light small">
+                            <tr>
+                                <th data-i18n="customers.payments.date">Date & Time</th>
+                                <th data-i18n="customers.payments.amount">Amount</th>
+                                <th data-i18n="customers.payments.method">Method</th>
+                                <th data-i18n="customers.payments.cashier">Cashier</th>
+                            </tr>
+                        </thead>
+                        <tbody id="salePaymentsBody">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer border-top-0 p-4 pt-0">
+                <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal" data-i18n="customers.modal.btn.close">Close</button>
             </div>
         </div>
     </div>
@@ -127,6 +182,10 @@
             <div class="modal-body p-4 pt-0">
                 <form id="settleDebtForm">
                     <input type="hidden" name="customer_id" id="debt-customer-id">
+                    <input type="hidden" name="sale_id" id="debt-sale-id" value="">
+                    <div id="debt-sale-alert" class="alert alert-info py-2 px-3 small rounded-3 d-none mb-3">
+                        <i class="fas fa-file-invoice me-1"></i><span id="debt-sale-alert-text"></span>
+                    </div>
                     <div class="mb-3">
                         <label class="form-label fw-semibold" data-i18n="customers.modal.customer">Customer</label>
                         <input type="text" id="debt-customer-name" class="form-control bg-light" readonly>

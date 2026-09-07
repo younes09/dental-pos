@@ -245,12 +245,13 @@ try {
             }
 
             $points_earned = ($earning_rate > 0) ? floor($total / $earning_rate) : 0;
+            $paid_at = ($payment_status === 'Paid') ? date('Y-m-d H:i:s') : null;
 
             // 1. Insert into sales table (F2.4: store points for reversal)
             $stmt = $pdo->prepare("
                 INSERT INTO sales 
-                (customer_id, user_id, cash_session_id, subtotal, discount, tax, total, paid_amount, payment_status, payment_method, invoice_type, points_earned, points_redeemed) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                (customer_id, user_id, cash_session_id, subtotal, discount, tax, total, paid_amount, payment_status, paid_at, payment_method, invoice_type, points_earned, points_redeemed) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ");
             $stmt->execute([
                 $customer_id,
@@ -262,12 +263,22 @@ try {
                 $total,
                 $paid_amount,
                 $payment_status,
+                $paid_at,
                 $payment_method,
                 $invoice_type,
                 $points_earned,
                 $points_redeemed
             ]);
             $sale_id = $pdo->lastInsertId();
+
+            // Record initial POS checkout payment
+            if ($paid_amount > 0) {
+                $sp_stmt = $pdo->prepare("
+                    INSERT INTO sale_payments (sale_id, customer_payment_id, amount, payment_method, notes, user_id, created_at)
+                    VALUES (?, NULL, ?, ?, 'Initial Checkout Payment', ?, NOW())
+                ");
+                $sp_stmt->execute([$sale_id, $paid_amount, $payment_method, $user_id]);
+            }
 
             // Generate and update invoice number
             $prefix = ($invoice_type === 'BL') ? 'BL' : 'FAC';
@@ -668,6 +679,8 @@ try {
             $query = "
                 SELECT s.*, c.name as customer_name, u.name as user_name,
                        (SELECT COUNT(*) FROM sale_returns WHERE sale_id = s.id) as has_returns,
+                       (SELECT COUNT(*) FROM sale_payments WHERE sale_id = s.id) as payment_count,
+                       (SELECT MAX(created_at) FROM sale_payments WHERE sale_id = s.id) as last_payment_date,
                        (
                            SELECT COALESCE(
                                CASE
@@ -697,6 +710,25 @@ try {
             
             $sales = $stmt->fetchAll();
             echo json_encode(['data' => $sales]);
+            break;
+
+        case 'sale_payments':
+            if (!in_array($_SESSION['user_role'] ?? '', ['Admin', 'Cashier'])) {
+                throw new Exception('Access denied.');
+            }
+            $sale_id = (int)($_GET['sale_id'] ?? 0);
+            if (!$sale_id) throw new Exception('Sale ID is required');
+
+            $stmt = $pdo->prepare("
+                SELECT sp.*, u.name as user_name
+                FROM sale_payments sp
+                LEFT JOIN users u ON sp.user_id = u.id
+                WHERE sp.sale_id = ?
+                ORDER BY sp.created_at ASC, sp.id ASC
+            ");
+            $stmt->execute([$sale_id]);
+            $payments = $stmt->fetchAll();
+            echo json_encode(['success' => true, 'data' => $payments]);
             break;
 
         case 'sale_details':
@@ -733,10 +765,22 @@ try {
             ");
             $stmt->execute([$id]);
             $items = $stmt->fetchAll();
+
+            // Get Sale Payments
+            $pay_stmt = $pdo->prepare("
+                SELECT sp.*, u.name as user_name
+                FROM sale_payments sp
+                LEFT JOIN users u ON sp.user_id = u.id
+                WHERE sp.sale_id = ?
+                ORDER BY sp.created_at ASC, sp.id ASC
+            ");
+            $pay_stmt->execute([$id]);
+            $payments = $pay_stmt->fetchAll();
             
             echo json_encode([
                 'sale' => $sale,
-                'items' => $items
+                'items' => $items,
+                'payments' => $payments
             ]);
             break;
 
