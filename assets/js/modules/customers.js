@@ -68,6 +68,50 @@ const customersModule = {
                 await this.submitSettleDebt();
             };
         }
+
+        const settleModalEl = document.getElementById('settleDebtModal');
+        if (settleModalEl) {
+            settleModalEl.addEventListener('hidden.bs.modal', () => {
+                if (this.returnToHistoryCustomerId) {
+                    const returnId = this.returnToHistoryCustomerId;
+                    this.returnToHistoryCustomerId = null;
+                    setTimeout(() => {
+                        this.viewHistory(returnId, true);
+                    }, 50);
+                } else {
+                    this.cleanupModalBackdrops();
+                }
+            });
+        }
+
+        const salePaymentsModalEl = document.getElementById('salePaymentsModal');
+        if (salePaymentsModalEl) {
+            salePaymentsModalEl.addEventListener('show.bs.modal', () => {
+                setTimeout(() => {
+                    const backdrops = document.querySelectorAll('.modal-backdrop');
+                    if (backdrops.length > 1) {
+                        backdrops[backdrops.length - 1].style.zIndex = '1060';
+                    }
+                }, 10);
+            });
+            salePaymentsModalEl.addEventListener('hidden.bs.modal', () => {
+                const historyModalEl = document.getElementById('historyModal');
+                if (historyModalEl && historyModalEl.classList.contains('show')) {
+                    document.body.classList.add('modal-open');
+                } else {
+                    this.cleanupModalBackdrops();
+                }
+            });
+        }
+
+        const historyModalEl = document.getElementById('historyModal');
+        if (historyModalEl) {
+            historyModalEl.addEventListener('hidden.bs.modal', () => {
+                if (!this.returnToHistoryCustomerId) {
+                    this.cleanupModalBackdrops();
+                }
+            });
+        }
     },
 
     initDataTable() {
@@ -161,7 +205,8 @@ const customersModule = {
 
             if (result.success) {
                 App.toast('success', result.success);
-                bootstrap.Modal.getInstance(document.getElementById('customerModal')).hide();
+                bootstrap.Modal.getOrCreateInstance(document.getElementById('customerModal')).hide();
+                this.cleanupModalBackdrops();
                 this.table.ajax.reload();
             } else {
                 App.toast('error', result.error);
@@ -184,7 +229,7 @@ const customersModule = {
         document.querySelector('[name="loyalty_points"]').value = customer.loyalty_points;
 
         document.getElementById('customerModalLabel').textContent = App.t('customers.js.edit_title') || 'Edit Customer Profile';
-        new bootstrap.Modal(document.getElementById('customerModal')).show();
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('customerModal')).show();
     },
 
     async deleteCustomer(id) {
@@ -209,8 +254,9 @@ const customersModule = {
     },
 
     currentHistoryCustomerId: null,
+    returnToHistoryCustomerId: null,
 
-    async viewHistory(id) {
+    async viewHistory(id, openModal = true) {
         this.currentHistoryCustomerId = id;
         const customer = this.table.rows().data().toArray().find(c => c.id == id);
         if (!customer) return;
@@ -219,8 +265,11 @@ const customersModule = {
         const historyBody = document.getElementById('historyBody');
         historyBody.innerHTML = `<tr><td colspan="7" class="text-center py-4"><div class="spinner-border spinner-border-sm text-teal"></div> ${App.t('customers.js.loading') || 'Loading...'}</td></tr>`;
 
-        const modal = new bootstrap.Modal(document.getElementById('historyModal'));
-        modal.show();
+        const historyModalEl = document.getElementById('historyModal');
+        const modal = bootstrap.Modal.getOrCreateInstance(historyModalEl);
+        if (openModal && !historyModalEl.classList.contains('show')) {
+            modal.show();
+        }
 
         try {
             const result = await App.api(`sales.php?action=history&customer_id=${id}`);
@@ -302,7 +351,8 @@ const customersModule = {
         const body = document.getElementById('salePaymentsBody');
         body.innerHTML = `<tr><td colspan="4" class="text-center py-3"><div class="spinner-border spinner-border-sm text-teal"></div> ${App.t('customers.js.loading') || 'Loading...'}</td></tr>`;
 
-        const modal = new bootstrap.Modal(document.getElementById('salePaymentsModal'));
+        const modalEl = document.getElementById('salePaymentsModal');
+        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
         modal.show();
 
         try {
@@ -341,6 +391,16 @@ const customersModule = {
         const customer = this.table.rows().data().toArray().find(c => c.id == id);
         if (!customer) return;
 
+        // Check if history modal is currently shown
+        const historyModalEl = document.getElementById('historyModal');
+        const isHistoryShown = historyModalEl && historyModalEl.classList.contains('show');
+        if (isHistoryShown) {
+            this.returnToHistoryCustomerId = id;
+            bootstrap.Modal.getOrCreateInstance(historyModalEl).hide();
+        } else {
+            this.returnToHistoryCustomerId = null;
+        }
+
         document.getElementById('debt-customer-id').value = customer.id;
         document.getElementById('debt-customer-name').value = customer.name;
         document.getElementById('debt-current-balance').textContent = App.formatCurrency(customer.balance || 0);
@@ -378,13 +438,28 @@ const customersModule = {
             }
         }
 
-        new bootstrap.Modal(document.getElementById('settleDebtModal')).show();
+        const settleModalEl = document.getElementById('settleDebtModal');
+        const showSettle = () => {
+            bootstrap.Modal.getOrCreateInstance(settleModalEl).show();
+        };
+
+        if (isHistoryShown) {
+            historyModalEl.addEventListener('hidden.bs.modal', showSettle, { once: true });
+        } else {
+            showSettle();
+        }
     },
 
     async submitSettleDebt() {
         const amountInput = document.getElementById('debt-payment-amount');
         const amount = parseFloat(amountInput.value) || 0;
         const maxAmount = parseFloat(amountInput.dataset.max) || 0;
+
+        if (amount <= 0) {
+            App.toast('error', App.t('customers.js.invalid_amount') || 'Please enter a valid payment amount.');
+            amountInput.classList.add('is-invalid');
+            return;
+        }
 
         if (amount > maxAmount + 0.001) {
             App.toast('error', (App.t('customers.js.error_exceed') || `Payment cannot exceed the allowed amount of `) + App.formatCurrency(maxAmount));
@@ -396,6 +471,8 @@ const customersModule = {
 
         const form = document.getElementById('settleDebtForm');
         const formData = new FormData(form);
+        const submitBtn = form.querySelector('button[type="submit"]');
+        if (submitBtn) submitBtn.disabled = true;
 
         try {
             const response = await fetch('api/customers.php?action=add_payment', {
@@ -406,19 +483,32 @@ const customersModule = {
 
             if (result.success) {
                 App.toast('success', result.success);
-                bootstrap.Modal.getInstance(document.getElementById('settleDebtModal')).hide();
+
+                const settleModalEl = document.getElementById('settleDebtModal');
+                const settleModal = bootstrap.Modal.getOrCreateInstance(settleModalEl);
+                settleModal.hide();
+
                 this.table.ajax.reload();
-                
-                // If purchase history modal is currently active, reload its data too
-                if (this.currentHistoryCustomerId) {
-                    this.viewHistory(this.currentHistoryCustomerId);
-                }
             } else {
                 App.toast('error', result.error);
             }
         } catch (error) {
             App.toast('error', (App.t('customers.js.error_settle_fail') || 'Failed to settle debt: ') + error.message);
+        } finally {
+            if (submitBtn) submitBtn.disabled = false;
         }
+    },
+
+    cleanupModalBackdrops() {
+        setTimeout(() => {
+            const openModals = document.querySelectorAll('.modal.show');
+            if (openModals.length === 0) {
+                document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+                document.body.classList.remove('modal-open');
+                document.body.style.removeProperty('padding-right');
+                document.body.style.removeProperty('overflow');
+            }
+        }, 350);
     }
 };
 
