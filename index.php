@@ -365,14 +365,15 @@ if (!isset($_SESSION['user_id'])) {
     <!-- Export Libraries -->
     <script src="assets/vendor/js/jspdf.umd.min.js"></script>
     <script src="assets/vendor/js/jspdf.plugin.autotable.min.js"></script>
+    <script src="assets/vendor/js/html2canvas.min.js"></script>
     <script src="assets/vendor/js/xlsx.full.min.js"></script>
     
     <!-- Translation Dictionary -->
     <!-- Fix #19: Use a static version string instead of time() to allow browser caching -->
-    <script src="assets/js/locales.js?v=1.0.0"></script>
+    <script src="assets/js/locales.js?v=1.0.1"></script>
     
     <!-- Core App Logic -->
-    <script src="assets/js/app.js?v=1.0.0"></script>
+    <script src="assets/js/app.js?v=1.0.1"></script>
     <script>
         // Inject user session data for RBAC
         App.state.user = {

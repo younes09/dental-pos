@@ -482,21 +482,16 @@ const App = {
         const scriptId = `script-${viewName}`;
         const moduleObjectName = `${viewName}Module`;
 
-        if (!document.getElementById(scriptId)) {
-            const script = document.createElement('script');
-            script.id = scriptId;
-            script.src = `assets/js/modules/${viewName}.js?v=${Date.now()}`;
-            script.onerror = () => {
-                console.warn(`No logic module found for ${viewName}`);
-            };
-            document.body.appendChild(script);
-        } else {
-            // If already loaded, re-initialize to refresh data
-            if (window[moduleObjectName] && typeof window[moduleObjectName].init === 'function') {
-                console.log(`Re-initializing module: ${moduleObjectName}`);
-                window[moduleObjectName].init();
-            }
-        }
+        const existingScript = document.getElementById(scriptId);
+        if (existingScript) existingScript.remove();
+
+        const script = document.createElement('script');
+        script.id = scriptId;
+        script.src = `assets/js/modules/${viewName}.js?v=${Date.now()}`;
+        script.onerror = () => {
+            console.warn(`No logic module found for ${viewName}`);
+        };
+        document.body.appendChild(script);
     },
 
     setLanguage(lang) {
@@ -563,6 +558,95 @@ const App = {
         const symbol = this.state.settings.currency || '$';
         const num = parseFloat(amount);
         return `${(isNaN(num) ? 0 : num).toFixed(2)} ${symbol}`;
+    },
+
+    numberToWordsFR(num) {
+        if (num === 0 || isNaN(num)) return 'Zéro';
+
+        const units = ['', 'Un', 'Deux', 'Trois', 'Quatre', 'Cinq', 'Six', 'Sept', 'Huit', 'Neuf'];
+        const teens = ['Dix', 'Onze', 'Douze', 'Treize', 'Quatorze', 'Quinze', 'Seize', 'Dix-Sept', 'Dix-Huit', 'Dix-Neuf'];
+        const tens = ['', 'Dix', 'Vingt', 'Trente', 'Quarante', 'Cinquante', 'Soixante', 'Soixante-Dix', 'Quatre-Vingt', 'Quatre-Vingt-Dix'];
+
+        function convertGroup(n) {
+            let words = '';
+            const h = Math.floor(n / 100);
+            const t = Math.floor((n % 100) / 10);
+            const u = n % 10;
+
+            if (h > 0) {
+                if (h === 1) {
+                    words += 'Cent ';
+                } else {
+                    words += units[h] + ' Cent ';
+                }
+            }
+
+            if (t > 0) {
+                if (t === 7) {
+                    if (u === 1) {
+                        words += 'Soixante et Onze';
+                    } else {
+                        words += 'Soixante-' + teens[u];
+                    }
+                } else if (t === 9) {
+                    words += 'Quatre-Vingt-' + teens[u];
+                } else if (t === 8) {
+                    if (u === 0) {
+                        words += 'Quatre-Vingts';
+                    } else {
+                        words += 'Quatre-Vingt-' + units[u];
+                    }
+                } else if (t === 1) {
+                    words += teens[u];
+                } else {
+                    words += tens[t];
+                    if (u > 0) {
+                        words += (u === 1) ? ' et Un' : '-' + units[u];
+                    }
+                }
+            } else if (u > 0) {
+                words += units[u];
+            }
+
+            return words.trim();
+        }
+
+        let words = '';
+        const mainPart = Math.floor(Math.abs(num));
+        const centsPart = Math.round((Math.abs(num) - mainPart) * 100);
+
+        const billions = Math.floor(mainPart / 1000000000);
+        const millions = Math.floor((mainPart % 1000000000) / 1000000);
+        const thousands = Math.floor((mainPart % 1000000) / 1000);
+        const remainder = mainPart % 1000;
+
+        if (billions > 0) {
+            words += convertGroup(billions) + ' Milliard' + (billions > 1 ? 's' : '') + ' ';
+        }
+        if (millions > 0) {
+            words += convertGroup(millions) + ' Million' + (millions > 1 ? 's' : '') + ' ';
+        }
+        if (thousands > 0) {
+            if (thousands === 1) {
+                words += 'Mille ';
+            } else {
+                words += convertGroup(thousands) + ' Mille ';
+            }
+        }
+        if (remainder > 0) {
+            words += convertGroup(remainder) + ' ';
+        }
+
+        words = words.trim();
+        if (!words) words = 'Zéro';
+
+        if (centsPart > 0) {
+            words += ' Dinars et ' + convertGroup(centsPart) + ' Centimes';
+        } else {
+            words += ' Dinars';
+        }
+
+        return words.replace(/\s+/g, ' ').trim();
     },
 
     formatDate(dateString) {

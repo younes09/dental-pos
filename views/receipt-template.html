@@ -454,9 +454,14 @@
 </head>
 
 <body>
-    <button class="print-btn no-print" onclick="window.print()">
-        <i class="fas fa-print"></i> <span data-i18n="receipt.btn_print">Imprimer la facture</span>
-    </button>
+    <div class="no-print" style="position: fixed; bottom: 30px; right: 30px; display: flex; gap: 10px; z-index: 1001;">
+        <button class="print-btn" style="position: static;" onclick="window.print()">
+            <i class="fas fa-print"></i> <span data-i18n="receipt.btn_print">Imprimer la facture</span>
+        </button>
+        <button class="print-btn" style="position: static; background: #00BFA6;" onclick="window.print()">
+            <i class="fas fa-file-pdf"></i> <span>Exporter PDF</span>
+        </button>
+    </div>
 
     <div class="receipt-container" id="receipt-content">
         <!-- Header Section -->
@@ -575,6 +580,7 @@
     </div>
 
     <script src="../assets/js/locales.js"></script>
+    <script src="../assets/vendor/js/html2canvas.min.js"></script>
     <script>
         function t(key, params = null) {
             // Priority 1: Use parent window's translation if available (reliable)
@@ -902,6 +908,43 @@
                 // Persistent storage for reload
                 sessionStorage.setItem('receipt_data', JSON.stringify(event.data.payload));
                 initTemplate(event.data.payload);
+
+                // PDF mode: capture locally with html2canvas and send image back to parent
+                if (event.data.pdfMode) {
+                    const src = event.source;
+                    const origin = event.origin;
+
+                    // Hide the action buttons before capture
+                    const noPrint = document.querySelector('.no-print');
+                    if (noPrint) noPrint.style.display = 'none';
+
+                    // Wait for fonts & images to render, then capture
+                    setTimeout(() => {
+                        const receiptEl = document.getElementById('receipt-content');
+                        html2canvas(receiptEl, {
+                            scale: 2,
+                            useCORS: true,
+                            allowTaint: true,
+                            backgroundColor: '#ffffff',
+                            logging: false,
+                            windowWidth: receiptEl.scrollWidth,
+                            windowHeight: receiptEl.scrollHeight
+                        }).then(canvas => {
+                            const imageData = canvas.toDataURL('image/jpeg', 0.97);
+                            const w = canvas.width;
+                            const h = canvas.height;
+                            try {
+                                src.postMessage({ type: 'PDF_CANVAS_READY', imageData, w, h }, origin);
+                            } catch(e) {
+                                console.error('postMessage failed:', e);
+                            }
+                        }).catch(err => {
+                            try {
+                                src.postMessage({ type: 'PDF_ERROR', message: err.message }, origin);
+                            } catch(e) {}
+                        });
+                    }, 800);
+                }
             }
         });
 

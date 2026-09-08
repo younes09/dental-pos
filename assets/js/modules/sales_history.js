@@ -111,6 +111,7 @@ const sales_historyModule = {
                                 <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
                                     <li><a class="dropdown-item" href="javascript:void(0)" onclick="sales_historyModule.viewDetails(${data.id})"><i class="fas fa-eye me-2 text-info"></i>${App.t('sh.action.view_details') || 'View Details'}</a></li>
                                     <li><a class="dropdown-item" href="javascript:void(0)" onclick="sales_historyModule.directPrint(${data.id})"><i class="fas fa-print me-2 text-teal"></i>${App.t('sh.action.print_receipt') || 'Print Receipt'}</a></li>
+                                    <li><a class="dropdown-item" href="javascript:void(0)" onclick="sales_historyModule.exportInvoicePDF(${data.id})"><i class="fas fa-file-pdf me-2 text-danger"></i>${App.t('sh.action.export_pdf') || 'Export Invoice (PDF)'}</a></li>
                                     ${!isCancelled ? `
                                         <li><hr class="dropdown-divider"></li>
                                         <li><a class="dropdown-item" href="javascript:void(0)" onclick="sales_historyModule.openReturnModal(${data.id})"><i class="fas fa-undo me-2 text-warning"></i>${App.t('sh.action.return_items') || 'Return Items'}</a></li>
@@ -269,6 +270,14 @@ const sales_historyModule = {
         document.getElementById('btn-print-receipt').onclick = () => {
             this.printReceipt(result);
         };
+
+        // Bind Export Invoice PDF button in modal
+        const modalExportPdfBtn = document.getElementById('btn-export-invoice-pdf');
+        if (modalExportPdfBtn) {
+            modalExportPdfBtn.onclick = () => {
+                this.exportInvoicePDF(result);
+            };
+        }
     },
 
     printReceipt(data) {
@@ -281,6 +290,191 @@ const sales_historyModule = {
                 payload: { ...data, settings: App.state.settings }
             }, window.location.origin);
         };
+    },
+
+    async exportInvoicePDF(saleOrId) {
+        let iframe = null;
+        try {
+            App.toast('info', App.t('sh.msg.generating_pdf') || 'Génération du PDF de la facture...');
+
+            // 1. Fetch sale data if only an ID was provided
+            let data;
+            if (typeof saleOrId === 'object' && saleOrId.sale) {
+                data = saleOrId;
+            } else {
+                data = await App.api(`sales.php?action=sale_details&id=${saleOrId}`);
+            }
+
+            if (!data || !data.sale) {
+                App.toast('error', App.t('sh.msg.error_loading_sale') || 'Impossible de charger les données de la vente.');
+                return;
+            }
+
+            // 2. Build filename
+            const { sale } = data;
+            const isBL = sale.invoice_type === 'BL';
+            const invoiceNum = sale.invoice_number ||
+                (isBL ? `BL-${String(sale.id).padStart(4, '0')}` : `FAC-${String(sale.id).padStart(4, '0')}`);
+            const sanitizedNum = String(invoiceNum).replace(/[^a-zA-Z0-9-_]/g, '_');
+            const fileName = `${isBL ? 'BL' : 'Facture'}_${sanitizedNum}.pdf`;
+
+            // 3. Create a hidden iframe (never blocked by browsers, unlike popups)
+            iframe = document.createElement('iframe');
+            iframe.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:900px;height:1200px;border:none;visibility:hidden;';
+            iframe.src = 'views/receipt-template.html';
+            document.body.appendChild(iframe);
+
+            // 4. Set up the response listener BEFORE the iframe loads (avoids race condition)
+            const imageResult = await new Promise((resolve, reject) => {
+                const timeout = setTimeout(() => {
+                    window.removeEventListener('message', handler);
+                    reject(new Error('Timeout: la template n\'a pas répondu (15s).'));
+                }, 15000);
+
+                function handler(event) {
+                    // Accept only messages from our iframe
+                    if (!iframe || event.source !== iframe.contentWindow) return;
+
+                    if (event.data && event.data.type === 'PDF_CANVAS_READY') {
+                        clearTimeout(timeout);
+                        window.removeEventListener('message', handler);
+                        resolve({ imageData: event.data.imageData, w: event.data.w, h: event.data.h });
+                    } else if (event.data && event.data.type === 'PDF_ERROR') {
+                        clearTimeout(timeout);
+                        window.removeEventListener('message', handler);
+                        reject(new Error('Erreur de capture: ' + event.data.message));
+                    }
+                }
+                window.addEventListener('message', handler);
+
+                // Send data once iframe is loaded
+                iframe.onload = () => {
+                    iframe.contentWindow.postMessage(
+                        {
+                            type: 'POPULATE_RECEIPT',
+                            pdfMode: true,
+                            payload: { ...data, settings: App.state.settings }
+                        },
+                        window.location.origin
+                    );
+                };
+            });
+
+            // 5. Build the PDF from the image sent by the iframe's html2canvas
+            const { jsPDF } = window.jspdf;
+            const pdfWidth  = 210; // A4 width in mm
+            const pdfHeight = Math.round((imageResult.h / imageResult.w) * pdfWidth);
+
+            const doc = new jsPDF({
+                orientation: 'portrait',
+                unit: 'mm',
+                format: [pdfWidth, pdfHeight]
+            });
+
+            doc.addImage(imageResult.imageData, 'JPEG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
+
+            // 6. Save PDF
+            doc.save(fileName);
+            App.toast('success', (App.t('sh.msg.pdf_exported') || 'Facture exportée avec succès en PDF') + ` — ${fileName}`);
+
+        } catch (err) {
+            console.error('Error in exportInvoicePDF:', err);
+            App.toast('error', 'Erreur lors de la création du PDF: ' + (err.message || err));
+        } finally {
+            // Always clean up the iframe
+            if (iframe && iframe.parentNode) {
+                iframe.parentNode.removeChild(iframe);
+            }
+        }
+    },
+
+    numberToWordsFR(num) {
+        if (num === 0 || isNaN(num)) return 'Zéro';
+
+        const units = ['', 'Un', 'Deux', 'Trois', 'Quatre', 'Cinq', 'Six', 'Sept', 'Huit', 'Neuf'];
+        const teens = ['Dix', 'Onze', 'Douze', 'Treize', 'Quatorze', 'Quinze', 'Seize', 'Dix-Sept', 'Dix-Huit', 'Dix-Neuf'];
+        const tens = ['', 'Dix', 'Vingt', 'Trente', 'Quarante', 'Cinquante', 'Soixante', 'Soixante-Dix', 'Quatre-Vingt', 'Quatre-Vingt-Dix'];
+
+        function convertGroup(n) {
+            let words = '';
+            const h = Math.floor(n / 100);
+            const t = Math.floor((n % 100) / 10);
+            const u = n % 10;
+
+            if (h > 0) {
+                if (h === 1) {
+                    words += 'Cent ';
+                } else {
+                    words += units[h] + ' Cent ';
+                }
+            }
+
+            if (t > 0) {
+                if (t === 7) {
+                    if (u === 1) {
+                        words += 'Soixante et Onze';
+                    } else {
+                        words += 'Soixante-' + teens[u];
+                    }
+                } else if (t === 9) {
+                    words += 'Quatre-Vingt-' + teens[u];
+                } else if (t === 8) {
+                    if (u === 0) {
+                        words += 'Quatre-Vingts';
+                    } else {
+                        words += 'Quatre-Vingt-' + units[u];
+                    }
+                } else if (t === 1) {
+                    words += teens[u];
+                } else {
+                    words += tens[t];
+                    if (u > 0) {
+                        words += (u === 1) ? ' et Un' : '-' + units[u];
+                    }
+                }
+            } else if (u > 0) {
+                words += units[u];
+            }
+
+            return words.trim();
+        }
+
+        let words = '';
+        const mainPart = Math.floor(Math.abs(num));
+        const centsPart = Math.round((Math.abs(num) - mainPart) * 100);
+
+        const billions = Math.floor(mainPart / 1000000000);
+        const millions = Math.floor((mainPart % 1000000000) / 1000000);
+        const thousands = Math.floor((mainPart % 1000000) / 1000);
+        const remainder = mainPart % 1000;
+
+        if (billions > 0) {
+            words += convertGroup(billions) + ' Milliard' + (billions > 1 ? 's' : '') + ' ';
+        }
+        if (millions > 0) {
+            words += convertGroup(millions) + ' Million' + (millions > 1 ? 's' : '') + ' ';
+        }
+        if (thousands > 0) {
+            if (thousands === 1) {
+                words += 'Mille ';
+            } else {
+                words += convertGroup(thousands) + ' Mille ';
+            }
+        }
+        if (remainder > 0) {
+            words += convertGroup(remainder) + ' ';
+        }
+
+        words = words.trim();
+        if (!words) words = 'Zéro';
+
+        if (centsPart > 0) {
+            words += ' Dinars et ' + convertGroup(centsPart) + ' Centimes';
+        } else {
+            words += ' Dinars';
+        }
+
+        return words.replace(/\s+/g, ' ').trim();
     },
 
     async openReturnModal(id) {
