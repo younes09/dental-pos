@@ -2,7 +2,7 @@
  * Purchase Orders Module
  */
 
-const purchase_ordersModule = {
+var purchase_ordersModule = {
     table: null,
     products: [],
     suppliers: [],

@@ -2,7 +2,7 @@
  * Vault and Bank Module
  */
 
-const vaultModule = {
+var vaultModule = {
     accounts: [],
 
     init() {

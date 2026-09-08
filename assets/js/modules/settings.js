@@ -2,7 +2,7 @@
  * Settings Module
  */
 
-const settingsModule = {
+var settingsModule = {
     init() {
         this.loadSettings();
         this.bindEvents();

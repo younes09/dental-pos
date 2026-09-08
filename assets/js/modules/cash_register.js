@@ -2,7 +2,7 @@
  * Cash Register Module
  */
 
-const cash_registerModule = {
+var cash_registerModule = {
     currentSession: null,
     table: null,
 

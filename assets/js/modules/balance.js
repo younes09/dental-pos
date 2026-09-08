@@ -2,7 +2,7 @@
  * Balance Module - Handles financial summaries and capital calculation
  */
 
-const balanceModule = {
+var balanceModule = {
     init() {
         console.log('Balance Module Initialized');
         this.fetchBalanceData();

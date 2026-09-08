@@ -373,7 +373,7 @@ if (!isset($_SESSION['user_id'])) {
     <script src="assets/js/locales.js?v=1.0.1"></script>
     
     <!-- Core App Logic -->
-    <script src="assets/js/app.js?v=1.0.1"></script>
+    <script src="assets/js/app.js?v=1.0.2"></script>
     <script>
         // Inject user session data for RBAC
         App.state.user = {

@@ -2,7 +2,7 @@
  * Suppliers Module
  */
 
-const suppliersModule = {
+var suppliersModule = {
     table: null,
 
     init() {

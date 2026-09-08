@@ -2,7 +2,7 @@
  * DentalPOS Interactive User Guide Module
  */
 
-const guideModule = {
+var guideModule = {
     // POS Hotspots Explanations Database
     posSpots: {
         search: {

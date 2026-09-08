@@ -1,4 +1,4 @@
-const notificationsModule = {
+var notificationsModule = {
     table: null,
 
     async init() {

@@ -2,7 +2,7 @@
  * Quotations Module
  */
 
-const quotationsModule = {
+var quotationsModule = {
     table: null,
     products: [],
     customers: [],

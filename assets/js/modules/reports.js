@@ -2,7 +2,7 @@
  * Reports Module
  */
 
-const reportsModule = {
+var reportsModule = {
     init() {
         this.setDefaultDates();
         this.bindEvents();

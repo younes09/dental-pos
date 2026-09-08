@@ -2,7 +2,7 @@
  * Sales History Module
  */
 
-const sales_historyModule = {
+var sales_historyModule = {
     table: null,
 
     init() {

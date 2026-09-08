@@ -2,7 +2,7 @@
  * Customers Module
  */
 
-const customersModule = {
+var customersModule = {
     table: null,
     wilayas: [
         { id: '01', name: '01 - Adrar' }, { id: '02', name: '02 - Chlef' }, { id: '03', name: '03 - Laghouat' },

@@ -2,7 +2,7 @@
  * Dashboard Module
  */
 
-const dashboardModule = {
+var dashboardModule = {
     init() {
         this.currentRange = 'daily';
         this.salesChart = null;
@@ -28,11 +28,14 @@ const dashboardModule = {
             });
         });
 
-        window.addEventListener('themeChanged', () => {
-            if (this.currentData) {
-                this.renderCharts(this.currentData.chart, this.currentData.top_products);
-            }
-        });
+        if (!this._themeBound) {
+            this._themeBound = true;
+            window.addEventListener('themeChanged', () => {
+                if (this.currentData && document.getElementById('salesChart')) {
+                    this.renderCharts(this.currentData.chart, this.currentData.top_products);
+                }
+            });
+        }
     },
 
     async fetchData(range = 'daily') {
@@ -79,12 +82,15 @@ const dashboardModule = {
         const barColor = isDark ? '#00BFA6' : '#00BFA6';
 
         // Line Chart
-        const ctxSales = document.getElementById('salesChart').getContext('2d');
-
-        // Destroy existing chart if it exists
+        const salesEl = document.getElementById('salesChart');
+        if (!salesEl) return;
+        const oldSales = Chart.getChart(salesEl);
+        if (oldSales) oldSales.destroy();
         if (this.salesChart) {
-            this.salesChart.destroy();
+            try { this.salesChart.destroy(); } catch (e) {}
+            this.salesChart = null;
         }
+        const ctxSales = salesEl.getContext('2d');
 
         this.salesChart = new Chart(ctxSales, {
             type: 'line',
@@ -125,12 +131,15 @@ const dashboardModule = {
         });
 
         // Bar Chart
-        const ctxProducts = document.getElementById('productsChart').getContext('2d');
-
-        // Destroy existing chart if it exists
+        const prodEl = document.getElementById('productsChart');
+        if (!prodEl) return;
+        const oldProd = Chart.getChart(prodEl);
+        if (oldProd) oldProd.destroy();
         if (this.productsChart) {
-            this.productsChart.destroy();
+            try { this.productsChart.destroy(); } catch (e) {}
+            this.productsChart = null;
         }
+        const ctxProducts = prodEl.getContext('2d');
 
         this.productsChart = new Chart(ctxProducts, {
             type: 'bar',

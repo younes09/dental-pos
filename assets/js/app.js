@@ -478,16 +478,32 @@ const App = {
     },
 
     initModule(viewName) {
-        // Load module-specific JS if exists
-        const scriptId = `script-${viewName}`;
         const moduleObjectName = `${viewName}Module`;
 
-        const existingScript = document.getElementById(scriptId);
-        if (existingScript) existingScript.remove();
+        // If the module object already exists and has an init method, re-initialize it for the new DOM
+        if (window[moduleObjectName] && typeof window[moduleObjectName].init === 'function') {
+            console.log(`Re-initializing module: ${moduleObjectName}`);
+            try {
+                window[moduleObjectName].init();
+            } catch (err) {
+                console.error(`Error initializing module ${moduleObjectName}:`, err);
+            }
+            return;
+        }
 
-        const script = document.createElement('script');
+        // Load module-specific JS if not already loaded
+        const scriptId = `script-${viewName}`;
+        let script = document.getElementById(scriptId);
+        if (script) {
+            if (window[moduleObjectName] && typeof window[moduleObjectName].init === 'function') {
+                window[moduleObjectName].init();
+            }
+            return;
+        }
+
+        script = document.createElement('script');
         script.id = scriptId;
-        script.src = `assets/js/modules/${viewName}.js?v=${Date.now()}`;
+        script.src = `assets/js/modules/${viewName}.js?v=1.0.2`;
         script.onerror = () => {
             console.warn(`No logic module found for ${viewName}`);
         };

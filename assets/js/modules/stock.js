@@ -2,7 +2,7 @@
  * Stock Management Module
  */
 
-const stockModule = {
+var stockModule = {
     table: null,
 
     init() {

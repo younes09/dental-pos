@@ -2,7 +2,7 @@
  * POS Module
  */
 
-const posModule = {
+var posModule = {
     allProducts: [],
     allCustomers: [],
     selectedCustomer: null,

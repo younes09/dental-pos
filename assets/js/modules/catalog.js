@@ -2,7 +2,7 @@
  * Catalog Module
  */
 
-const catalogModule = {
+var catalogModule = {
     categoriesTable: null,
     brandsTable: null,
 

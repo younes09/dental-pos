@@ -3,7 +3,7 @@
  * Depends on: Chart.js (globally loaded), App helpers
  */
 
-const analyticsModule = {
+var analyticsModule = {
     charts: {},
     state: { period: 'daily', from: '', to: '' },
     wilayas: [

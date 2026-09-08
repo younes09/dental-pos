@@ -2,7 +2,7 @@
  * Profile Module Logic
  */
 
-const profileModule = {
+var profileModule = {
     init() {
         if (!document.getElementById('profileNameDisplay')) {
             console.warn('Profile view elements not found, skipping init');

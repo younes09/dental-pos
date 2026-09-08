@@ -2,7 +2,7 @@
  * User Management Module
  */
 
-const usersModule = {
+var usersModule = {
     table: null,
 
     init() {

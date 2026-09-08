@@ -1,7 +1,7 @@
 /**
  * Salary Management Module
  */
-const salariesModule = {
+var salariesModule = {
     staffTable: null,
     paymentsTable: null,
     staff: [],

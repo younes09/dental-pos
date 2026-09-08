@@ -1,7 +1,7 @@
 /**
  * Equipment Management Module
  */
-const equipmentModule = {
+var equipmentModule = {
     table: null,
 
     init() {
