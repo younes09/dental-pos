@@ -71,6 +71,15 @@ const posModule = {
         }
     },
 
+    setSaleDateToNow() {
+        const dateInput = document.getElementById('cart-sale-date');
+        if (dateInput) {
+            const now = new Date();
+            const localIso = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+            dateInput.value = localIso;
+        }
+    },
+
     bindEvents() {
         // Search filter
         const posSearch = document.getElementById('pos-search');
@@ -120,6 +129,10 @@ const posModule = {
 
         // Cart controls
         document.getElementById('btn-clear-cart').onclick = () => this.clearCart();
+        const btnResetSaleDate = document.getElementById('btn-reset-sale-date');
+        if (btnResetSaleDate) btnResetSaleDate.onclick = () => this.setSaleDateToNow();
+        const saleDateInput = document.getElementById('cart-sale-date');
+        if (saleDateInput) saleDateInput.onchange = () => this.saveCartState();
         document.getElementById('cart-discount').oninput = () => { this.fixedDiscountAmount = null; this.calculateTotals(); };
         document.getElementById('cart-points-redeem').oninput = () => this.calculateTotals();
         document.getElementById('cart-paid-amount').oninput = () => this.calculateTotals();
@@ -901,6 +914,7 @@ const posModule = {
         this.cart = [];
         this.currentQuotationId = null;
         document.getElementById('cart-paid-amount').value = '';
+        this.setSaleDateToNow();
         this.renderCart();
         this.calculateTotals();
     },
@@ -1045,6 +1059,7 @@ const posModule = {
         const state = {
             cart: this.cart,
             selectedCustomer: this.selectedCustomer,
+            sale_date: document.getElementById('cart-sale-date')?.value || '',
             discount: document.getElementById('cart-discount')?.value || 0,
             points_redeemed: document.getElementById('cart-points-redeem')?.value || 0,
             invoice_type: document.querySelector('input[name="invoice-type"]:checked')?.value || 'BV',
@@ -1080,6 +1095,11 @@ const posModule = {
                         document.getElementById('cart-points-row').classList.remove('d-none');
                     }
                 }
+
+                if (state.sale_date) {
+                    const saleDateEl = document.getElementById('cart-sale-date');
+                    if (saleDateEl) saleDateEl.value = state.sale_date;
+                }
                 
                 if (state.discount) {
                     const discountEl = document.getElementById('cart-discount');
@@ -1107,6 +1127,10 @@ const posModule = {
             }
         } catch (e) {
             console.error('Failed to restore POS state', e);
+        }
+
+        if (!document.getElementById('cart-sale-date')?.value) {
+            this.setSaleDateToNow();
         }
     },
 
@@ -1136,6 +1160,7 @@ const posModule = {
             const saleData = {
                 customer_id: this.selectedCustomer ? this.selectedCustomer.id : null,
                 quotation_id: this.currentQuotationId,
+                sale_date: document.getElementById('cart-sale-date')?.value || null,
                 subtotal: totals.subtotal,
                 discount_amount: totals.discountAmount,
                 manual_discount_percent: parseFloat(document.getElementById('cart-discount').value) || 0,

@@ -244,19 +244,32 @@ try {
                 throw new Exception('Debt is only allowed for registered customers. Please select a customer or pay the full amount.');
             }
 
+            // Support custom/backdated sale date
+            $sale_date_input = !empty($data['sale_date']) ? trim($data['sale_date']) : null;
+            if ($sale_date_input) {
+                $timestamp = strtotime($sale_date_input);
+                if ($timestamp === false) {
+                    throw new Exception('Invalid sale date format.');
+                }
+                $sale_date = date('Y-m-d H:i:s', $timestamp);
+            } else {
+                $sale_date = date('Y-m-d H:i:s');
+            }
+
             $points_earned = ($earning_rate > 0) ? floor($total / $earning_rate) : 0;
-            $paid_at = ($payment_status === 'Paid') ? date('Y-m-d H:i:s') : null;
+            $paid_at = ($payment_status === 'Paid') ? $sale_date : null;
 
             // 1. Insert into sales table (F2.4: store points for reversal)
             $stmt = $pdo->prepare("
                 INSERT INTO sales 
-                (customer_id, user_id, cash_session_id, subtotal, discount, tax, total, paid_amount, payment_status, paid_at, payment_method, invoice_type, points_earned, points_redeemed) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                (customer_id, user_id, cash_session_id, date, subtotal, discount, tax, total, paid_amount, payment_status, paid_at, payment_method, invoice_type, points_earned, points_redeemed) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ");
             $stmt->execute([
                 $customer_id,
                 $user_id,
                 $cash_session_id,
+                $sale_date,
                 $subtotal,
                 $discount_amount,
                 $tax,
@@ -275,14 +288,14 @@ try {
             if ($paid_amount > 0) {
                 $sp_stmt = $pdo->prepare("
                     INSERT INTO sale_payments (sale_id, customer_payment_id, amount, payment_method, notes, user_id, created_at)
-                    VALUES (?, NULL, ?, ?, 'Initial Checkout Payment', ?, NOW())
+                    VALUES (?, NULL, ?, ?, 'Initial Checkout Payment', ?, ?)
                 ");
-                $sp_stmt->execute([$sale_id, $paid_amount, $payment_method, $user_id]);
+                $sp_stmt->execute([$sale_id, $paid_amount, $payment_method, $user_id, $sale_date]);
             }
 
             // Generate and update invoice number
             $prefix = ($invoice_type === 'BL') ? 'BL' : 'FAC';
-            $year = date('Y');
+            $year = date('Y', strtotime($sale_date));
             $invoice_number = $prefix . '-' . $year . '-' . str_pad($sale_id, 4, '0', STR_PAD_LEFT);
             $update_invoice_stmt = $pdo->prepare("UPDATE sales SET invoice_number = ? WHERE id = ?");
             $update_invoice_stmt->execute([$invoice_number, $sale_id]);
