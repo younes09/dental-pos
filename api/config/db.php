@@ -25,4 +25,3 @@ try {
     error_log("Database connection failed: " . $e->getMessage());
     die(json_encode(['error' => 'Database connection failed. Please contact the administrator.']));
 }
-// Removed closing tag to prevent accidental whitespace/output before headers sent
