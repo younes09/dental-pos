@@ -1,0 +1,3 @@
+## 2026-09-09 - Fix N+1 Correlated Subqueries
+**Learning:** In the `list` action of `api/customers.php`, using correlated subqueries directly inside the `SELECT` clause (e.g., `(SELECT COALESCE(SUM(total), 0) FROM sales WHERE customer_id = c.id)`) creates an N+1 query problem that scales poorly and causes severe database performance regressions as the number of customers grows.
+**Action:** When querying lists that need aggregated data from related tables, refactor the query to use a `LEFT JOIN` on a derived table grouped by the foreign key (e.g., `LEFT JOIN (SELECT customer_id, SUM(total) as total_purchases FROM sales GROUP BY customer_id) s`). Use `COALESCE` to handle cases where there are no related records.

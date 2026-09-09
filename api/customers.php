@@ -8,12 +8,19 @@ $action = $_GET['action'] ?? 'list';
 try {
     switch ($action) {
         case 'list':
-            // Added subquery or join for last visit and total purchases
+            // ⚡ Bolt Optimization: Replaced correlated subqueries with a LEFT JOIN on a derived table to fix N+1 performance issue
             $stmt = $pdo->prepare("
                 SELECT c.*, 
-                (SELECT date FROM sales WHERE customer_id = c.id ORDER BY date DESC LIMIT 1) as last_visit,
-                (SELECT COALESCE(SUM(total), 0) FROM sales WHERE customer_id = c.id AND (status != 'Cancelled' OR status IS NULL)) as total_purchases
+                       s.last_visit,
+                       COALESCE(s.total_purchases, 0) as total_purchases
                 FROM customers c
+                LEFT JOIN (
+                    SELECT customer_id,
+                           MAX(date) as last_visit,
+                           SUM(CASE WHEN status != 'Cancelled' OR status IS NULL THEN total ELSE 0 END) as total_purchases
+                    FROM sales
+                    GROUP BY customer_id
+                ) s ON c.id = s.customer_id
                 ORDER BY c.id DESC
             ");
             $stmt->execute();
