@@ -1,0 +1,3 @@
+## 2024-03-01 - SARGability and DATE() Function Overheads in MySQL
+**Learning:** Wrapping a column in a function like `DATE()` inside a `WHERE` clause (e.g., `WHERE DATE(date) BETWEEN ? AND ?`) prevents the MySQL engine from utilizing available indexes on that column, forcing it to evaluate the function for every row in a full table scan.
+**Action:** Always refactor queries to use index-friendly SARGable (Search ARgument ABLE) range conditions (e.g., `date >= ? AND date <= ?`). Furthermore, ensure manual string appending (e.g., `$to . ' 23:59:59'`) is done outside the database to include bounds correctly.
