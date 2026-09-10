@@ -1,0 +1,3 @@
+## 2024-05-24 - SARGable Queries and Composite Indexes
+**Learning:** Using `DATE(column)` in `WHERE` clauses (e.g., `DATE(date) BETWEEN ? AND ?`) breaks SARGability, preventing the database from using indexes efficiently and leading to full table scans. Furthermore, for tables frequently queried by date and status (like the `sales` table), a composite index on `(date, status)` is crucial.
+**Action:** Always rewrite date filters using bounding logic (`column >= ? AND column <= ?`) and append specific time bounds (`00:00:00` and `23:59:59`) for `DATETIME` or `TIMESTAMP` columns. Ensure composite indexes are added to handle multi-column filtering.
