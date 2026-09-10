@@ -1,0 +1,3 @@
+## 2024-07-21 - Replace DATE() in WHERE clauses with SARGable ranges
+**Learning:** Using `DATE(column) BETWEEN ? AND ?` on timestamp columns prevents the database from using indexes effectively because the function wraps the column, causing full table scans. Using SARGable range conditions like `column >= ? AND column < DATE_ADD(?, INTERVAL 1 DAY)` allows MariaDB/MySQL to use indexes on timestamp columns, significantly improving database performance for analytics and reporting queries.
+**Action:** Always prefer SARGable range conditions over wrapping indexed columns in functions like `DATE()`, `MONTH()`, or `YEAR()` when querying time-based data.
