@@ -8,16 +8,25 @@ $action = $_GET['action'] ?? 'list';
 try {
     switch ($action) {
         case 'list':
-            // Added subquery or join for last visit and total purchases
+            // ⚡ Bolt: Removed correlated subqueries in SELECT clause for performance
+            // Uses a LEFT JOIN on an aggregated derived table to avoid N+1 queries.
             $stmt = $pdo->prepare("
                 SELECT c.*, 
-                (SELECT date FROM sales WHERE customer_id = c.id ORDER BY date DESC LIMIT 1) as last_visit,
-                (SELECT COALESCE(SUM(total), 0) FROM sales WHERE customer_id = c.id AND (status != 'Cancelled' OR status IS NULL)) as total_purchases
+                       s.last_visit,
+                       COALESCE(s.total_purchases, 0) as total_purchases
                 FROM customers c
+                LEFT JOIN (
+                    SELECT customer_id,
+                           MAX(date) as last_visit,
+                           SUM(CASE WHEN status != 'Cancelled' OR status IS NULL THEN total ELSE 0 END) as total_purchases
+                    FROM sales
+                    GROUP BY customer_id
+                ) s ON c.id = s.customer_id
                 ORDER BY c.id DESC
             ");
             $stmt->execute();
-            $customers = $stmt->fetchAll();
+            // ⚡ Bolt: Used FETCH_ASSOC to reduce JSON payload size by removing numeric keys
+            $customers = $stmt->fetchAll(PDO::FETCH_ASSOC);
             echo json_encode(['data' => $customers]);
             break;
 
