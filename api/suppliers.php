@@ -9,10 +9,16 @@ try {
     switch ($action) {
         case 'list':
             // Include count of purchase orders
+            // ⚡ Bolt Optimization: Replaced N+1 correlated subquery with a LEFT JOIN on a derived table for performance.
             $stmt = $pdo->prepare("
                 SELECT s.*, 
-                (SELECT SUM(total) FROM purchase_orders WHERE supplier_id = s.id) as total_purchases
+                       COALESCE(po.total_purchases, 0) as total_purchases
                 FROM suppliers s
+                LEFT JOIN (
+                    SELECT supplier_id, SUM(total) as total_purchases
+                    FROM purchase_orders
+                    GROUP BY supplier_id
+                ) po ON po.supplier_id = s.id
                 ORDER BY s.id DESC
             ");
             $stmt->execute();
