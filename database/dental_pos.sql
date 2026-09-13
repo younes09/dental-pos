@@ -213,7 +213,10 @@ CREATE TABLE sales (
     invoice_number VARCHAR(50) DEFAULT NULL,
     FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE SET NULL,
     FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (cash_session_id) REFERENCES cash_sessions(id) ON DELETE SET NULL
+    FOREIGN KEY (cash_session_id) REFERENCES cash_sessions(id) ON DELETE SET NULL,
+    -- ⚡ Bolt: Composite index to prevent full table scans on analytics queries
+    -- Optimized column order: (status, date) because status uses equality and date uses range
+    INDEX idx_sales_status_date (status, date)
 );
 
 -- Sale Items table

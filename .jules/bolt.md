@@ -1,0 +1,3 @@
+## 2024-05-15 - SARGable Queries and Composite Indexes
+**Learning:** Wrapping indexed DATETIME or TIMESTAMP columns in `DATE()` functions negates the index and causes full table scans. In this codebase, the `sales` table is frequently filtered by date ranges and status (e.g. in `api/analytics.php`).
+**Action:** Always write SARGable range queries for dates (e.g. `date >= ? AND date <= ?`) instead of using `DATE(date) BETWEEN ? AND ?`. Ensure accurate boundary checking by appending ` 00:00:00` and ` 23:59:59` respectively in PHP. Also, always ensure the queried tables have the corresponding composite index, like `(date, status)`.
