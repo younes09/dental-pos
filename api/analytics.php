@@ -11,8 +11,10 @@ if (($_SESSION['user_role'] ?? '') !== 'Admin') {
 }
 
 $action = $_GET['action'] ?? 'summary';
-$from   = $_GET['from'] ?? date('Y-m-d', strtotime('-30 days'));
-$to     = $_GET['to']   ?? date('Y-m-d');
+$from_raw = $_GET['from'] ?? date('Y-m-d', strtotime('-30 days'));
+$from = $from_raw . ' 00:00:00';
+$to_raw = $_GET['to'] ?? date('Y-m-d');
+$to = $to_raw . ' 23:59:59';
 $period = $_GET['period'] ?? 'daily';
 
 try {
@@ -22,7 +24,7 @@ try {
         // 1. KPI Summary
         // ---------------------------------------------------------------
         case 'summary':
-            // Revenue & profit in range (deducting returns)
+            // Revenue, profit, and order metrics in range (deducting returns)
             $stmt = $pdo->prepare("
                 SELECT
                     COALESCE(SUM(
@@ -31,41 +33,30 @@ try {
                             ELSE 0 
                         END
                     ), 0) as revenue,
-                    COUNT(s.id)               as sales_count,
-                    COALESCE(AVG(
-                        CASE 
-                            WHEN s.subtotal > 0 THEN si.net_subtotal * (1 - (s.discount / s.subtotal))
-                            ELSE 0 
-                        END
-                    ), 0) as avg_order
+                    COUNT(s.id) as sales_count,
+                    COALESCE(SUM(si.net_cogs), 0) as cogs
                 FROM sales s
                 LEFT JOIN (
                     SELECT 
-                        sale_id,
-                        SUM((qty - returned_qty) * unit_price) as net_subtotal
-                    FROM sale_items
-                    GROUP BY sale_id
+                        si.sale_id,
+                        SUM((si.qty - si.returned_qty) * si.unit_price) as net_subtotal,
+                        SUM((si.qty - si.returned_qty) * si.cost_price) as net_cogs
+                    FROM sale_items si
+                    JOIN sales s2 ON si.sale_id = s2.id
+                    WHERE s2.status = 'Completed' AND s2.date >= ? AND s2.date <= ?
+                    GROUP BY si.sale_id
                 ) si ON si.sale_id = s.id
-                WHERE DATE(s.date) BETWEEN ? AND ? AND s.status = 'Completed'
+                WHERE s.status = 'Completed' AND s.date >= ? AND s.date <= ?
             ");
-            $stmt->execute([$from, $to]);
-            $rev = $stmt->fetch();
-
-            // COGS for profit
-            $stmt = $pdo->prepare("
-                SELECT COALESCE(SUM((si.qty - si.returned_qty) * si.cost_price), 0) as cogs
-                FROM sale_items si
-                JOIN sales s ON si.sale_id = s.id
-                WHERE DATE(s.date) BETWEEN ? AND ? AND s.status = 'Completed'
-            ");
-            $stmt->execute([$from, $to]);
-            $cogs = $stmt->fetch()['cogs'];
+            $stmt->execute([$from, $to, $from, $to]);
+            $rev = $stmt->fetch() ?: ['revenue' => 0, 'sales_count' => 0, 'cogs' => 0];
+            $cogs = $rev['cogs'];
 
             // New customers in range
             $stmt = $pdo->prepare("
                 SELECT COUNT(*) as new_customers
                 FROM customers
-                WHERE DATE(created_at) BETWEEN ? AND ?
+                WHERE created_at >= ? AND created_at <= ?
             ");
             $stmt->execute([$from, $to]);
             $newCust = $stmt->fetch()['new_customers'] ?? 0;
@@ -77,7 +68,7 @@ try {
                 JOIN sales s ON si.sale_id = s.id
                 JOIN products p ON si.product_id = p.id
                 LEFT JOIN categories c ON p.category_id = c.id
-                WHERE DATE(s.date) BETWEEN ? AND ? AND s.status = 'Completed'
+                WHERE s.date >= ? AND s.date <= ? AND s.status = 'Completed'
                 GROUP BY c.id
                 ORDER BY cat_revenue DESC
                 LIMIT 1
@@ -89,7 +80,7 @@ try {
                 'revenue'       => (float)$rev['revenue'],
                 'profit'        => (float)($rev['revenue'] - $cogs),
                 'sales_count'   => (int)$rev['sales_count'],
-                'avg_order'     => (float)$rev['avg_order'],
+                'avg_order'     => $rev['sales_count'] > 0 ? (float)($rev['revenue'] / $rev['sales_count']) : 0.0,
                 'new_customers' => (int)$newCust,
                 'top_category'  => $topCat
             ]);
@@ -127,17 +118,19 @@ try {
                 FROM sales s
                 LEFT JOIN (
                     SELECT 
-                        sale_id,
-                        SUM((qty - returned_qty) * unit_price) as net_subtotal,
-                        SUM((qty - returned_qty) * cost_price) as net_cogs
-                    FROM sale_items
-                    GROUP BY sale_id
+                        si.sale_id,
+                        SUM((si.qty - si.returned_qty) * si.unit_price) as net_subtotal,
+                        SUM((si.qty - si.returned_qty) * si.cost_price) as net_cogs
+                    FROM sale_items si
+                    JOIN sales s2 ON si.sale_id = s2.id
+                    WHERE s2.status = 'Completed' AND s2.date >= ? AND s2.date <= ?
+                    GROUP BY si.sale_id
                 ) si ON si.sale_id = s.id
-                WHERE DATE(s.date) BETWEEN ? AND ? AND s.status = 'Completed'
+                WHERE s.status = 'Completed' AND s.date >= ? AND s.date <= ?
                 GROUP BY $groupExpr
                 ORDER BY MIN(s.date) ASC
             ");
-            $stmt->execute([$from, $to]);
+            $stmt->execute([$from, $to, $from, $to]);
             echo json_encode(['data' => $stmt->fetchAll()]);
             break;
 
@@ -153,7 +146,7 @@ try {
                 FROM sale_items si
                 JOIN products p ON si.product_id = p.id
                 JOIN sales s ON si.sale_id = s.id
-                WHERE DATE(s.date) BETWEEN ? AND ? AND s.status = 'Completed'
+                WHERE s.date >= ? AND s.date <= ? AND s.status = 'Completed'
                 GROUP BY si.product_id
                 ORDER BY revenue DESC
                 LIMIT 10
@@ -172,7 +165,7 @@ try {
                     COUNT(*)       as count,
                     SUM(total)     as total
                 FROM sales
-                WHERE DATE(date) BETWEEN ? AND ? AND status = 'Completed'
+                WHERE date >= ? AND date <= ? AND status = 'Completed'
                 GROUP BY payment_method
                 ORDER BY total DESC
             ");
@@ -201,7 +194,7 @@ try {
                     SUM(CASE WHEN c.created_at <  s.date - INTERVAL 1 DAY THEN 1 ELSE 0 END) as returning_customers
                 FROM sales s
                 LEFT JOIN customers c ON s.customer_id = c.id
-                WHERE DATE(s.date) BETWEEN ? AND ? AND s.status = 'Completed' AND s.customer_id IS NOT NULL
+                WHERE s.date >= ? AND s.date <= ? AND s.status = 'Completed' AND s.customer_id IS NOT NULL
                 GROUP BY $groupExpr
                 ORDER BY MIN(s.date) ASC
             ");
@@ -219,7 +212,7 @@ try {
                     DAYOFWEEK(date)   as dow,
                     COUNT(*)          as sales_count
                 FROM sales
-                WHERE DATE(date) BETWEEN ? AND ? AND status = 'Completed'
+                WHERE date >= ? AND date <= ? AND status = 'Completed'
                 GROUP BY HOUR(date), DAYOFWEEK(date)
                 ORDER BY dow ASC, hour ASC
             ");
@@ -238,7 +231,7 @@ try {
                     COUNT(s.id) as sales_count
                 FROM sales s
                 LEFT JOIN customers c ON s.customer_id = c.id
-                WHERE DATE(s.date) BETWEEN ? AND ? AND s.status = 'Completed'
+                WHERE s.date >= ? AND s.date <= ? AND s.status = 'Completed'
                 GROUP BY c.wilaya
                 ORDER BY revenue DESC
             ");
