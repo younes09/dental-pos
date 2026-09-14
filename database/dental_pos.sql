@@ -217,6 +217,8 @@ CREATE TABLE sales (
 );
 
 -- Sale Items table
+CREATE INDEX idx_sales_status_date ON sales(status, date);
+
 CREATE TABLE sale_items (
     id INT AUTO_INCREMENT PRIMARY KEY,
     sale_id INT,

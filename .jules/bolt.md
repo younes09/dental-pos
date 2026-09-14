@@ -1,0 +1,3 @@
+## 2024-05-18 - Optimize SARGable queries in Analytics API
+**Learning:** The database index on `sales(status, date)` (from memory) was not being fully utilized because the `analytics.php` API used `DATE(s.date) BETWEEN ? AND ?` in its `WHERE` clauses. Wrapping columns in functions like `DATE()` makes the query non-SARGable (Search Argument Able), preventing the database from using the index optimally.
+**Action:** Replace `DATE(s.date)` with `s.date` and append `00:00:00` and `23:59:59` to the start and end dates respectively in PHP before passing them to the parameterized query. This enables index-based range scans instead of full table scans.
