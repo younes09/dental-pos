@@ -4,3 +4,6 @@
 ## 2024-05-19 - ARIA labels in Dynamically Injected UI
 **Learning:** Screen readers often fail to interpret dynamically injected icon-only buttons (e.g. inside a POS cart powered by innerHTML) properly, treating them as generic unlabelled buttons, and FontAwesome icons as raw characters. Also dynamic number changes (like cart quantity) are missed without aria-live.
 **Action:** When creating dynamic UIs with template literals, consistently apply `aria-label`, `type="button"`, and `aria-hidden="true"` on icons, and use `aria-live="polite"` on dynamically updating text (like quantities).
+## 2024-09-14 - Translatable ARIA labels via custom i18n
+**Learning:** Native `aria-label` attributes aren't always compatible with automated i18n scripts that only target standard properties. For fully accessible localized applications, translation utilities must explicitly handle `data-i18n-target="aria-label"` logic.
+**Action:** Always ensure that custom localization utilities (like the `translate()` loop in `app.js`) support dynamic ARIA attributes so that assistive technologies read localized descriptions.
