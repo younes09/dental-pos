@@ -10,10 +10,16 @@ try {
         case 'list':
             $stmt = $pdo->prepare("
                 SELECT p.*, c.name as category_name, b.name as brand_name,
-                       (SELECT MIN(expiry_date) FROM stock_batches WHERE product_id = p.id AND remaining_qty > 0) as batch_expiry_date
+                       sb.batch_expiry_date
                 FROM products p
                 LEFT JOIN categories c ON p.category_id = c.id
                 LEFT JOIN brands b ON p.brand_id = b.id
+                LEFT JOIN (
+                    SELECT product_id, MIN(expiry_date) as batch_expiry_date
+                    FROM stock_batches
+                    WHERE remaining_qty > 0
+                    GROUP BY product_id
+                ) sb ON p.id = sb.product_id
                 ORDER BY p.id DESC
             ");
             $stmt->execute();
