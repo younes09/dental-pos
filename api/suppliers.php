@@ -8,11 +8,16 @@ $action = $_GET['action'] ?? 'list';
 try {
     switch ($action) {
         case 'list':
-            // Include count of purchase orders
+            // Include count of purchase orders via LEFT JOIN instead of correlated subquery to avoid N+1 issue
             $stmt = $pdo->prepare("
                 SELECT s.*, 
-                (SELECT SUM(total) FROM purchase_orders WHERE supplier_id = s.id) as total_purchases
+                       COALESCE(po.total_purchases, 0) as total_purchases
                 FROM suppliers s
+                LEFT JOIN (
+                    SELECT supplier_id, SUM(total) as total_purchases
+                    FROM purchase_orders
+                    GROUP BY supplier_id
+                ) po ON s.id = po.supplier_id
                 ORDER BY s.id DESC
             ");
             $stmt->execute();
