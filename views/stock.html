@@ -183,7 +183,7 @@
                                             <option value="" data-i18n="stock.modal.category_select">Select Category
                                             </option>
                                         </select>
-                                        <button class="btn btn-outline-secondary" type="button" id="btn-add-category" title="Add New Category">
+                                        <button class="btn btn-outline-secondary" type="button" id="btn-add-category" title="Add New Category" aria-label="Add New Category" data-i18n="product.add_category" data-i18n-target="aria-label">
                                             <i class="fas fa-plus"></i>
                                         </button>
                                     </div>
@@ -195,7 +195,7 @@
                                             style="cursor: pointer;" required>
                                             <option value="" data-i18n="stock.modal.brand_select">Select Brand</option>
                                         </select>
-                                        <button class="btn btn-outline-secondary" type="button" id="btn-add-brand" title="Add New Brand">
+                                        <button class="btn btn-outline-secondary" type="button" id="btn-add-brand" title="Add New Brand" aria-label="Add New Brand" data-i18n="product.add_brand" data-i18n-target="aria-label">
                                             <i class="fas fa-plus"></i>
                                         </button>
                                     </div>
@@ -245,7 +245,7 @@
                                 <img id="product-img-preview" src="assets/img/img_holder.png"
                                     class="img-fluid rounded mb-2"
                                     style="width: 150px; height: 150px; object-fit: cover; cursor: pointer;">
-                                <button type="button" id="btn-remove-image"
+                                <button type="button" id="btn-remove-image" aria-label="Remove image" data-i18n="product.remove_image" data-i18n-target="aria-label"
                                     class="btn btn-sm btn-danger rounded-circle position-absolute top-0 end-0 m-2 d-none"
                                     title="Remove image"
                                     style="width: 25px; height: 25px; padding: 0; line-height: 25px;">
@@ -405,7 +405,7 @@
                                 <p class="mb-0 fw-semibold text-truncate" id="selected-file-name"></p>
                                 <small class="text-muted" id="selected-file-size"></small>
                             </div>
-                            <button type="button" class="btn btn-sm text-danger" id="btn-remove-import-file">
+                            <button type="button" class="btn btn-sm text-danger" id="btn-remove-import-file" aria-label="Remove file" data-i18n="stock.import.remove_file" data-i18n-target="aria-label">
                                 <i class="fas fa-times"></i>
                             </button>
                         </div>
