@@ -10,8 +10,8 @@
                             <i class="fas fa-search"></i>
                             <input type="text" id="pos-search" class="form-control"
                                 placeholder="Search by name, barcode or category..." data-i18n="pos.search_placeholder" data-i18n-target="placeholder">
-                            <button type="button" id="btn-clear-pos-search" class="btn btn-link text-muted position-absolute end-0 top-50 translate-middle-y border-0 p-0 me-3" style="display: none; z-index: 5; text-decoration: none;">
-                                <i class="fas fa-times" style=" left: -15px; " title="vider le champ de recherche"></i>
+                            <button type="button" id="btn-clear-pos-search" class="btn btn-link text-muted position-absolute end-0 top-50 translate-middle-y border-0 p-0 me-3" style="display: none; z-index: 5; text-decoration: none;" aria-label="Clear search" data-i18n="pos.btn.clear" data-i18n-target="aria-label">
+                                <i class="fas fa-times" style=" left: -15px; "></i>
                             </button>
                         </div>
                     </div>
@@ -237,7 +237,7 @@
         <div class="modal-content border-0 rounded-4">
             <div class="modal-header border-0 p-4">
                 <h5 class="modal-title fw-bold" data-i18n="pos.modal.customer.title">Select Customer</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-4 pt-0">
                 <p class="text-muted small" data-i18n="pos.modal.customer.desc">Search registered customers or leave empty for walking customer.</p>
@@ -274,7 +274,7 @@
         <div class="modal-content border-0 rounded-4">
             <div class="modal-header border-0 p-4">
                 <h5 class="modal-title fw-bold" data-i18n="pos.modal.held.title">Held Sales</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-4 pt-0">
                 <p class="text-muted small" data-i18n="pos.modal.held.desc">Resume or delete previously held sales.</p>
@@ -295,7 +295,7 @@
         <div class="modal-content border-0 rounded-4">
             <div class="modal-header border-0 p-4 pb-0">
                 <h5 class="modal-title fw-bold text-teal" data-i18n="pos.modal.quick.title">Quick Add Customer</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-4">
                 <form id="pos-quick-customer-form">
@@ -338,7 +338,7 @@
         <div class="modal-content border-0 rounded-4">
             <div class="modal-header border-0 p-4">
                 <h5 class="modal-title fw-bold" data-i18n="pos.modal.quote.title">Load Quotation</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-4 pt-0">
                 <p class="text-muted small" data-i18n="pos.modal.quote.desc">Select a pending quotation to load into the cart.</p>
@@ -374,7 +374,7 @@
                         <div class="d-flex gap-2 flex-wrap mt-1" id="pdm-badges"></div>
                     </div>
                 </div>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
             <div class="modal-body px-4 pb-2">
