@@ -1,0 +1,4 @@
+
+## 2024-05-18 - N+1 Correlated Subqueries in Endpoints
+**Learning:** Returning aggregated lists with subqueries in the SELECT clause (e.g. `(SELECT COUNT(*) FROM sales WHERE customer_id = c.id)`) for unbounded lists (like customers and suppliers) causes classic N+1 execution scaling problems, leading to severe performance bottlenecks. Standard standard database optimization recommends aggregating these in a single derived table.
+**Action:** Replaced SELECT clause correlated subqueries with a `LEFT JOIN` onto a single derived table pre-grouped by the foreign key (e.g. `LEFT JOIN (SELECT customer_id, COUNT(*) FROM sales GROUP BY customer_id)`). This reduces scaling to O(1) queries. Ensure the derived table is explicitly indexed, and use `COALESCE` in the main SELECT to handle NULLs from the `LEFT JOIN`.
