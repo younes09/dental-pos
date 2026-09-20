@@ -1,0 +1,3 @@
+## 2024-05-24 - O(N²) Subquery Bottleneck in Dashboard Analytics
+**Learning:** Found a severe performance bottleneck in `api/dashboard.php`. The dashboard analytics queries were using a `LEFT JOIN` on a derived table containing an aggregation of `sale_items` with a join back to `sales`. This forced the database to create a temporary table for the subquery and scan the `sales` table twice.
+**Action:** Replace `LEFT JOIN` on derived tables with a direct `LEFT JOIN sale_items` in analytical queries, distributing the aggregation logic inside the main `SUM()` function. This avoids temporary tables and redundant table scans.

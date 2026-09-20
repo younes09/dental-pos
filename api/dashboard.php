@@ -10,27 +10,18 @@ try {
         SELECT 
             COALESCE(SUM(
                 CASE 
-                    WHEN s.subtotal > 0 THEN si.net_subtotal * (1 - (s.discount / s.subtotal))
+                    WHEN s.subtotal > 0 THEN ((si.qty - si.returned_qty) * si.unit_price) * (1 - (s.discount / s.subtotal))
                     ELSE 0 
                 END
             ), 0) as revenue,
             COALESCE(SUM(
                 CASE 
-                    WHEN s.subtotal > 0 THEN si.net_subtotal * (1 - (s.discount / s.subtotal))
+                    WHEN s.subtotal > 0 THEN ((si.qty - si.returned_qty) * si.unit_price) * (1 - (s.discount / s.subtotal))
                     ELSE 0 
-                END - si.net_cogs
+                END - ((si.qty - si.returned_qty) * si.cost_price)
             ), 0) as profit
         FROM sales s
-        LEFT JOIN (
-            SELECT 
-                si.sale_id,
-                SUM((si.qty - si.returned_qty) * si.unit_price) as net_subtotal,
-                SUM((si.qty - si.returned_qty) * si.cost_price) as net_cogs
-            FROM sale_items si
-            JOIN sales s2 ON si.sale_id = s2.id
-            WHERE s2.date >= CURDATE() AND s2.date < DATE_ADD(CURDATE(), INTERVAL 1 DAY)
-            GROUP BY si.sale_id
-        ) si ON si.sale_id = s.id
+        LEFT JOIN sale_items si ON s.id = si.sale_id
         WHERE s.date >= CURDATE() AND s.date < DATE_ADD(CURDATE(), INTERVAL 1 DAY) AND s.status = 'Completed'
     ");
     $stmt->execute();
@@ -43,27 +34,18 @@ try {
         SELECT 
             COALESCE(SUM(
                 CASE 
-                    WHEN s.subtotal > 0 THEN si.net_subtotal * (1 - (s.discount / s.subtotal))
+                    WHEN s.subtotal > 0 THEN ((si.qty - si.returned_qty) * si.unit_price) * (1 - (s.discount / s.subtotal))
                     ELSE 0 
                 END
             ), 0) as revenue,
             COALESCE(SUM(
                 CASE 
-                    WHEN s.subtotal > 0 THEN si.net_subtotal * (1 - (s.discount / s.subtotal))
+                    WHEN s.subtotal > 0 THEN ((si.qty - si.returned_qty) * si.unit_price) * (1 - (s.discount / s.subtotal))
                     ELSE 0 
-                END - si.net_cogs
+                END - ((si.qty - si.returned_qty) * si.cost_price)
             ), 0) as profit
         FROM sales s
-        LEFT JOIN (
-            SELECT 
-                si.sale_id,
-                SUM((si.qty - si.returned_qty) * si.unit_price) as net_subtotal,
-                SUM((si.qty - si.returned_qty) * si.cost_price) as net_cogs
-            FROM sale_items si
-            JOIN sales s2 ON si.sale_id = s2.id
-            WHERE s2.date >= DATE_SUB(CURDATE(), INTERVAL 1 DAY) AND s2.date < CURDATE()
-            GROUP BY si.sale_id
-        ) si ON si.sale_id = s.id
+        LEFT JOIN sale_items si ON s.id = si.sale_id
         WHERE s.date >= DATE_SUB(CURDATE(), INTERVAL 1 DAY) AND s.date < CURDATE() AND s.status = 'Completed'
     ");
     $stmt->execute();
@@ -127,20 +109,12 @@ try {
                     DATE_FORMAT(MIN(s.date), 'Week %u %Y') as day,
                     COALESCE(SUM(
                         CASE 
-                            WHEN s.subtotal > 0 THEN si.net_subtotal * (1 - (s.discount / s.subtotal))
+                            WHEN s.subtotal > 0 THEN ((si.qty - si.returned_qty) * si.unit_price) * (1 - (s.discount / s.subtotal))
                             ELSE 0 
                         END
                     ), 0) as total 
                 FROM sales s
-                LEFT JOIN (
-                    SELECT 
-                        si.sale_id,
-                        SUM((si.qty - si.returned_qty) * si.unit_price) as net_subtotal
-                    FROM sale_items si
-                    JOIN sales s2 ON si.sale_id = s2.id
-                    WHERE s2.date >= DATE_SUB(CURDATE(), INTERVAL 4 WEEK)
-                    GROUP BY si.sale_id
-                ) si ON si.sale_id = s.id
+                LEFT JOIN sale_items si ON s.id = si.sale_id
                 WHERE s.date >= DATE_SUB(CURDATE(), INTERVAL 4 WEEK) AND s.status = 'Completed'
                 GROUP BY YEARWEEK(s.date, 1)
                 ORDER BY MIN(s.date) ASC
@@ -153,20 +127,12 @@ try {
                     DATE_FORMAT(s.date, '%b %Y') as day,
                     COALESCE(SUM(
                         CASE 
-                            WHEN s.subtotal > 0 THEN si.net_subtotal * (1 - (s.discount / s.subtotal))
+                            WHEN s.subtotal > 0 THEN ((si.qty - si.returned_qty) * si.unit_price) * (1 - (s.discount / s.subtotal))
                             ELSE 0 
                         END
                     ), 0) as total 
                 FROM sales s
-                LEFT JOIN (
-                    SELECT 
-                        si.sale_id,
-                        SUM((si.qty - si.returned_qty) * si.unit_price) as net_subtotal
-                    FROM sale_items si
-                    JOIN sales s2 ON si.sale_id = s2.id
-                    WHERE s2.date >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
-                    GROUP BY si.sale_id
-                ) si ON si.sale_id = s.id
+                LEFT JOIN sale_items si ON s.id = si.sale_id
                 WHERE s.date >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH) AND s.status = 'Completed'
                 GROUP BY YEAR(s.date), MONTH(s.date)
                 ORDER BY YEAR(s.date) ASC, MONTH(s.date) ASC
@@ -180,20 +146,12 @@ try {
                     DATE_FORMAT(s.date, '%b %d') as day,
                     COALESCE(SUM(
                         CASE 
-                            WHEN s.subtotal > 0 THEN si.net_subtotal * (1 - (s.discount / s.subtotal))
+                            WHEN s.subtotal > 0 THEN ((si.qty - si.returned_qty) * si.unit_price) * (1 - (s.discount / s.subtotal))
                             ELSE 0 
                         END
                     ), 0) as total 
                 FROM sales s
-                LEFT JOIN (
-                    SELECT 
-                        si.sale_id,
-                        SUM((si.qty - si.returned_qty) * si.unit_price) as net_subtotal
-                    FROM sale_items si
-                    JOIN sales s2 ON si.sale_id = s2.id
-                    WHERE s2.date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
-                    GROUP BY si.sale_id
-                ) si ON si.sale_id = s.id
+                LEFT JOIN sale_items si ON s.id = si.sale_id
                 WHERE s.date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY) AND s.status = 'Completed'
                 GROUP BY DATE(s.date)
                 ORDER BY s.date ASC
