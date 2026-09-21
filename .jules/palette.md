@@ -1,0 +1,3 @@
+## 2024-05-24 - Add ARIA Label to clearSearch Button
+**Learning:** Found an icon-only button without an ARIA label in `store.php`, meaning it wasn't screen reader accessible. Furthermore, the translation system needs to be made aware of it to provide a translated aria-label. The `translatePage()` method in `store.php` supports `data-i18n-target="title"`, but it's better if it supports `aria-label` directly or if we use the title target to set both title and aria-label.
+**Action:** Add `aria-label="Clear"` and set `data-i18n="pos.btn.clear"` (which exists in `assets/js/locales.js`) with `data-i18n-target="aria-label"` to the `#clearSearch` button in `store.php`, and update `translatePage()` to support `data-i18n-target="aria-label"`.
