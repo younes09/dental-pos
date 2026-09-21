@@ -405,3 +405,6 @@ CREATE TABLE notifications (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+-- Indexes for Analytics Performance
+CREATE INDEX idx_sales_status_date ON sales(status, date);
+CREATE INDEX idx_customers_created_at ON customers(created_at);
