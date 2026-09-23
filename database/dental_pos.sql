@@ -405,3 +405,5 @@ CREATE TABLE notifications (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+-- Index for frequent sales queries by status and date range
+CREATE INDEX idx_sales_status_date ON sales(status, date);
