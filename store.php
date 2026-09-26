@@ -452,6 +452,9 @@
                     el.setAttribute('placeholder', translation);
                 } else if (target === 'title') {
                     el.setAttribute('title', translation);
+                    el.setAttribute('aria-label', translation);
+                } else if (target === 'aria-label') {
+                    el.setAttribute('aria-label', translation);
                 }
             });
             updateLangButtons();
