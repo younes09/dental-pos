@@ -1,0 +1,3 @@
+## 2024-05-18 - Replacing non-SARGable DATE() function with index-friendly date bounds
+**Learning:** Found multiple instances where the analytics API used `DATE(date) BETWEEN ? AND ?`. This prevents standard MySQL indexes from being used on the `date` column because wrapping the column in a function (`DATE(date)`) makes the condition non-SARGable (Search Argumentable), leading to full table scans.
+**Action:** Replace `DATE(date) BETWEEN 'Y-m-d' AND 'Y-m-d'` with `date >= 'Y-m-d 00:00:00' AND date <= 'Y-m-d 23:59:59'` and ensure a composite index exists on `(status, date)` to support these queries efficiently.
