@@ -216,6 +216,9 @@ CREATE TABLE sales (
     FOREIGN KEY (cash_session_id) REFERENCES cash_sessions(id) ON DELETE SET NULL
 );
 
+-- Performance Index for analytics
+CREATE INDEX idx_sales_status_date ON sales (status, date);
+
 -- Sale Items table
 CREATE TABLE sale_items (
     id INT AUTO_INCREMENT PRIMARY KEY,
