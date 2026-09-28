@@ -83,22 +83,22 @@ try {
 
     // Calculate Growth Percentages
     $revenue_growth = 0;
-    if ($yesterday_revenue > 0) {
-        $revenue_growth = (($today_revenue - $yesterday_revenue) / $yesterday_revenue) * 100;
+    if ($yesterday_revenue != 0) {
+        $revenue_growth = (($today_revenue - $yesterday_revenue) / abs($yesterday_revenue)) * 100;
     } elseif ($yesterday_revenue == 0 && $today_revenue > 0) {
         $revenue_growth = 100; // New revenue from zero
     }
 
     $profit_growth = 0;
-    if ($yesterday_profit > 0) {
-        $profit_growth = (($today_profit - $yesterday_profit) / $yesterday_profit) * 100;
+    if ($yesterday_profit != 0) {
+        $profit_growth = (($today_profit - $yesterday_profit) / abs($yesterday_profit)) * 100;
     } elseif ($yesterday_profit == 0 && $today_profit > 0) {
         $profit_growth = 100; // New profit from zero
     }
 
     $sales_count_growth = 0;
-    if ($last_month_sales > 0) {
-        $sales_count_growth = (($monthly_sales - $last_month_sales) / $last_month_sales) * 100;
+    if ($last_month_sales != 0) {
+        $sales_count_growth = (($monthly_sales - $last_month_sales) / abs($last_month_sales)) * 100;
     }
 
     // Low Stock Items
