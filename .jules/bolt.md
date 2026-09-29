@@ -1,0 +1,3 @@
+## 2024-06-25 - Missing Index on Sales Table
+**Learning:** The `sales` table is frequently queried in analytics and dashboard reports using a combination of `status = 'Completed'` and date ranges (`date >= ... AND date < ...`). Without an index, this results in full table scans.
+**Action:** Added a composite index `idx_sales_status_date (status, date)` to the `sales` table in `database/dental_pos.sql` to optimize these frequent range queries. The equality condition (`status`) is placed first in the composite index to maximize index selectivity and performance.
