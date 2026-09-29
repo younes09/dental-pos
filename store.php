@@ -310,7 +310,7 @@
                         <div class="search-container">
                             <i class="fas fa-search search-icon"></i>
                             <input type="text" id="searchInput" class="form-control" placeholder="Search..." data-i18n="store.search_placeholder" data-i18n-target="placeholder">
-                            <button id="clearSearch" class="btn-clear"><i class="fas fa-times"></i></button>
+                            <button id="clearSearch" class="btn-clear" type="button" data-i18n="pos.btn.clear" data-i18n-target="aria-label"><i class="fas fa-times" aria-hidden="true"></i></button>
                         </div>
                     </div>
                     
@@ -452,6 +452,9 @@
                     el.setAttribute('placeholder', translation);
                 } else if (target === 'title') {
                     el.setAttribute('title', translation);
+                    el.setAttribute('aria-label', translation);
+                } else if (target === 'aria-label') {
+                    el.setAttribute('aria-label', translation);
                 }
             });
             updateLangButtons();
