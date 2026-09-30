@@ -689,69 +689,34 @@ try {
                 throw new Exception('Only Admins and Cashiers can view sales history.');
             }
             $customer_id = $_GET['customer_id'] ?? null;
+            $query = "
+                SELECT s.*, c.name as customer_name, u.name as user_name,
+                       (SELECT COUNT(*) FROM sale_returns WHERE sale_id = s.id) as has_returns,
+                       (SELECT COUNT(*) FROM sale_payments WHERE sale_id = s.id) as payment_count,
+                       (SELECT MAX(created_at) FROM sale_payments WHERE sale_id = s.id) as last_payment_date,
+                       (
+                           SELECT COALESCE(
+                               CASE
+                                   WHEN s.subtotal > 0 THEN (SUM((si.qty - si.returned_qty) * si.unit_price) * (1 - (s.discount / s.subtotal))) - SUM((si.qty - si.returned_qty) * si.cost_price)
+                                   ELSE -SUM((si.qty - si.returned_qty) * si.cost_price)
+                               END,
+                               0
+                           )
+                           FROM sale_items si
+                           WHERE si.sale_id = s.id
+                       ) as profit
+                FROM sales s
+                LEFT JOIN customers c ON s.customer_id = c.id
+                LEFT JOIN users u ON s.user_id = u.id
+            ";
             
             if ($customer_id) {
-                // Keep correlated subqueries for filtered queries to allow index pushdown
-                $query = "
-                    SELECT s.*, c.name as customer_name, u.name as user_name,
-                           (SELECT COUNT(*) FROM sale_returns WHERE sale_id = s.id) as has_returns,
-                           (SELECT COUNT(*) FROM sale_payments WHERE sale_id = s.id) as payment_count,
-                           (SELECT MAX(created_at) FROM sale_payments WHERE sale_id = s.id) as last_payment_date,
-                           (
-                               SELECT COALESCE(
-                                   CASE
-                                       WHEN s.subtotal > 0 THEN (SUM((si.qty - si.returned_qty) * si.unit_price) * (1 - (s.discount / s.subtotal))) - SUM((si.qty - si.returned_qty) * si.cost_price)
-                                       ELSE -SUM((si.qty - si.returned_qty) * si.cost_price)
-                                   END,
-                                   0
-                               )
-                               FROM sale_items si
-                               WHERE si.sale_id = s.id
-                           ) as profit
-                    FROM sales s
-                    LEFT JOIN customers c ON s.customer_id = c.id
-                    LEFT JOIN users u ON s.user_id = u.id
-                    WHERE s.customer_id = ?
-                    ORDER BY s.date DESC
-                ";
+                $query .= " WHERE s.customer_id = ? ";
+                $query .= " ORDER BY s.date DESC";
                 $stmt = $pdo->prepare($query);
                 $stmt->execute([$customer_id]);
             } else {
-                // Use derived tables for unbounded list to prevent N+1 performance degradation
-                $query = "
-                    SELECT s.*, c.name as customer_name, u.name as user_name,
-                           COALESCE(sr.has_returns, 0) as has_returns,
-                           COALESCE(sp.payment_count, 0) as payment_count,
-                           sp.last_payment_date,
-                           COALESCE(
-                               CASE
-                                   WHEN s.subtotal > 0 THEN (si.total_revenue * (1 - (s.discount / s.subtotal))) - si.total_cost
-                                   ELSE -si.total_cost
-                               END,
-                               0
-                           ) as profit
-                    FROM sales s
-                    LEFT JOIN customers c ON s.customer_id = c.id
-                    LEFT JOIN users u ON s.user_id = u.id
-                    LEFT JOIN (
-                        SELECT sale_id, COUNT(*) as has_returns
-                        FROM sale_returns
-                        GROUP BY sale_id
-                    ) sr ON sr.sale_id = s.id
-                    LEFT JOIN (
-                        SELECT sale_id, COUNT(*) as payment_count, MAX(created_at) as last_payment_date
-                        FROM sale_payments
-                        GROUP BY sale_id
-                    ) sp ON sp.sale_id = s.id
-                    LEFT JOIN (
-                        SELECT sale_id,
-                               SUM((qty - returned_qty) * unit_price) as total_revenue,
-                               SUM((qty - returned_qty) * cost_price) as total_cost
-                        FROM sale_items
-                        GROUP BY sale_id
-                    ) si ON si.sale_id = s.id
-                    ORDER BY s.date DESC
-                ";
+                $query .= " ORDER BY s.date DESC";
                 $stmt = $pdo->prepare($query);
                 $stmt->execute();
             }
