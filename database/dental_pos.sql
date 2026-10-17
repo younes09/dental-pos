@@ -216,6 +216,9 @@ CREATE TABLE sales (
     FOREIGN KEY (cash_session_id) REFERENCES cash_sessions(id) ON DELETE SET NULL
 );
 
+-- Index for dashboard filtering
+CREATE INDEX idx_sales_date_status ON sales(date, status);
+
 -- Sale Items table
 CREATE TABLE sale_items (
     id INT AUTO_INCREMENT PRIMARY KEY,
