@@ -1051,6 +1051,15 @@ var posModule = {
             this._debtWarningShown = false;
         }
 
+        // Palette: Disable action buttons when cart is empty
+        const isCartEmpty = this.cart.length === 0;
+        const btnCheckout = document.getElementById('btn-checkout');
+        const btnClearCart = document.getElementById('btn-clear-cart');
+        const btnHoldSale = document.getElementById('btn-hold-sale');
+        if (btnCheckout) btnCheckout.disabled = isCartEmpty;
+        if (btnClearCart) btnClearCart.disabled = isCartEmpty;
+        if (btnHoldSale) btnHoldSale.disabled = isCartEmpty;
+
         this.saveCartState();
         return { subtotal, discountAmount, tax, total, pointsRedeemed, pointsEarned, paidAmount: isNaN(paidVal) ? total : paidVal };
     },
@@ -1143,6 +1152,7 @@ var posModule = {
         // F4.7: Prevent double-submit
         const btn = document.getElementById('btn-checkout');
         if (btn.disabled) return;
+        const originalBtnHtml = btn.innerHTML;
         btn.disabled = true;
         btn.innerHTML = `<i class="fas fa-spinner fa-spin me-2"></i>${App.t('pos.msg.processing') || 'Processing...'}`;
 
@@ -1209,8 +1219,8 @@ var posModule = {
                 }
             }
         } finally {
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-check-circle me-2"></i>Complete Sale';
+            btn.innerHTML = originalBtnHtml;
+            btn.disabled = this.cart.length === 0;
         }
     },
 
