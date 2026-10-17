@@ -1,0 +1,3 @@
+## 2024-11-20 - Non-SARGable DATE() function in WHERE clauses
+**Learning:** In MySQL, applying a function like `DATE(column)` to an indexed datetime column in a `WHERE` clause prevents the database from using the index, resulting in a full table scan. This was discovered as a bottleneck in the analytics endpoints (like `api/analytics.php`) that query large sales tables.
+**Action:** Replace `WHERE DATE(date_column) BETWEEN ? AND ?` with boundary conditions directly on the datetime column (e.g., `WHERE date_column >= ? AND date_column <= ?`) while explicitly setting the time bounds in the application code (appending `00:00:00` to the start date and `23:59:59` to the end date).
