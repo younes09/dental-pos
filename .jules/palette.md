@@ -1,0 +1,3 @@
+## 2024-10-27 - Disable Empty State Buttons & Preserve i18n
+**Learning:** Action buttons (like Checkout, Hold, Clear) that act on collections (like a cart) must be disabled outright in both HTML (to prevent flash of enabled state before JS loads) and dynamically in JS when the collection is empty. Additionally, when updating button states dynamically (e.g. during a loading state), replacing innerHTML can destroy underlying i18n translation spans if not carefully preserved.
+**Action:** Always set the `disabled` attribute directly in HTML templates for empty-by-default states. When modifying innerHTML dynamically during async actions, ensure any nested `<span data-i18n="...">` elements are perfectly reconstructed in both the loading and restored states.
