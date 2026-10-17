@@ -1,0 +1,3 @@
+## 2024-05-18 - [Avoid Prepared Statement Compilation Inside Loops]
+**Learning:** Found an N+1 performance anti-pattern in `api/sales.php` where PHP PDO `prepare()` statements were executed repeatedly inside a `foreach` loop for every processed item. This redundantly compiles the statement in the database engine (if emulated prepares are off) and adds PDO overhead for each iteration.
+**Action:** When querying or updating records within a loop based on varying parameters, always initialize the `$pdo->prepare(...)` statement *before* the loop and only call `execute([$params])` inside the loop. This minimizes overhead and significantly improves performance during large iterations.
