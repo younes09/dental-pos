@@ -12,7 +12,9 @@ if (($_SESSION['user_role'] ?? '') !== 'Admin') {
 
 $action = $_GET['action'] ?? 'summary';
 $from   = $_GET['from'] ?? date('Y-m-d', strtotime('-30 days'));
+$from   = $from . ' 00:00:00';
 $to     = $_GET['to']   ?? date('Y-m-d');
+$to     = $to . ' 23:59:59';
 $period = $_GET['period'] ?? 'daily';
 
 try {
@@ -46,7 +48,7 @@ try {
                     FROM sale_items
                     GROUP BY sale_id
                 ) si ON si.sale_id = s.id
-                WHERE DATE(s.date) BETWEEN ? AND ? AND s.status = 'Completed'
+                WHERE s.date BETWEEN ? AND ? AND s.status = 'Completed'
             ");
             $stmt->execute([$from, $to]);
             $rev = $stmt->fetch();
@@ -56,7 +58,7 @@ try {
                 SELECT COALESCE(SUM((si.qty - si.returned_qty) * si.cost_price), 0) as cogs
                 FROM sale_items si
                 JOIN sales s ON si.sale_id = s.id
-                WHERE DATE(s.date) BETWEEN ? AND ? AND s.status = 'Completed'
+                WHERE s.date BETWEEN ? AND ? AND s.status = 'Completed'
             ");
             $stmt->execute([$from, $to]);
             $cogs = $stmt->fetch()['cogs'];
@@ -65,7 +67,7 @@ try {
             $stmt = $pdo->prepare("
                 SELECT COUNT(*) as new_customers
                 FROM customers
-                WHERE DATE(created_at) BETWEEN ? AND ?
+                WHERE created_at BETWEEN ? AND ?
             ");
             $stmt->execute([$from, $to]);
             $newCust = $stmt->fetch()['new_customers'] ?? 0;
@@ -77,7 +79,7 @@ try {
                 JOIN sales s ON si.sale_id = s.id
                 JOIN products p ON si.product_id = p.id
                 LEFT JOIN categories c ON p.category_id = c.id
-                WHERE DATE(s.date) BETWEEN ? AND ? AND s.status = 'Completed'
+                WHERE s.date BETWEEN ? AND ? AND s.status = 'Completed'
                 GROUP BY c.id
                 ORDER BY cat_revenue DESC
                 LIMIT 1
@@ -100,13 +102,13 @@ try {
         // ---------------------------------------------------------------
         case 'revenue_trend':
             $groupExpr = "DATE(s.date)";
-            $labelExpr = "DATE_FORMAT(s.date, '%b %d')";
+            $labelExpr = "DATE_FORMAT(MIN(s.date), '%b %d')";
             if ($period === 'weekly') {
                 $groupExpr = "YEARWEEK(s.date, 1)";
                 $labelExpr = "DATE_FORMAT(MIN(s.date), 'Wk %u %Y')";
             } elseif ($period === 'monthly') {
                 $groupExpr = "DATE_FORMAT(s.date, '%Y-%m')";
-                $labelExpr = "DATE_FORMAT(s.date, '%b %Y')";
+                $labelExpr = "DATE_FORMAT(MIN(s.date), '%b %Y')";
             }
 
             $stmt = $pdo->prepare("
@@ -133,7 +135,7 @@ try {
                     FROM sale_items
                     GROUP BY sale_id
                 ) si ON si.sale_id = s.id
-                WHERE DATE(s.date) BETWEEN ? AND ? AND s.status = 'Completed'
+                WHERE s.date BETWEEN ? AND ? AND s.status = 'Completed'
                 GROUP BY $groupExpr
                 ORDER BY MIN(s.date) ASC
             ");
@@ -153,7 +155,7 @@ try {
                 FROM sale_items si
                 JOIN products p ON si.product_id = p.id
                 JOIN sales s ON si.sale_id = s.id
-                WHERE DATE(s.date) BETWEEN ? AND ? AND s.status = 'Completed'
+                WHERE s.date BETWEEN ? AND ? AND s.status = 'Completed'
                 GROUP BY si.product_id
                 ORDER BY revenue DESC
                 LIMIT 10
@@ -172,7 +174,7 @@ try {
                     COUNT(*)       as count,
                     SUM(total)     as total
                 FROM sales
-                WHERE DATE(date) BETWEEN ? AND ? AND status = 'Completed'
+                WHERE date BETWEEN ? AND ? AND status = 'Completed'
                 GROUP BY payment_method
                 ORDER BY total DESC
             ");
@@ -185,13 +187,13 @@ try {
         // ---------------------------------------------------------------
         case 'customer_insights':
             $groupExpr = "DATE(s.date)";
-            $labelExpr = "DATE_FORMAT(s.date, '%b %d')";
+            $labelExpr = "DATE_FORMAT(MIN(s.date), '%b %d')";
             if ($period === 'weekly') {
                 $groupExpr = "YEARWEEK(s.date, 1)";
                 $labelExpr = "DATE_FORMAT(MIN(s.date), 'Wk %u %Y')";
             } elseif ($period === 'monthly') {
                 $groupExpr = "DATE_FORMAT(s.date, '%Y-%m')";
-                $labelExpr = "DATE_FORMAT(s.date, '%b %Y')";
+                $labelExpr = "DATE_FORMAT(MIN(s.date), '%b %Y')";
             }
 
             $stmt = $pdo->prepare("
@@ -201,7 +203,7 @@ try {
                     SUM(CASE WHEN c.created_at <  s.date - INTERVAL 1 DAY THEN 1 ELSE 0 END) as returning_customers
                 FROM sales s
                 LEFT JOIN customers c ON s.customer_id = c.id
-                WHERE DATE(s.date) BETWEEN ? AND ? AND s.status = 'Completed' AND s.customer_id IS NOT NULL
+                WHERE s.date BETWEEN ? AND ? AND s.status = 'Completed' AND s.customer_id IS NOT NULL
                 GROUP BY $groupExpr
                 ORDER BY MIN(s.date) ASC
             ");
@@ -219,7 +221,7 @@ try {
                     DAYOFWEEK(date)   as dow,
                     COUNT(*)          as sales_count
                 FROM sales
-                WHERE DATE(date) BETWEEN ? AND ? AND status = 'Completed'
+                WHERE date BETWEEN ? AND ? AND status = 'Completed'
                 GROUP BY HOUR(date), DAYOFWEEK(date)
                 ORDER BY dow ASC, hour ASC
             ");
@@ -238,7 +240,7 @@ try {
                     COUNT(s.id) as sales_count
                 FROM sales s
                 LEFT JOIN customers c ON s.customer_id = c.id
-                WHERE DATE(s.date) BETWEEN ? AND ? AND s.status = 'Completed'
+                WHERE s.date BETWEEN ? AND ? AND s.status = 'Completed'
                 GROUP BY c.wilaya
                 ORDER BY revenue DESC
             ");
