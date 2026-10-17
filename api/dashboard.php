@@ -34,7 +34,7 @@ try {
         WHERE s.date >= CURDATE() AND s.date < DATE_ADD(CURDATE(), INTERVAL 1 DAY) AND s.status = 'Completed'
     ");
     $stmt->execute();
-    $today_data = $stmt->fetch();
+    $today_data = $stmt->fetch(PDO::FETCH_ASSOC);
     $today_revenue = (float)($today_data['revenue'] ?? 0);
     $today_profit = (float)($today_data['profit'] ?? 0);
 
@@ -67,19 +67,19 @@ try {
         WHERE s.date >= DATE_SUB(CURDATE(), INTERVAL 1 DAY) AND s.date < CURDATE() AND s.status = 'Completed'
     ");
     $stmt->execute();
-    $yesterday_data = $stmt->fetch();
+    $yesterday_data = $stmt->fetch(PDO::FETCH_ASSOC);
     $yesterday_revenue = (float)($yesterday_data['revenue'] ?? 0);
     $yesterday_profit = (float)($yesterday_data['profit'] ?? 0);
 
     // Monthly Sales Count (This Month)
     $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM sales WHERE date >= DATE_FORMAT(CURDATE(), '%Y-%m-01') AND date < DATE_ADD(DATE_FORMAT(CURDATE(), '%Y-%m-01'), INTERVAL 1 MONTH) AND status = 'Completed'");
     $stmt->execute();
-    $monthly_sales = $stmt->fetch()['count'] ?? 0;
+    $monthly_sales = (int)($stmt->fetchColumn() ?: 0);
 
     // Last Month's Sales Count
     $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM sales WHERE date >= DATE_SUB(DATE_FORMAT(CURDATE(), '%Y-%m-01'), INTERVAL 1 MONTH) AND date < DATE_FORMAT(CURDATE(), '%Y-%m-01') AND status = 'Completed'");
     $stmt->execute();
-    $last_month_sales = $stmt->fetch()['count'] ?? 0;
+    $last_month_sales = (int)($stmt->fetchColumn() ?: 0);
 
     // Calculate Growth Percentages
     $revenue_growth = 0;
@@ -104,105 +104,61 @@ try {
     // Low Stock Items
     $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM products WHERE stock_qty <= min_stock AND status = 'Active'");
     $stmt->execute();
-    $low_stock = $stmt->fetch()['count'] ?? 0;
+    $low_stock = (int)($stmt->fetchColumn() ?: 0);
 
     // Active Customers
     $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM customers");
     $stmt->execute();
-    $customers = $stmt->fetch()['count'] ?? 0;
+    $customers = (int)($stmt->fetchColumn() ?: 0);
 
     // Pending POs
     $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM purchase_orders WHERE status = 'Pending'");
     $stmt->execute();
-    $pending_po = $stmt->fetch()['count'] ?? 0;
+    $pending_po = (int)($stmt->fetchColumn() ?: 0);
 
     // 2. Sales Chart Data
     $filter = $_GET['filter'] ?? 'daily';
     
-    switch ($filter) {
-        case 'weekly':
-            // Bug #10 Fix: Group by YEARWEEK to avoid cross-year week merging
-            $stmt = $pdo->prepare("
-                SELECT 
-                    DATE_FORMAT(MIN(s.date), 'Week %u %Y') as day,
-                    COALESCE(SUM(
-                        CASE 
-                            WHEN s.subtotal > 0 THEN si.net_subtotal * (1 - (s.discount / s.subtotal))
-                            ELSE 0 
-                        END
-                    ), 0) as total 
-                FROM sales s
-                LEFT JOIN (
-                    SELECT 
-                        si.sale_id,
-                        SUM((si.qty - si.returned_qty) * si.unit_price) as net_subtotal
-                    FROM sale_items si
-                    JOIN sales s2 ON si.sale_id = s2.id
-                    WHERE s2.date >= DATE_SUB(CURDATE(), INTERVAL 4 WEEK)
-                    GROUP BY si.sale_id
-                ) si ON si.sale_id = s.id
-                WHERE s.date >= DATE_SUB(CURDATE(), INTERVAL 4 WEEK) AND s.status = 'Completed'
-                GROUP BY YEARWEEK(s.date, 1)
-                ORDER BY MIN(s.date) ASC
-            ");
-            break;
-        case 'monthly':
-            // Last 6 months, grouped by month
-            $stmt = $pdo->prepare("
-                SELECT 
-                    DATE_FORMAT(s.date, '%b %Y') as day,
-                    COALESCE(SUM(
-                        CASE 
-                            WHEN s.subtotal > 0 THEN si.net_subtotal * (1 - (s.discount / s.subtotal))
-                            ELSE 0 
-                        END
-                    ), 0) as total 
-                FROM sales s
-                LEFT JOIN (
-                    SELECT 
-                        si.sale_id,
-                        SUM((si.qty - si.returned_qty) * si.unit_price) as net_subtotal
-                    FROM sale_items si
-                    JOIN sales s2 ON si.sale_id = s2.id
-                    WHERE s2.date >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
-                    GROUP BY si.sale_id
-                ) si ON si.sale_id = s.id
-                WHERE s.date >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH) AND s.status = 'Completed'
-                GROUP BY YEAR(s.date), MONTH(s.date)
-                ORDER BY YEAR(s.date) ASC, MONTH(s.date) ASC
-            ");
-            break;
-        case 'daily':
-        default:
-            // Last 7 days, grouped by day (original behavior)
-            $stmt = $pdo->prepare("
-                SELECT 
-                    DATE_FORMAT(s.date, '%b %d') as day,
-                    COALESCE(SUM(
-                        CASE 
-                            WHEN s.subtotal > 0 THEN si.net_subtotal * (1 - (s.discount / s.subtotal))
-                            ELSE 0 
-                        END
-                    ), 0) as total 
-                FROM sales s
-                LEFT JOIN (
-                    SELECT 
-                        si.sale_id,
-                        SUM((si.qty - si.returned_qty) * si.unit_price) as net_subtotal
-                    FROM sale_items si
-                    JOIN sales s2 ON si.sale_id = s2.id
-                    WHERE s2.date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
-                    GROUP BY si.sale_id
-                ) si ON si.sale_id = s.id
-                WHERE s.date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY) AND s.status = 'Completed'
-                GROUP BY DATE(s.date)
-                ORDER BY s.date ASC
-            ");
-            break;
+    if ($filter === 'weekly') {
+        $interval = '4 WEEK';
+        $group_by = 'YEARWEEK(s.date, 1)';
+        $date_select = "DATE_FORMAT(MIN(s.date), 'Week %u %Y')";
+    } elseif ($filter === 'monthly') {
+        $interval = '6 MONTH';
+        $group_by = 'YEAR(s.date), MONTH(s.date)';
+        $date_select = "DATE_FORMAT(MIN(s.date), '%b %Y')";
+    } else {
+        $interval = '7 DAY';
+        $group_by = 'DATE(s.date)';
+        $date_select = "DATE_FORMAT(MIN(s.date), '%b %d')";
     }
     
+    $stmt = $pdo->prepare("
+        SELECT
+            {$date_select} as day,
+            COALESCE(SUM(
+                CASE
+                    WHEN s.subtotal > 0 THEN si.net_subtotal * (1 - (s.discount / s.subtotal))
+                    ELSE 0
+                END
+            ), 0) as total
+        FROM sales s
+        LEFT JOIN (
+            SELECT
+                si.sale_id,
+                SUM((si.qty - si.returned_qty) * si.unit_price) as net_subtotal
+            FROM sale_items si
+            JOIN sales s2 ON si.sale_id = s2.id
+            WHERE s2.date >= DATE_SUB(CURDATE(), INTERVAL {$interval})
+            GROUP BY si.sale_id
+        ) si ON si.sale_id = s.id
+        WHERE s.date >= DATE_SUB(CURDATE(), INTERVAL {$interval}) AND s.status = 'Completed'
+        GROUP BY {$group_by}
+        ORDER BY MIN(s.date) ASC
+    ");
+
     $stmt->execute();
-    $chart_data = $stmt->fetchAll();
+    $chart_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // 3. Top Products
     $stmt = $pdo->prepare("
@@ -216,7 +172,7 @@ try {
         LIMIT 5
     ");
     $stmt->execute();
-    $top_products = $stmt->fetchAll();
+    $top_products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // 4. Recent Transactions
     $stmt = $pdo->prepare("
@@ -227,7 +183,7 @@ try {
         LIMIT 10
     ");
     $stmt->execute();
-    $recent_sales = $stmt->fetchAll();
+    $recent_sales = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // 5. Stock Alerts List
     $stmt = $pdo->prepare("
@@ -238,7 +194,7 @@ try {
         LIMIT 5
     ");
     $stmt->execute();
-    $stock_alerts = $stmt->fetchAll();
+    $stock_alerts = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     echo json_encode([
         'kpis' => [
