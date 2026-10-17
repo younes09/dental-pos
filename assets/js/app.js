@@ -106,18 +106,22 @@ const App = {
     translate(container = document) {
         container.querySelectorAll('[data-i18n]').forEach(el => {
             const key = el.getAttribute('data-i18n');
-            const target = el.getAttribute('data-i18n-target') || 'text';
+            const targets = (el.getAttribute('data-i18n-target') || 'text').split(',').map(t => t.trim());
             const translation = this.t(key);
 
-            if (target === 'text') {
-                el.textContent = translation;
-            } else if (target === 'html') {
-                el.innerHTML = translation;
-            } else if (target === 'placeholder') {
-                el.setAttribute('placeholder', translation);
-            } else if (target === 'title') {
-                el.setAttribute('title', translation);
-            }
+            targets.forEach(target => {
+                if (target === 'text') {
+                    el.textContent = translation;
+                } else if (target === 'html') {
+                    el.innerHTML = translation;
+                } else if (target === 'placeholder') {
+                    el.setAttribute('placeholder', translation);
+                } else if (target === 'title') {
+                    el.setAttribute('title', translation);
+                } else if (target === 'aria-label') {
+                    el.setAttribute('aria-label', translation);
+                }
+            });
         });
 
         // Auto-initialize tooltips for elements in this container
