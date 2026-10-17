@@ -1,0 +1,3 @@
+## 2024-05-24 - [Correlated Subqueries vs Derived Tables]
+**Learning:** [Using correlated subqueries in a SELECT clause, like `(SELECT ... FROM sales WHERE customer_id = c.id)`, causes N+1 performance issues in MySQL because the subquery runs for every row returned. In `api/customers.php`, this scaled poorly as the number of customers and sales grew.]
+**Action:** [Use a `LEFT JOIN` on a derived table grouped by the foreign key (e.g., `LEFT JOIN (SELECT customer_id, MAX(date), SUM(...) ... GROUP BY customer_id) s ON c.id = s.customer_id`) to compute aggregates once for all relevant rows in a single pass.]
