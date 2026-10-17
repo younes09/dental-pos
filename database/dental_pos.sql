@@ -213,7 +213,8 @@ CREATE TABLE sales (
     invoice_number VARCHAR(50) DEFAULT NULL,
     FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE SET NULL,
     FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (cash_session_id) REFERENCES cash_sessions(id) ON DELETE SET NULL
+    FOREIGN KEY (cash_session_id) REFERENCES cash_sessions(id) ON DELETE SET NULL,
+    INDEX idx_sales_date_status (date, status)
 );
 
 -- Sale Items table
