@@ -28,13 +28,20 @@ try {
                 SUM((si.qty - si.returned_qty) * si.cost_price) as net_cogs
             FROM sale_items si
             JOIN sales s2 ON si.sale_id = s2.id
-            WHERE s2.date >= CURDATE() AND s2.date < DATE_ADD(CURDATE(), INTERVAL 1 DAY)
+            WHERE s2.date >= :today_start AND s2.date <= :today_end
             GROUP BY si.sale_id
         ) si ON si.sale_id = s.id
-        WHERE s.date >= CURDATE() AND s.date < DATE_ADD(CURDATE(), INTERVAL 1 DAY) AND s.status = 'Completed'
+        WHERE s.date >= :today_start2 AND s.date <= :today_end2 AND s.status = 'Completed'
     ");
-    $stmt->execute();
-    $today_data = $stmt->fetch();
+    $today_start = date('Y-m-d 00:00:00');
+    $today_end = date('Y-m-d 23:59:59');
+    $stmt->execute([
+        ':today_start' => $today_start,
+        ':today_end' => $today_end,
+        ':today_start2' => $today_start,
+        ':today_end2' => $today_end
+    ]);
+    $today_data = $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
     $today_revenue = (float)($today_data['revenue'] ?? 0);
     $today_profit = (float)($today_data['profit'] ?? 0);
 
@@ -61,60 +68,79 @@ try {
                 SUM((si.qty - si.returned_qty) * si.cost_price) as net_cogs
             FROM sale_items si
             JOIN sales s2 ON si.sale_id = s2.id
-            WHERE s2.date >= DATE_SUB(CURDATE(), INTERVAL 1 DAY) AND s2.date < CURDATE()
+            WHERE s2.date >= :yest_start AND s2.date <= :yest_end
             GROUP BY si.sale_id
         ) si ON si.sale_id = s.id
-        WHERE s.date >= DATE_SUB(CURDATE(), INTERVAL 1 DAY) AND s.date < CURDATE() AND s.status = 'Completed'
+        WHERE s.date >= :yest_start2 AND s.date <= :yest_end2 AND s.status = 'Completed'
     ");
-    $stmt->execute();
-    $yesterday_data = $stmt->fetch();
+    $yesterday_start = date('Y-m-d 00:00:00', strtotime('-1 day'));
+    $yesterday_end = date('Y-m-d 23:59:59', strtotime('-1 day'));
+    $stmt->execute([
+        ':yest_start' => $yesterday_start,
+        ':yest_end' => $yesterday_end,
+        ':yest_start2' => $yesterday_start,
+        ':yest_end2' => $yesterday_end
+    ]);
+    $yesterday_data = $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
     $yesterday_revenue = (float)($yesterday_data['revenue'] ?? 0);
     $yesterday_profit = (float)($yesterday_data['profit'] ?? 0);
 
     // Monthly Sales Count (This Month)
-    $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM sales WHERE date >= DATE_FORMAT(CURDATE(), '%Y-%m-01') AND date < DATE_ADD(DATE_FORMAT(CURDATE(), '%Y-%m-01'), INTERVAL 1 MONTH) AND status = 'Completed'");
-    $stmt->execute();
-    $monthly_sales = $stmt->fetch()['count'] ?? 0;
+    $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM sales WHERE date >= :month_start AND date <= :month_end AND status = 'Completed'");
+    $month_start = date('Y-m-01 00:00:00');
+    $month_end = date('Y-m-t 23:59:59');
+    $stmt->execute([
+        ':month_start' => $month_start,
+        ':month_end' => $month_end
+    ]);
+    $monthly_sales = ($stmt->fetch(PDO::FETCH_ASSOC) ?: [])['count'] ?? 0;
 
     // Last Month's Sales Count
-    $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM sales WHERE date >= DATE_SUB(DATE_FORMAT(CURDATE(), '%Y-%m-01'), INTERVAL 1 MONTH) AND date < DATE_FORMAT(CURDATE(), '%Y-%m-01') AND status = 'Completed'");
-    $stmt->execute();
-    $last_month_sales = $stmt->fetch()['count'] ?? 0;
+    $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM sales WHERE date >= :last_month_start AND date <= :last_month_end AND status = 'Completed'");
+    $last_month_start = date('Y-m-01 00:00:00', strtotime('first day of previous month'));
+    $last_month_end = date('Y-m-t 23:59:59', strtotime('last day of previous month'));
+    $stmt->execute([
+        ':last_month_start' => $last_month_start,
+        ':last_month_end' => $last_month_end
+    ]);
+    $last_month_sales = ($stmt->fetch(PDO::FETCH_ASSOC) ?: [])['count'] ?? 0;
 
     // Calculate Growth Percentages
     $revenue_growth = 0;
-    if ($yesterday_revenue > 0) {
-        $revenue_growth = (($today_revenue - $yesterday_revenue) / $yesterday_revenue) * 100;
-    } elseif ($yesterday_revenue == 0 && $today_revenue > 0) {
+    if ($yesterday_revenue != 0) {
+        $revenue_growth = (($today_revenue - $yesterday_revenue) / abs($yesterday_revenue)) * 100;
+    } elseif ($today_revenue > 0) {
         $revenue_growth = 100; // New revenue from zero
     }
 
     $profit_growth = 0;
-    if ($yesterday_profit > 0) {
-        $profit_growth = (($today_profit - $yesterday_profit) / $yesterday_profit) * 100;
-    } elseif ($yesterday_profit == 0 && $today_profit > 0) {
+    if ($yesterday_profit != 0) {
+        $profit_growth = (($today_profit - $yesterday_profit) / abs($yesterday_profit)) * 100;
+    } elseif ($today_profit > 0) {
         $profit_growth = 100; // New profit from zero
     }
 
     $sales_count_growth = 0;
     if ($last_month_sales > 0) {
         $sales_count_growth = (($monthly_sales - $last_month_sales) / $last_month_sales) * 100;
+    } elseif ($last_month_sales == 0 && $monthly_sales > 0) {
+        $sales_count_growth = 100;
     }
 
     // Low Stock Items
     $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM products WHERE stock_qty <= min_stock AND status = 'Active'");
     $stmt->execute();
-    $low_stock = $stmt->fetch()['count'] ?? 0;
+    $low_stock = ($stmt->fetch(PDO::FETCH_ASSOC) ?: [])['count'] ?? 0;
 
     // Active Customers
     $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM customers");
     $stmt->execute();
-    $customers = $stmt->fetch()['count'] ?? 0;
+    $customers = ($stmt->fetch(PDO::FETCH_ASSOC) ?: [])['count'] ?? 0;
 
     // Pending POs
     $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM purchase_orders WHERE status = 'Pending'");
     $stmt->execute();
-    $pending_po = $stmt->fetch()['count'] ?? 0;
+    $pending_po = ($stmt->fetch(PDO::FETCH_ASSOC) ?: [])['count'] ?? 0;
 
     // 2. Sales Chart Data
     $filter = $_GET['filter'] ?? 'daily';
@@ -138,10 +164,10 @@ try {
                         SUM((si.qty - si.returned_qty) * si.unit_price) as net_subtotal
                     FROM sale_items si
                     JOIN sales s2 ON si.sale_id = s2.id
-                    WHERE s2.date >= DATE_SUB(CURDATE(), INTERVAL 4 WEEK)
+                    WHERE s2.date >= :chart_start
                     GROUP BY si.sale_id
                 ) si ON si.sale_id = s.id
-                WHERE s.date >= DATE_SUB(CURDATE(), INTERVAL 4 WEEK) AND s.status = 'Completed'
+                WHERE s.date >= :chart_start2 AND s.status = 'Completed'
                 GROUP BY YEARWEEK(s.date, 1)
                 ORDER BY MIN(s.date) ASC
             ");
@@ -164,10 +190,10 @@ try {
                         SUM((si.qty - si.returned_qty) * si.unit_price) as net_subtotal
                     FROM sale_items si
                     JOIN sales s2 ON si.sale_id = s2.id
-                    WHERE s2.date >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+                    WHERE s2.date >= :chart_start
                     GROUP BY si.sale_id
                 ) si ON si.sale_id = s.id
-                WHERE s.date >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH) AND s.status = 'Completed'
+                WHERE s.date >= :chart_start2 AND s.status = 'Completed'
                 GROUP BY YEAR(s.date), MONTH(s.date)
                 ORDER BY YEAR(s.date) ASC, MONTH(s.date) ASC
             ");
@@ -191,18 +217,35 @@ try {
                         SUM((si.qty - si.returned_qty) * si.unit_price) as net_subtotal
                     FROM sale_items si
                     JOIN sales s2 ON si.sale_id = s2.id
-                    WHERE s2.date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+                    WHERE s2.date >= :chart_start
                     GROUP BY si.sale_id
                 ) si ON si.sale_id = s.id
-                WHERE s.date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY) AND s.status = 'Completed'
+                WHERE s.date >= :chart_start2 AND s.status = 'Completed'
                 GROUP BY DATE(s.date)
                 ORDER BY s.date ASC
             ");
             break;
     }
     
-    $stmt->execute();
-    $chart_data = $stmt->fetchAll();
+    $chart_start_val = '';
+    switch ($filter) {
+        case 'weekly':
+            $chart_start_val = date('Y-m-d 00:00:00', strtotime('-4 weeks'));
+            break;
+        case 'monthly':
+            $chart_start_val = date('Y-m-d 00:00:00', strtotime('-6 months'));
+            break;
+        case 'daily':
+        default:
+            $chart_start_val = date('Y-m-d 00:00:00', strtotime('-7 days'));
+            break;
+    }
+
+    $stmt->execute([
+        ':chart_start' => $chart_start_val,
+        ':chart_start2' => $chart_start_val
+    ]);
+    $chart_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // 3. Top Products
     $stmt = $pdo->prepare("
@@ -216,7 +259,7 @@ try {
         LIMIT 5
     ");
     $stmt->execute();
-    $top_products = $stmt->fetchAll();
+    $top_products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // 4. Recent Transactions
     $stmt = $pdo->prepare("
@@ -227,7 +270,7 @@ try {
         LIMIT 10
     ");
     $stmt->execute();
-    $recent_sales = $stmt->fetchAll();
+    $recent_sales = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // 5. Stock Alerts List
     $stmt = $pdo->prepare("
@@ -238,7 +281,7 @@ try {
         LIMIT 5
     ");
     $stmt->execute();
-    $stock_alerts = $stmt->fetchAll();
+    $stock_alerts = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     echo json_encode([
         'kpis' => [
