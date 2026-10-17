@@ -921,7 +921,16 @@ var posModule = {
 
     renderCart() {
         const cartList = document.getElementById('pos-cart-items');
-        if (this.cart.length === 0) {
+
+        const isEmpty = this.cart.length === 0;
+        const btnClear = document.getElementById('btn-clear-cart');
+        const btnHold = document.getElementById('btn-hold-sale');
+        const btnCheckout = document.getElementById('btn-checkout');
+        if (btnClear) btnClear.disabled = isEmpty;
+        if (btnHold) btnHold.disabled = isEmpty;
+        if (btnCheckout) btnCheckout.disabled = isEmpty;
+
+        if (isEmpty) {
             cartList.innerHTML = `
                 <div class="text-center py-5 text-muted">
                     <i class="fas fa-basket-shopping mb-3 opacity-25" style="font-size: calc(1.575rem + 3.9vw);"></i>
