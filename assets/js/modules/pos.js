@@ -920,6 +920,14 @@ var posModule = {
     },
 
     renderCart() {
+        const disableActions = this.cart.length === 0;
+        const btnClearCart = document.getElementById('btn-clear-cart');
+        const btnCheckout = document.getElementById('btn-checkout');
+        const btnHold = document.getElementById('btn-hold-sale');
+        if (btnClearCart) btnClearCart.disabled = disableActions;
+        if (btnCheckout) btnCheckout.disabled = disableActions;
+        if (btnHold) btnHold.disabled = disableActions;
+
         const cartList = document.getElementById('pos-cart-items');
         if (this.cart.length === 0) {
             cartList.innerHTML = `
@@ -1144,7 +1152,7 @@ var posModule = {
         const btn = document.getElementById('btn-checkout');
         if (btn.disabled) return;
         btn.disabled = true;
-        btn.innerHTML = `<i class="fas fa-spinner fa-spin me-2"></i>${App.t('pos.msg.processing') || 'Processing...'}`;
+        btn.innerHTML = `<i class="fas fa-spinner fa-spin me-2"></i><span data-i18n="pos.msg.processing">${App.t('pos.msg.processing') || 'Processing...'}</span>`;
 
         try {
             const totals = this.calculateTotals();
@@ -1209,8 +1217,8 @@ var posModule = {
                 }
             }
         } finally {
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-check-circle me-2"></i>Complete Sale';
+            btn.disabled = this.cart.length === 0;
+            btn.innerHTML = `<i class="fas fa-check-circle me-2"></i><span data-i18n="pos.btn.complete">${App.t('pos.btn.complete') || 'COMPLETE SALE'}</span>`;
         }
     },
 
