@@ -113,7 +113,7 @@ if (isset($_SESSION['user_id'])) {
                     </div>
                     <a href="#" class="small text-teal text-decoration-none" data-i18n="login.forgot">Forgot password?</a>
                 </div>
-                <button type="submit" class="btn btn-teal" data-i18n="login.btn_signin">SIGN IN</button>
+                <button type="submit" class="btn btn-teal" aria-label="Sign in" data-i18n="login.btn_signin">SIGN IN</button>
             </form>
             
             <div class="text-center mt-3">
