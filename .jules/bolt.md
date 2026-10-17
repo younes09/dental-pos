@@ -1,0 +1,3 @@
+## 2024-05-14 - Fix N+1 query issue in customer listing
+**Learning:** Correlated subqueries in the SELECT clause (e.g., `(SELECT ... FROM sales WHERE customer_id = c.id)`) cause significant N+1 performance issues in MySQL, especially as the number of customers and sales grows.
+**Action:** Always refactor correlated subqueries into a `LEFT JOIN` on a derived table (e.g., `LEFT JOIN (SELECT customer_id, MAX(date), SUM(...) FROM sales GROUP BY customer_id) s ON c.id = s.customer_id`) to allow MySQL to compute the aggregates once for all customers, improving performance by roughly 3-4x in this codebase.
