@@ -15,6 +15,10 @@ $from   = $_GET['from'] ?? date('Y-m-d', strtotime('-30 days'));
 $to     = $_GET['to']   ?? date('Y-m-d');
 $period = $_GET['period'] ?? 'daily';
 
+// ⚡ Bolt: Append time bounds for SARGable index-friendly queries
+$fromDate = $from . ' 00:00:00';
+$toDate   = $to . ' 23:59:59';
+
 try {
     switch ($action) {
 
@@ -46,9 +50,9 @@ try {
                     FROM sale_items
                     GROUP BY sale_id
                 ) si ON si.sale_id = s.id
-                WHERE DATE(s.date) BETWEEN ? AND ? AND s.status = 'Completed'
+                WHERE s.date BETWEEN ? AND ? AND s.status = 'Completed'
             ");
-            $stmt->execute([$from, $to]);
+            $stmt->execute([$fromDate, $toDate]);
             $rev = $stmt->fetch();
 
             // COGS for profit
@@ -56,18 +60,18 @@ try {
                 SELECT COALESCE(SUM((si.qty - si.returned_qty) * si.cost_price), 0) as cogs
                 FROM sale_items si
                 JOIN sales s ON si.sale_id = s.id
-                WHERE DATE(s.date) BETWEEN ? AND ? AND s.status = 'Completed'
+                WHERE s.date BETWEEN ? AND ? AND s.status = 'Completed'
             ");
-            $stmt->execute([$from, $to]);
+            $stmt->execute([$fromDate, $toDate]);
             $cogs = $stmt->fetch()['cogs'];
 
             // New customers in range
             $stmt = $pdo->prepare("
                 SELECT COUNT(*) as new_customers
                 FROM customers
-                WHERE DATE(created_at) BETWEEN ? AND ?
+                WHERE created_at BETWEEN ? AND ?
             ");
-            $stmt->execute([$from, $to]);
+            $stmt->execute([$fromDate, $toDate]);
             $newCust = $stmt->fetch()['new_customers'] ?? 0;
 
             // Bug #11 Fix: Use item-level revenue to avoid double-counting multi-item sales
@@ -77,12 +81,12 @@ try {
                 JOIN sales s ON si.sale_id = s.id
                 JOIN products p ON si.product_id = p.id
                 LEFT JOIN categories c ON p.category_id = c.id
-                WHERE DATE(s.date) BETWEEN ? AND ? AND s.status = 'Completed'
+                WHERE s.date BETWEEN ? AND ? AND s.status = 'Completed'
                 GROUP BY c.id
                 ORDER BY cat_revenue DESC
                 LIMIT 1
             ");
-            $stmt->execute([$from, $to]);
+            $stmt->execute([$fromDate, $toDate]);
             $topCat = $stmt->fetch()['name'] ?? 'N/A';
 
             echo json_encode([
@@ -133,11 +137,11 @@ try {
                     FROM sale_items
                     GROUP BY sale_id
                 ) si ON si.sale_id = s.id
-                WHERE DATE(s.date) BETWEEN ? AND ? AND s.status = 'Completed'
+                WHERE s.date BETWEEN ? AND ? AND s.status = 'Completed'
                 GROUP BY $groupExpr
                 ORDER BY MIN(s.date) ASC
             ");
-            $stmt->execute([$from, $to]);
+            $stmt->execute([$fromDate, $toDate]);
             echo json_encode(['data' => $stmt->fetchAll()]);
             break;
 
@@ -153,12 +157,12 @@ try {
                 FROM sale_items si
                 JOIN products p ON si.product_id = p.id
                 JOIN sales s ON si.sale_id = s.id
-                WHERE DATE(s.date) BETWEEN ? AND ? AND s.status = 'Completed'
+                WHERE s.date BETWEEN ? AND ? AND s.status = 'Completed'
                 GROUP BY si.product_id
                 ORDER BY revenue DESC
                 LIMIT 10
             ");
-            $stmt->execute([$from, $to]);
+            $stmt->execute([$fromDate, $toDate]);
             echo json_encode(['data' => $stmt->fetchAll()]);
             break;
 
@@ -172,11 +176,11 @@ try {
                     COUNT(*)       as count,
                     SUM(total)     as total
                 FROM sales
-                WHERE DATE(date) BETWEEN ? AND ? AND status = 'Completed'
+                WHERE date BETWEEN ? AND ? AND status = 'Completed'
                 GROUP BY payment_method
                 ORDER BY total DESC
             ");
-            $stmt->execute([$from, $to]);
+            $stmt->execute([$fromDate, $toDate]);
             echo json_encode(['data' => $stmt->fetchAll()]);
             break;
 
@@ -201,11 +205,11 @@ try {
                     SUM(CASE WHEN c.created_at <  s.date - INTERVAL 1 DAY THEN 1 ELSE 0 END) as returning_customers
                 FROM sales s
                 LEFT JOIN customers c ON s.customer_id = c.id
-                WHERE DATE(s.date) BETWEEN ? AND ? AND s.status = 'Completed' AND s.customer_id IS NOT NULL
+                WHERE s.date BETWEEN ? AND ? AND s.status = 'Completed' AND s.customer_id IS NOT NULL
                 GROUP BY $groupExpr
                 ORDER BY MIN(s.date) ASC
             ");
-            $stmt->execute([$from, $to]);
+            $stmt->execute([$fromDate, $toDate]);
             echo json_encode(['data' => $stmt->fetchAll()]);
             break;
 
@@ -219,11 +223,11 @@ try {
                     DAYOFWEEK(date)   as dow,
                     COUNT(*)          as sales_count
                 FROM sales
-                WHERE DATE(date) BETWEEN ? AND ? AND status = 'Completed'
+                WHERE date BETWEEN ? AND ? AND status = 'Completed'
                 GROUP BY HOUR(date), DAYOFWEEK(date)
                 ORDER BY dow ASC, hour ASC
             ");
-            $stmt->execute([$from, $to]);
+            $stmt->execute([$fromDate, $toDate]);
             echo json_encode(['data' => $stmt->fetchAll()]);
             break;
             
@@ -238,11 +242,11 @@ try {
                     COUNT(s.id) as sales_count
                 FROM sales s
                 LEFT JOIN customers c ON s.customer_id = c.id
-                WHERE DATE(s.date) BETWEEN ? AND ? AND s.status = 'Completed'
+                WHERE s.date BETWEEN ? AND ? AND s.status = 'Completed'
                 GROUP BY c.wilaya
                 ORDER BY revenue DESC
             ");
-            $stmt->execute([$from, $to]);
+            $stmt->execute([$fromDate, $toDate]);
             echo json_encode(['data' => $stmt->fetchAll()]);
             break;
 
