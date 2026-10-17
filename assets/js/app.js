@@ -113,10 +113,12 @@ const App = {
                 el.textContent = translation;
             } else if (target === 'html') {
                 el.innerHTML = translation;
-            } else if (target === 'placeholder') {
-                el.setAttribute('placeholder', translation);
-            } else if (target === 'title') {
-                el.setAttribute('title', translation);
+            } else {
+                target.split(',').map(t => t.trim()).forEach(attr => {
+                    if (attr === 'text') el.textContent = translation;
+                    else if (attr === 'html') el.innerHTML = translation;
+                    else el.setAttribute(attr, translation);
+                });
             }
         });
 
