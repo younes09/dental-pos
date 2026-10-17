@@ -1,0 +1,3 @@
+## 2024-05-24 - SARGability Optimization in Analytics queries
+**Learning:** Optimizing queries with SARGable date filtering (`date >= ? AND date <= ?`) instead of using `DATE(date) BETWEEN ? AND ?` significantly improves query performance. However, applying this on outer queries involving `LEFT JOIN`s to derived tables can cause severe performance regressions (10x slower on 20k rows) due to full table scans on the derived table.
+**Action:** Always ensure that when performing SARGable optimization on outer queries with derived tables, the derived table query also includes the explicit date-filtering bounds in its `WHERE` clause to avoid full table scans.
