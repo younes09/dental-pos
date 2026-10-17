@@ -41,14 +41,16 @@ try {
                 FROM sales s
                 LEFT JOIN (
                     SELECT 
-                        sale_id,
-                        SUM((qty - returned_qty) * unit_price) as net_subtotal
-                    FROM sale_items
-                    GROUP BY sale_id
+                        si_inner.sale_id,
+                        SUM((si_inner.qty - si_inner.returned_qty) * si_inner.unit_price) as net_subtotal
+                    FROM sale_items si_inner
+                    JOIN sales s2 ON si_inner.sale_id = s2.id
+                    WHERE DATE(s2.date) BETWEEN ? AND ?
+                    GROUP BY si_inner.sale_id
                 ) si ON si.sale_id = s.id
                 WHERE DATE(s.date) BETWEEN ? AND ? AND s.status = 'Completed'
             ");
-            $stmt->execute([$from, $to]);
+            $stmt->execute([$from, $to, $from, $to]);
             $rev = $stmt->fetch();
 
             // COGS for profit
@@ -127,17 +129,19 @@ try {
                 FROM sales s
                 LEFT JOIN (
                     SELECT 
-                        sale_id,
-                        SUM((qty - returned_qty) * unit_price) as net_subtotal,
-                        SUM((qty - returned_qty) * cost_price) as net_cogs
-                    FROM sale_items
-                    GROUP BY sale_id
+                        si_inner.sale_id,
+                        SUM((si_inner.qty - si_inner.returned_qty) * si_inner.unit_price) as net_subtotal,
+                        SUM((si_inner.qty - si_inner.returned_qty) * si_inner.cost_price) as net_cogs
+                    FROM sale_items si_inner
+                    JOIN sales s2 ON si_inner.sale_id = s2.id
+                    WHERE DATE(s2.date) BETWEEN ? AND ?
+                    GROUP BY si_inner.sale_id
                 ) si ON si.sale_id = s.id
                 WHERE DATE(s.date) BETWEEN ? AND ? AND s.status = 'Completed'
                 GROUP BY $groupExpr
                 ORDER BY MIN(s.date) ASC
             ");
-            $stmt->execute([$from, $to]);
+            $stmt->execute([$from, $to, $from, $to]);
             echo json_encode(['data' => $stmt->fetchAll()]);
             break;
 
