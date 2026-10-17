@@ -1051,6 +1051,15 @@ var posModule = {
             this._debtWarningShown = false;
         }
 
+        const cartHasItems = this.cart.length > 0;
+        const btnClear = document.getElementById('btn-clear-cart');
+        const btnCheckout = document.getElementById('btn-checkout');
+        const btnHold = document.getElementById('btn-hold-sale');
+
+        if (btnClear) btnClear.disabled = !cartHasItems;
+        if (btnCheckout) btnCheckout.disabled = !cartHasItems;
+        if (btnHold) btnHold.disabled = !cartHasItems;
+
         this.saveCartState();
         return { subtotal, discountAmount, tax, total, pointsRedeemed, pointsEarned, paidAmount: isNaN(paidVal) ? total : paidVal };
     },
