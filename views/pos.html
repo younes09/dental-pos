@@ -10,8 +10,8 @@
                             <i class="fas fa-search"></i>
                             <input type="text" id="pos-search" class="form-control"
                                 placeholder="Search by name, barcode or category..." data-i18n="pos.search_placeholder" data-i18n-target="placeholder">
-                            <button type="button" id="btn-clear-pos-search" class="btn btn-link text-muted position-absolute end-0 top-50 translate-middle-y border-0 p-0 me-3" style="display: none; z-index: 5; text-decoration: none;">
-                                <i class="fas fa-times" style=" left: -15px; " title="vider le champ de recherche"></i>
+                            <button type="button" id="btn-clear-pos-search" class="btn btn-link text-muted position-absolute end-0 top-50 translate-middle-y border-0 p-0 me-3" style="display: none; z-index: 5; text-decoration: none;" data-i18n="pos.btn.clear" data-i18n-target="aria-label, title">
+                                <i class="fas fa-times" style=" left: -15px; "></i>
                             </button>
                         </div>
                     </div>
@@ -22,10 +22,10 @@
                     </div>
                     <div class="col-md-3 d-flex justify-content-end">
                         <div class="btn-group border rounded-pill p-1 bg-light shadow-sm" role="group" aria-label="View Toggler">
-                            <button type="button" class="btn btn-sm rounded-pill px-3 active" id="btn-view-grid" data-toggle="tooltip" data-placement="top" title="Grid View" data-i18n="pos.grid_view" data-i18n-target="title">
+                            <button type="button" class="btn btn-sm rounded-pill px-3 active" id="btn-view-grid" data-toggle="tooltip" data-placement="top" title="Grid View" data-i18n="pos.grid_view" data-i18n-target="title, aria-label">
                                 <i class="fas fa-th"></i>
                             </button>
-                            <button type="button" class="btn btn-sm rounded-pill px-3" id="btn-view-list" data-toggle="tooltip" data-placement="top" title="List View" data-i18n="pos.list_view" data-i18n-target="title">
+                            <button type="button" class="btn btn-sm rounded-pill px-3" id="btn-view-list" data-toggle="tooltip" data-placement="top" title="List View" data-i18n="pos.list_view" data-i18n-target="title, aria-label">
                                 <i class="fas fa-list"></i>
                             </button>
                         </div>
