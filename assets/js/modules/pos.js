@@ -921,7 +921,18 @@ var posModule = {
 
     renderCart() {
         const cartList = document.getElementById('pos-cart-items');
-        if (this.cart.length === 0) {
+
+        const btnClear = document.getElementById('btn-clear-cart');
+        const btnCheckout = document.getElementById('btn-checkout');
+        const btnHoldSale = document.getElementById('btn-hold-sale');
+
+        const isEmpty = this.cart.length === 0;
+
+        if (btnClear) btnClear.disabled = isEmpty;
+        if (btnCheckout) btnCheckout.disabled = isEmpty;
+        if (btnHoldSale) btnHoldSale.disabled = isEmpty;
+
+        if (isEmpty) {
             cartList.innerHTML = `
                 <div class="text-center py-5 text-muted">
                     <i class="fas fa-basket-shopping mb-3 opacity-25" style="font-size: calc(1.575rem + 3.9vw);"></i>
@@ -1209,8 +1220,8 @@ var posModule = {
                 }
             }
         } finally {
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-check-circle me-2"></i>Complete Sale';
+            btn.disabled = this.cart.length === 0;
+            btn.innerHTML = `<i class="fas fa-check-circle me-2"></i><span data-i18n="pos.btn.complete">${App.t('pos.btn.complete') || 'COMPLETE SALE'}</span>`;
         }
     },
 
