@@ -1,0 +1,3 @@
+## 2024-05-24 - SARGable Date Queries in Analytics
+**Learning:** The `api/analytics.php` file previously used `DATE(s.date) BETWEEN ? AND ?` for its date filtering. This is an anti-pattern as applying a function like `DATE()` to an indexed column prevents the database engine from using the index, leading to full table scans and performance degradation as the `sales` table grows.
+**Action:** Replaced these calls with SARGable (Search ARGument ABLE) conditions (`s.date >= ? AND s.date <= ?`) and manually constructed the bound variables to include the full day bounds (e.g., appending ` 00:00:00` and ` 23:59:59` to the dates before executing the query). This allows MySQL to efficiently utilize indexes on the `date` columns.
