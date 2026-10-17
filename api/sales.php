@@ -11,8 +11,14 @@ try {
             $stmt = $pdo->prepare("
                 SELECT p.id, p.name, p.selling_price, p.purchase_price, p.stock_qty, p.min_stock, p.barcode, p.image, p.category_id, p.brand_id,
                        c.name as category_name, b.name as brand_name,
-                       (SELECT MIN(expiry_date) FROM stock_batches WHERE product_id = p.id AND remaining_qty > 0) as expiry_date
+                       sb.expiry_date
                 FROM products p
+                LEFT JOIN (
+                    SELECT product_id, MIN(expiry_date) as expiry_date
+                    FROM stock_batches
+                    WHERE remaining_qty > 0
+                    GROUP BY product_id
+                ) sb ON sb.product_id = p.id
                 LEFT JOIN categories c ON p.category_id = c.id
                 LEFT JOIN brands b ON p.brand_id = b.id
                 WHERE p.status = 'Active' 
