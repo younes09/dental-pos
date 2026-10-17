@@ -920,8 +920,19 @@ var posModule = {
     },
 
     renderCart() {
+        const isEmpty = this.cart.length === 0;
+
+        // Disable action buttons if cart is empty
+        const btnClear = document.getElementById('btn-clear-cart');
+        const btnHold = document.getElementById('btn-hold-sale');
+        const btnCheckout = document.getElementById('btn-checkout');
+
+        if (btnClear) btnClear.disabled = isEmpty;
+        if (btnHold) btnHold.disabled = isEmpty;
+        if (btnCheckout) btnCheckout.disabled = isEmpty;
+
         const cartList = document.getElementById('pos-cart-items');
-        if (this.cart.length === 0) {
+        if (isEmpty) {
             cartList.innerHTML = `
                 <div class="text-center py-5 text-muted">
                     <i class="fas fa-basket-shopping mb-3 opacity-25" style="font-size: calc(1.575rem + 3.9vw);"></i>
@@ -1209,8 +1220,8 @@ var posModule = {
                 }
             }
         } finally {
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-check-circle me-2"></i>Complete Sale';
+            btn.disabled = this.cart.length === 0;
+            btn.innerHTML = '<i class="fas fa-check-circle me-2"></i><span data-i18n="pos.btn.complete">COMPLETE SALE</span>';
         }
     },
 
