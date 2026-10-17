@@ -99,6 +99,8 @@ try {
     $sales_count_growth = 0;
     if ($last_month_sales > 0) {
         $sales_count_growth = (($monthly_sales - $last_month_sales) / $last_month_sales) * 100;
+    } elseif ($last_month_sales == 0 && $monthly_sales > 0) {
+        $sales_count_growth = 100; // New sales count from zero
     }
 
     // Low Stock Items
