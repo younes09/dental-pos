@@ -920,6 +920,14 @@ var posModule = {
     },
 
     renderCart() {
+        const isCartEmpty = this.cart.length === 0;
+        const btnCheckout = document.getElementById('btn-checkout');
+        if (btnCheckout) btnCheckout.disabled = isCartEmpty;
+        const btnClearCart = document.getElementById('btn-clear-cart');
+        if (btnClearCart) btnClearCart.disabled = isCartEmpty;
+        const btnHoldSale = document.getElementById('btn-hold-sale');
+        if (btnHoldSale) btnHoldSale.disabled = isCartEmpty;
+
         const cartList = document.getElementById('pos-cart-items');
         if (this.cart.length === 0) {
             cartList.innerHTML = `
