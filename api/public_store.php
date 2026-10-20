@@ -36,38 +36,59 @@ try {
             $brand_id = isset($_GET['brand_id']) && $_GET['brand_id'] !== '' ? (int)$_GET['brand_id'] : null;
             $availability = $_GET['availability'] ?? 'all';
             $sort = $_GET['sort'] ?? 'name_asc';
+            $page = max(1, (int)($_GET['page'] ?? 1));
+            $limit = max(1, min(100, (int)($_GET['limit'] ?? 12)));
 
+            $where = "";
+            $params = [];
+
+            if (!empty($search)) {
+                $where .= " AND (p.name LIKE :search OR p.barcode LIKE :search OR c.name LIKE :search OR b.name LIKE :search)";
+                $params['search'] = '%' . $search . '%';
+            }
+
+            if ($category_id !== null) {
+                $where .= " AND p.category_id = :category_id";
+                $params['category_id'] = $category_id;
+            }
+
+            if ($brand_id !== null) {
+                $where .= " AND p.brand_id = :brand_id";
+                $params['brand_id'] = $brand_id;
+            }
+
+            if ($availability === 'in_stock') {
+                $where .= " AND p.stock_qty > 0";
+            } elseif ($availability === 'out_of_stock') {
+                $where .= " AND p.stock_qty = 0";
+            }
+
+            // Total count query
+            $countQuery = "
+                SELECT COUNT(*) as total
+                FROM products p
+                LEFT JOIN categories c ON p.category_id = c.id
+                LEFT JOIN brands b ON p.brand_id = b.id
+                WHERE p.status = 'Active'" . $where;
+
+            $countStmt = $pdo->prepare($countQuery);
+            $countStmt->execute($params);
+            $totalRecords = (int)$countStmt->fetchColumn();
+
+            $totalPages = $totalRecords > 0 ? (int)ceil($totalRecords / $limit) : 1;
+            if ($page > $totalPages) {
+                $page = $totalPages;
+            }
+            $offset = ($page - 1) * $limit;
+
+            // Data query
             $query = "
                 SELECT p.id, p.name, p.selling_price, p.stock_qty, p.min_stock, p.image, p.barcode, p.expiry_date,
                        c.name as category_name, b.name as brand_name
                 FROM products p
                 LEFT JOIN categories c ON p.category_id = c.id
                 LEFT JOIN brands b ON p.brand_id = b.id
-                WHERE p.status = 'Active'
-            ";
-
-            $params = [];
-
-            if (!empty($search)) {
-                $query .= " AND (p.name LIKE :search OR p.barcode LIKE :search OR c.name LIKE :search OR b.name LIKE :search)";
-                $params['search'] = '%' . $search . '%';
-            }
-
-            if ($category_id !== null) {
-                $query .= " AND p.category_id = :category_id";
-                $params['category_id'] = $category_id;
-            }
-
-            if ($brand_id !== null) {
-                $query .= " AND p.brand_id = :brand_id";
-                $params['brand_id'] = $brand_id;
-            }
-
-            if ($availability === 'in_stock') {
-                $query .= " AND p.stock_qty > 0";
-            } elseif ($availability === 'out_of_stock') {
-                $query .= " AND p.stock_qty = 0";
-            }
+                WHERE p.status = 'Active'" . $where;
 
             switch ($sort) {
                 case 'name_desc':
@@ -90,11 +111,21 @@ try {
                     break;
             }
 
+            $query .= " LIMIT " . (int)$limit . " OFFSET " . (int)$offset;
+
             $stmt = $pdo->prepare($query);
             $stmt->execute($params);
             $products = $stmt->fetchAll();
 
-            echo json_encode(['data' => $products]);
+            echo json_encode([
+                'data' => $products,
+                'pagination' => [
+                    'page' => $page,
+                    'limit' => $limit,
+                    'total_records' => $totalRecords,
+                    'total_pages' => $totalPages
+                ]
+            ]);
             break;
 
         default:

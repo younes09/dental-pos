@@ -1310,7 +1310,11 @@ const locales = {
         "store.products_found": "{count} products found",
         "store.contact_us": "Contact Us",
         "store.inquire": "Inquire / Order",
-        "store.inquire_msg": "Hello, I would like to inquire about the product: {name} (Ref: {barcode})"
+        "store.inquire_msg": "Hello, I would like to inquire about the product: {name} (Ref: {barcode})",
+        "store.page_prev": "Previous",
+        "store.page_next": "Next",
+        "store.page_info": "Showing {start} to {end} of {total} products",
+        "store.per_page": "per page"
     },
     fr: {
         // General
@@ -2622,6 +2626,10 @@ const locales = {
         "store.products_found": "{count} produits trouvés",
         "store.contact_us": "Contactez-nous",
         "store.inquire": "Se renseigner / Commander",
-        "store.inquire_msg": "Bonjour, je souhaite me renseigner sur le produit : {name} (Réf : {barcode})"
+        "store.inquire_msg": "Bonjour, je souhaite me renseigner sur le produit : {name} (Réf : {barcode})",
+        "store.page_prev": "Précédent",
+        "store.page_next": "Suivant",
+        "store.page_info": "Affichage de {start} à {end} sur {total} produits",
+        "store.per_page": "par page"
     }
 };

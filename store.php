@@ -346,6 +346,49 @@
             border-radius: 16px;
         }
 
+        /* Pagination Styling */
+        .pagination .page-link {
+            border-radius: 8px !important;
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            background-color: var(--card-bg);
+            padding: 6px 12px;
+            font-size: 0.88rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .pagination .page-item.active .page-link {
+            background-color: var(--primary-teal) !important;
+            border-color: var(--primary-teal) !important;
+            color: #ffffff !important;
+            font-weight: 700;
+            box-shadow: 0 2px 6px rgba(0, 191, 166, 0.3);
+        }
+
+        .pagination .page-link:hover:not(.disabled) {
+            background-color: rgba(0, 191, 166, 0.1);
+            border-color: var(--primary-teal);
+            color: var(--primary-teal);
+        }
+
+        .pagination .page-item.disabled .page-link {
+            opacity: 0.45;
+            background-color: transparent;
+            cursor: not-allowed;
+        }
+
+        body.dark-mode .pagination .page-link {
+            background-color: #1a2a40;
+            border-color: #2a3c54;
+            color: #cbd5e1;
+        }
+
+        body.dark-mode .pagination .page-item.active .page-link {
+            background-color: var(--primary-teal) !important;
+            color: #ffffff !important;
+        }
+
         .empty-state i {
             font-size: 3.5rem;
             color: #cbd5e1;
@@ -533,18 +576,28 @@
 
             <!-- Products Section -->
             <div class="col-lg-9">
-                <!-- Toolbar: Products count & View Mode -->
-                <div class="toolbar-box">
-                    <div class="fw-semibold small text-muted">
+                <!-- Toolbar: Products count & View Mode & Limit -->
+                <div class="toolbar-box flex-wrap gap-2">
+                    <div class="fw-semibold small text-muted d-flex align-items-center gap-2">
                         <span id="productsCountText">Chargement...</span>
                     </div>
-                    <div class="d-flex align-items-center gap-1">
-                        <button type="button" class="view-btn active" id="btnViewGrid" title="Affichage Grille">
-                            <i class="fas fa-th-large"></i>
-                        </button>
-                        <button type="button" class="view-btn" id="btnViewList" title="Affichage Liste">
-                            <i class="fas fa-list"></i>
-                        </button>
+                    <div class="d-flex align-items-center gap-2 ms-auto">
+                        <div class="d-flex align-items-center gap-1 small text-muted">
+                            <span class="d-none d-sm-inline" data-i18n="store.per_page">Par page :</span>
+                            <select id="limitSelect" class="form-select form-select-sm rounded-3 py-1 px-2" style="width: auto; font-size: 0.82rem;">
+                                <option value="12" selected>12</option>
+                                <option value="24">24</option>
+                                <option value="48">48</option>
+                            </select>
+                        </div>
+                        <div class="d-flex align-items-center gap-1 border-start ps-2">
+                            <button type="button" class="view-btn active" id="btnViewGrid" title="Affichage Grille">
+                                <i class="fas fa-th-large"></i>
+                            </button>
+                            <button type="button" class="view-btn" id="btnViewList" title="Affichage Liste">
+                                <i class="fas fa-list"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -556,6 +609,18 @@
                             <span class="visually-hidden">Loading...</span>
                         </div>
                     </div>
+                </div>
+
+                <!-- Pagination Controls -->
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-4 pt-3 border-top gap-3" id="paginationWrapper" style="display: none !important;">
+                    <div class="small text-muted" id="paginationInfo">
+                        <!-- Populated by JS -->
+                    </div>
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination pagination-sm mb-0 gap-1 flex-wrap justify-content-center" id="paginationList">
+                            <!-- Populated by JS -->
+                        </ul>
+                    </nav>
                 </div>
             </div>
         </div>
@@ -684,7 +749,11 @@
                 "store.products_found": "{count} produits trouvés",
                 "store.contact_us": "Contactez-nous",
                 "store.inquire": "Se renseigner",
-                "store.inquire_msg": "Bonjour, je souhaite me renseigner sur le produit : {name} (Réf : {barcode})"
+                "store.inquire_msg": "Bonjour, je souhaite me renseigner sur le produit : {name} (Réf : {barcode})",
+                "store.page_prev": "Précédent",
+                "store.page_next": "Suivant",
+                "store.page_info": "Affichage de {start} à {end} sur {total} produits",
+                "store.per_page": "Par page :"
             },
             en: {
                 "store.title": "Product Catalog",
@@ -721,7 +790,11 @@
                 "store.products_found": "{count} products found",
                 "store.contact_us": "Contact Us",
                 "store.inquire": "Inquire",
-                "store.inquire_msg": "Hello, I would like to inquire about the product: {name} (Ref: {barcode})"
+                "store.inquire_msg": "Hello, I would like to inquire about the product: {name} (Ref: {barcode})",
+                "store.page_prev": "Previous",
+                "store.page_next": "Next",
+                "store.page_info": "Showing {start} to {end} of {total} products",
+                "store.per_page": "Per page:"
             }
         };
 
@@ -982,14 +1055,96 @@
             });
         }
 
-        // Fetch Products with active filters
-        async function loadProducts() {
+        let currentPage = 1;
+        let itemsLimit = 12;
+        let totalRecords = 0;
+        let totalPages = 1;
+
+        // Render Pagination controls
+        function renderPagination() {
+            const wrapper = document.getElementById('paginationWrapper');
+            const list = document.getElementById('paginationList');
+            const info = document.getElementById('paginationInfo');
+
+            if (totalRecords === 0 || totalPages <= 1) {
+                wrapper.style.setProperty('display', 'none', 'important');
+                return;
+            }
+
+            wrapper.style.removeProperty('display');
+            wrapper.style.display = 'flex';
+
+            const startIdx = (currentPage - 1) * itemsLimit + 1;
+            const endIdx = Math.min(currentPage * itemsLimit, totalRecords);
+            info.textContent = t('store.page_info', { start: startIdx, end: endIdx, total: totalRecords });
+
+            let html = '';
+
+            // Previous button
+            const prevDisabled = currentPage <= 1 ? 'disabled' : '';
+            html += `
+                <li class="page-item ${prevDisabled}">
+                    <button class="page-link" onclick="goToPage(${currentPage - 1})" ${prevDisabled ? 'disabled' : ''} aria-label="Previous">
+                        <i class="fas fa-chevron-left me-1"></i><span class="d-none d-sm-inline">${t('store.page_prev')}</span>
+                    </button>
+                </li>
+            `;
+
+            // Calculate pagination window
+            const delta = 2;
+            const range = [];
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - delta && i <= currentPage + delta)) {
+                    range.push(i);
+                }
+            }
+
+            let lastNum = 0;
+            for (const p of range) {
+                if (lastNum > 0 && p - lastNum > 1) {
+                    html += `<li class="page-item disabled"><span class="page-link border-0">...</span></li>`;
+                }
+                const activeClass = p === currentPage ? 'active' : '';
+                html += `
+                    <li class="page-item ${activeClass}">
+                        <button class="page-link" onclick="goToPage(${p})">${p}</button>
+                    </li>
+                `;
+                lastNum = p;
+            }
+
+            // Next button
+            const nextDisabled = currentPage >= totalPages ? 'disabled' : '';
+            html += `
+                <li class="page-item ${nextDisabled}">
+                    <button class="page-link" onclick="goToPage(${currentPage + 1})" ${nextDisabled ? 'disabled' : ''} aria-label="Next">
+                        <span class="d-none d-sm-inline">${t('store.page_next')}</span><i class="fas fa-chevron-right ms-1"></i>
+                    </button>
+                </li>
+            `;
+
+            list.innerHTML = html;
+        }
+
+        window.goToPage = function(pageNum) {
+            if (pageNum < 1 || pageNum > totalPages || pageNum === currentPage) return;
+            loadProducts(pageNum);
+            const gridEl = document.getElementById('productsGrid');
+            if (gridEl) {
+                gridEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        };
+
+        // Fetch Products with active filters & pagination
+        async function loadProducts(page = 1) {
+            currentPage = page;
             const grid = document.getElementById('productsGrid');
             const search = document.getElementById('searchInput').value.trim();
             const category_id = document.getElementById('categoryFilter').value;
             const brand_id = document.getElementById('brandFilter').value;
             const availability = document.getElementById('availabilityFilter').value;
             const sort = document.getElementById('sortFilter').value;
+            itemsLimit = parseInt(document.getElementById('limitSelect').value) || 12;
 
             grid.innerHTML = `
                 <div class="col-12 text-center py-5" id="gridLoader">
@@ -1006,14 +1161,26 @@
                     category_id: category_id,
                     brand_id: brand_id,
                     availability: availability,
-                    sort: sort
+                    sort: sort,
+                    page: currentPage,
+                    limit: itemsLimit
                 });
 
                 const res = await fetch('api/public_store.php?' + params.toString());
                 const result = await res.json();
                 productsList = result.data || [];
 
+                if (result.pagination) {
+                    currentPage = result.pagination.page;
+                    totalRecords = result.pagination.total_records;
+                    totalPages = result.pagination.total_pages;
+                } else {
+                    totalRecords = productsList.length;
+                    totalPages = 1;
+                }
+
                 renderProducts(productsList);
+                renderPagination();
             } catch (err) {
                 console.error("Error loading products:", err);
                 grid.innerHTML = `
@@ -1022,6 +1189,7 @@
                         <p>${t('app.error') || 'Error loading products.'}</p>
                     </div>
                 `;
+                document.getElementById('paginationWrapper').style.setProperty('display', 'none', 'important');
             }
         }
 
@@ -1093,10 +1261,11 @@
         };
 
         // Filter Event Listeners
-        document.getElementById('categoryFilter').addEventListener('change', loadProducts);
-        document.getElementById('brandFilter').addEventListener('change', loadProducts);
-        document.getElementById('availabilityFilter').addEventListener('change', loadProducts);
-        document.getElementById('sortFilter').addEventListener('change', loadProducts);
+        document.getElementById('categoryFilter').addEventListener('change', () => loadProducts(1));
+        document.getElementById('brandFilter').addEventListener('change', () => loadProducts(1));
+        document.getElementById('availabilityFilter').addEventListener('change', () => loadProducts(1));
+        document.getElementById('sortFilter').addEventListener('change', () => loadProducts(1));
+        document.getElementById('limitSelect').addEventListener('change', () => loadProducts(1));
 
         // Reset Filters button
         document.getElementById('btnResetFilters').addEventListener('click', () => {
@@ -1106,7 +1275,8 @@
             document.getElementById('brandFilter').value = '';
             document.getElementById('availabilityFilter').value = 'all';
             document.getElementById('sortFilter').value = 'name_asc';
-            loadProducts();
+            document.getElementById('limitSelect').value = '12';
+            loadProducts(1);
         });
 
         // Search Input Events (Debounced & Enter)
@@ -1120,7 +1290,7 @@
             
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => {
-                loadProducts();
+                loadProducts(1);
             }, 300);
         });
 
@@ -1128,14 +1298,14 @@
             if (e.key === 'Enter') {
                 e.preventDefault();
                 clearTimeout(searchTimeout);
-                loadProducts();
+                loadProducts(1);
             }
         });
 
         clearSearch.addEventListener('click', () => {
             searchInput.value = '';
             clearSearch.style.display = 'none';
-            loadProducts();
+            loadProducts(1);
             searchInput.focus();
         });
 
