@@ -1314,7 +1314,19 @@ const locales = {
         "store.page_prev": "Previous",
         "store.page_next": "Next",
         "store.page_info": "Showing {start} to {end} of {total} products",
-        "store.per_page": "per page"
+        "store.per_page": "per page",
+        "store.new_badge": "New",
+        "store.add_to_cart": "Add to Cart",
+        "store.added_to_cart": "Added to Cart!",
+        "store.cart": "Cart",
+        "store.cart_title": "My Cart",
+        "store.cart_empty": "Your cart is empty",
+        "store.cart_total": "Cart Total",
+        "store.cart_order_wa": "Order via WhatsApp",
+        "store.cart_clear": "Clear Cart",
+        "store.subtotal": "Subtotal",
+        "store.qty_to_buy": "Quantity",
+        "store.max_stock_reached": "Maximum stock reached"
     },
     fr: {
         // General
@@ -2630,6 +2642,18 @@ const locales = {
         "store.page_prev": "Précédent",
         "store.page_next": "Suivant",
         "store.page_info": "Affichage de {start} à {end} sur {total} produits",
-        "store.per_page": "par page"
+        "store.per_page": "par page",
+        "store.new_badge": "Nouveau",
+        "store.add_to_cart": "Mettre dans le panier",
+        "store.added_to_cart": "Ajouté au panier !",
+        "store.cart": "Panier",
+        "store.cart_title": "Mon Panier",
+        "store.cart_empty": "Votre panier est vide",
+        "store.cart_total": "Total du panier",
+        "store.cart_order_wa": "Commander via WhatsApp",
+        "store.cart_clear": "Vider le panier",
+        "store.subtotal": "Sous-total",
+        "store.qty_to_buy": "Quantité",
+        "store.max_stock_reached": "Stock maximum atteint"
     }
 };

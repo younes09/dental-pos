@@ -1006,9 +1006,9 @@ body.dark-mode .custom-pills .nav-link.active {
 }
 
 /* Ensure dropdowns inside responsive tables are not clipped */
-.table-responsive {
+/* .table-responsive {
     min-height: 60vh;
-}
+} */
 
 /* POS Product Card Title Wrap */
 .product-title-wrap {

@@ -521,6 +521,201 @@
             color: #fff;
         }
 
+        /* Badge « Nouveau » */
+        .product-badge-new {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
+            color: #ffffff;
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 20px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            box-shadow: 0 4px 10px rgba(255, 107, 107, 0.4);
+            z-index: 2;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .badge-new-inline {
+            background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
+            color: #ffffff;
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 3px 9px;
+            border-radius: 12px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            box-shadow: 0 2px 6px rgba(255, 107, 107, 0.3);
+            vertical-align: middle;
+        }
+
+        /* Quantity Controller */
+        .quantity-controller {
+            display: inline-flex;
+            align-items: center;
+            background: var(--card-bg);
+            border: 1.5px solid var(--card-border);
+            border-radius: 12px;
+            padding: 3px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+            transition: border-color 0.2s ease;
+        }
+
+        .quantity-controller:focus-within {
+            border-color: var(--primary-teal);
+        }
+
+        .btn-qty-step {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .btn-qty-step:hover:not(:disabled) {
+            background: var(--primary-teal);
+            color: #ffffff;
+        }
+
+        .btn-qty-step:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+        }
+
+        .qty-input {
+            width: 52px;
+            height: 36px;
+            border: none;
+            background: transparent;
+            text-align: center;
+            font-weight: 700;
+            font-size: 1.05rem;
+            color: var(--text-main);
+            outline: none;
+            -moz-appearance: textfield;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .qty-input::-webkit-outer-spin-button,
+        .qty-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* Subtotal box */
+        .subtotal-box {
+            background: rgba(0, 191, 166, 0.08);
+            border: 1px dashed rgba(0, 191, 166, 0.35);
+            border-radius: 12px;
+            padding: 12px 16px;
+        }
+
+        body.dark-mode .subtotal-box {
+            background: rgba(0, 191, 166, 0.12);
+            border-color: rgba(0, 191, 166, 0.25);
+        }
+
+        /* Nav Cart Button & Live Badge */
+        .nav-cart-btn {
+            position: relative;
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            border-radius: 20px;
+            padding: 6px 14px;
+            font-weight: 600;
+            font-size: 0.88rem;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .nav-cart-btn:hover {
+            background: rgba(255, 255, 255, 0.22);
+            color: #ffffff;
+            transform: translateY(-1px);
+        }
+
+        .cart-badge-count {
+            background: #FF6B6B;
+            color: #ffffff;
+            font-size: 0.72rem;
+            font-weight: 700;
+            border-radius: 20px;
+            padding: 2px 7px;
+            min-width: 20px;
+            text-align: center;
+            line-height: 1.2;
+            box-shadow: 0 2px 6px rgba(255, 107, 107, 0.4);
+        }
+
+        @keyframes cartPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.35); }
+            100% { transform: scale(1); }
+        }
+
+        .cart-badge-pulse {
+            animation: cartPulse 0.35s ease;
+        }
+
+        /* Cart Modal Elements */
+        .cart-item-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .cart-item-row:last-child {
+            border-bottom: none;
+        }
+
+        .cart-item-thumb {
+            width: 58px;
+            height: 58px;
+            min-width: 58px;
+            border-radius: 10px;
+            object-fit: contain;
+            background: #f8fafc;
+            padding: 4px;
+            border: 1px solid var(--card-border);
+        }
+
+        body.dark-mode .cart-item-thumb {
+            background: #172237;
+        }
+
+        .cart-summary-box {
+            background: var(--card-bg);
+            border: 1.5px solid var(--card-border);
+            border-radius: 14px;
+            padding: 16px;
+        }
+
+        .bg-teal-subtle {
+            background-color: rgba(0, 191, 166, 0.12) !important;
+        }
+
         .store-footer {
             margin-top: auto;
             background-color: #0A1628;
@@ -573,6 +768,13 @@
                         <img src="assets/vendor/img/flags/us.png" width="20" alt="EN">
                     </button>
                 </div>
+                
+                <!-- Cart Button -->
+                <button id="navCartBtn" class="nav-cart-btn ms-2" onclick="openCartModal()" title="Mon Panier">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span class="d-none d-sm-inline" data-i18n="store.cart">Panier</span>
+                    <span id="cartCountBadge" class="cart-badge-count">0</span>
+                </button>
                 
                 <a href="login.php" class="btn btn-teal btn-sm px-3 rounded-pill ms-2" data-i18n="store.back_to_login">
                     <i class="fas fa-sign-in-alt me-1"></i>Connexion POS
@@ -742,32 +944,46 @@
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
                 <div class="modal-header p-4 border-bottom pb-3">
-                    <h5 class="modal-title fw-bold font-outfit" id="modalProductTitle" data-i18n="store.product_details">Détails du Produit</h5>
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="fas fa-box-open text-teal fs-5"></i>
+                        <h5 class="modal-title fw-bold font-outfit mb-0" id="modalProductTitle" data-i18n="store.product_details">Détails du Produit</h5>
+                    </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
-                    <div class="row g-4 align-items-center">
+                    <div class="row g-4 align-items-start">
+                        <!-- Product Image Column -->
                         <div class="col-md-5 text-center">
-                            <img id="modalImg" src="assets/img/img_holder.png" class="modal-product-img img-fluid" alt="Product Image" onerror="this.onerror=null; this.src='assets/img/img_holder.png';">
+                            <div class="position-relative">
+                                <img id="modalImg" src="assets/img/img_holder.png" class="modal-product-img img-fluid" alt="Product Image" onerror="this.onerror=null; this.src='assets/img/img_holder.png';">
+                                <span id="modalImgNewBadge" class="product-badge-new" style="display: none;">
+                                    <i class="fas fa-sparkles me-1"></i><span data-i18n="store.new_badge">Nouveau</span>
+                                </span>
+                            </div>
                         </div>
+
+                        <!-- Product Info & Actions Column -->
                         <div class="col-md-7">
-                            <div class="product-brand mb-1" id="modalBrand">BRAND</div>
+                            <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+                                <span class="badge bg-teal-subtle text-teal fw-bold px-2 py-1" id="modalBrand">BRAND</span>
+                                <span class="badge bg-light text-secondary border px-2 py-1" id="modalCategory">CATEGORY</span>
+                                <span id="modalNewBadge" class="badge-new-inline" style="display: none;">
+                                    <i class="fas fa-sparkles"></i> <span data-i18n="store.new_badge">Nouveau</span>
+                                </span>
+                            </div>
+
                             <h3 class="fw-bold mb-3 font-outfit" id="modalName">Product Name</h3>
                             
                             <!-- Specs list -->
-                            <div class="table-responsive">
-                                <table class="table table-borderless align-middle mb-3 small">
+                            <div class="table-responsive mb-3">
+                                <table class="table table-borderless align-middle mb-0 small">
                                     <tbody>
                                         <tr>
-                                            <td class="ps-0 py-1 text-muted fw-medium" width="150" data-i18n="store.category">Catégorie</td>
-                                            <td class="py-1 fw-semibold" id="modalCategory">-</td>
-                                        </tr>
-                                        <tr>
-                                            <td class="ps-0 py-1 text-muted fw-medium" data-i18n="store.barcode">Code-barres</td>
+                                            <td class="ps-0 py-1 text-muted fw-medium" width="140" data-i18n="store.barcode">Code-barres</td>
                                             <td class="py-1" id="modalBarcode"><code class="bg-light px-2 py-1 rounded text-dark">-</code></td>
                                         </tr>
                                         <tr>
-                                            <td class="ps-0 py-1 text-muted fw-medium" data-i18n="store.quantity">Stock Disponible</td>
+                                            <td class="ps-0 py-1 text-muted fw-medium" data-i18n="store.quantity">Disponibilité</td>
                                             <td class="py-1 fw-semibold">
                                                 <span id="modalStockQty" class="badge bg-secondary">0</span>
                                                 <span id="modalAvailabilityBadge" class="availability-badge ms-1">Badge</span>
@@ -780,21 +996,82 @@
                                     </tbody>
                                 </table>
                             </div>
-                            
-                            <div class="d-flex flex-wrap justify-content-between align-items-center pt-3 border-top gap-3">
-                                <div>
-                                    <div class="small text-muted mb-0" data-i18n="store.price">Prix</div>
-                                    <div class="price-tag fs-3" id="modalPrice">0.00 DZD</div>
+
+                            <!-- Pricing & Quantity Controller Card -->
+                            <div class="p-3 rounded-3 mb-3" style="background: rgba(0, 0, 0, 0.02); border: 1.5px solid var(--card-border);">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <div>
+                                        <div class="small text-muted mb-0" data-i18n="store.price">Prix unitaire</div>
+                                        <div class="price-tag fs-3" id="modalPrice">0.00 DZD</div>
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="badge bg-light text-muted border small">TTC</span>
+                                    </div>
                                 </div>
-                                <div class="d-flex gap-2">
-                                    <a id="modalInquireBtn" href="#" target="_blank" class="btn btn-teal px-3 py-2 rounded-3 shadow-sm" style="display: none;">
-                                        <i class="fab fa-whatsapp me-1"></i><span data-i18n="store.inquire">Se renseigner</span>
-                                    </a>
-                                    <button type="button" class="btn btn-outline-secondary px-3 py-2 rounded-3" data-bs-dismiss="modal" data-i18n="btn.close">Fermer</button>
+                                
+                                <!-- Quantity Controller Section -->
+                                <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                                    <div>
+                                        <div class="fw-semibold small" data-i18n="store.qty_to_buy">Quantité à acheter</div>
+                                        <div class="small text-muted" id="modalStockLimitHint">Max disponible: 0</div>
+                                    </div>
+                                    <div class="quantity-controller">
+                                        <button type="button" class="btn-qty-step" id="btnQtyMinus" onclick="stepModalQty(-1)" aria-label="Diminuer">
+                                            <i class="fas fa-minus"></i>
+                                        </button>
+                                        <input type="number" id="modalQtyInput" class="qty-input" value="1" min="1" max="1" oninput="onModalQtyInput(this)" onchange="onModalQtyChange(this)">
+                                        <button type="button" class="btn-qty-step" id="btnQtyPlus" onclick="stepModalQty(1)" aria-label="Augmenter">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                    </div>
                                 </div>
+                            </div>
+
+                            <!-- Subtotal preview -->
+                            <div class="subtotal-box d-flex justify-content-between align-items-center mb-3" id="modalSubtotalWrapper">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="fas fa-calculator text-teal fs-5"></i>
+                                    <span class="fw-bold" data-i18n="store.subtotal">Sous-total :</span>
+                                </div>
+                                <div class="price-tag fs-4" id="modalSubtotal">0.00 DZD</div>
+                            </div>
+
+                            <!-- Actions -->
+                            <div class="d-flex flex-wrap gap-2 pt-2">
+                                <button type="button" id="btnModalAddToCart" class="btn btn-teal flex-grow-1 py-2 px-3 rounded-3 shadow-sm d-flex align-items-center justify-content-center gap-2" onclick="addCurrentModalToCart()">
+                                    <i class="fas fa-cart-plus fs-5"></i>
+                                    <span class="fw-bold" data-i18n="store.add_to_cart">Mettre dans le panier</span>
+                                </button>
+                                <a id="modalInquireBtn" href="#" target="_blank" class="btn btn-outline-success py-2 px-3 rounded-3 shadow-sm d-flex align-items-center gap-2" style="display: none;" title="WhatsApp">
+                                    <i class="fab fa-whatsapp fs-5"></i>
+                                    <span class="d-none d-sm-inline" data-i18n="store.inquire">WhatsApp</span>
+                                </a>
+                                <button type="button" class="btn btn-outline-secondary py-2 px-3 rounded-3" data-bs-dismiss="modal" data-i18n="btn.close">Fermer</button>
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Shopping Cart Modal -->
+    <div class="modal fade" id="cartModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
+                <div class="modal-header p-4 border-bottom pb-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="fas fa-shopping-cart text-teal fs-5"></i>
+                        <h5 class="modal-title fw-bold font-outfit mb-0" data-i18n="store.cart_title">Mon Panier</h5>
+                        <span id="cartModalCountBadge" class="badge bg-teal-subtle text-teal ms-2">0</span>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4" id="cartModalBody">
+                    <!-- Populated dynamically by JS -->
+                </div>
+                <div class="modal-footer p-3 border-top d-flex justify-content-between align-items-center" id="cartModalFooter">
+                    <!-- Populated dynamically by JS -->
                 </div>
             </div>
         </div>
@@ -864,7 +1141,22 @@
                 "store.page_prev": "Précédent",
                 "store.page_next": "Suivant",
                 "store.page_info": "Affichage de {start} à {end} sur {total} produits",
-                "store.per_page": "Par page :"
+                "store.per_page": "Par page :",
+                "store.new_badge": "Nouveau",
+                "store.add_to_cart": "Mettre dans le panier",
+                "store.added_to_cart": "Ajouté au panier !",
+                "store.cart": "Panier",
+                "store.cart_title": "Mon Panier",
+                "store.cart_empty": "Votre panier est vide",
+                "store.cart_empty_sub": "Découvrez nos produits et ajoutez-les à votre panier.",
+                "store.cart_total": "Total du panier",
+                "store.cart_order_wa": "Commander via WhatsApp",
+                "store.cart_clear": "Vider le panier",
+                "store.cart_clear_confirm": "Êtes-vous sûr de vouloir vider le panier ?",
+                "store.subtotal": "Sous-total :",
+                "store.qty_to_buy": "Quantité à acheter",
+                "store.max_stock_reached": "Stock maximum atteint",
+                "store.out_of_stock_btn": "Rupture de stock"
             },
             en: {
                 "store.title": "Product Catalog",
@@ -905,7 +1197,22 @@
                 "store.page_prev": "Previous",
                 "store.page_next": "Next",
                 "store.page_info": "Showing {start} to {end} of {total} products",
-                "store.per_page": "Per page:"
+                "store.per_page": "Per page:",
+                "store.new_badge": "New",
+                "store.add_to_cart": "Add to Cart",
+                "store.added_to_cart": "Added to Cart!",
+                "store.cart": "Cart",
+                "store.cart_title": "My Cart",
+                "store.cart_empty": "Your cart is empty",
+                "store.cart_empty_sub": "Discover our products and add them to your cart.",
+                "store.cart_total": "Cart Total",
+                "store.cart_order_wa": "Order via WhatsApp",
+                "store.cart_clear": "Clear Cart",
+                "store.cart_clear_confirm": "Are you sure you want to clear the cart?",
+                "store.subtotal": "Subtotal:",
+                "store.qty_to_buy": "Quantity to buy",
+                "store.max_stock_reached": "Maximum stock reached",
+                "store.out_of_stock_btn": "Out of Stock"
             }
         };
 
@@ -1097,6 +1404,20 @@
             }
         }
 
+        // Check if product is New (added within last 90 days)
+        function checkIsNewProduct(p) {
+            if (!p) return false;
+            if (p.created_at) {
+                const dateStr = p.created_at.replace(' ', 'T');
+                const createdTime = new Date(dateStr).getTime();
+                if (!isNaN(createdTime)) {
+                    const diffDays = (Date.now() - createdTime) / (1000 * 60 * 60 * 24);
+                    if (diffDays <= 90) return true;
+                }
+            }
+            return false;
+        }
+
         // Render Products List
         function renderProducts(items) {
             const grid = document.getElementById('productsGrid');
@@ -1134,6 +1455,9 @@
                     stockBadge = `<span class="availability-badge bg-success-subtle text-success"><i class="fas fa-check-circle"></i>${t('store.status_in_stock')} (${stockQty})</span>`;
                 }
 
+                const isNew = checkIsNewProduct(p);
+                const newBadgeHtml = isNew ? `<span class="product-badge-new"><i class="fas fa-sparkles me-1"></i>${t('store.new_badge')}</span>` : '';
+
                 const imgSrc = p.image && p.image !== 'default.jpg' && p.image !== 'default.png' ? 'assets/img/products/' + p.image : 'assets/img/img_holder.png';
                 const brandName = p.brand_name ? p.brand_name : '-';
                 const catName = p.category_name ? p.category_name : '-';
@@ -1142,6 +1466,7 @@
                 col.innerHTML = `
                     <div class="card product-card" onclick="viewProductDetails(${p.id})">
                         <div class="product-img-wrapper">
+                            ${newBadgeHtml}
                             <img src="${imgSrc}" class="product-img" alt="${App.escapeHtml(p.name)}" onerror="this.onerror=null; this.src='assets/img/img_holder.png';">
                         </div>
                         <div class="product-info">
@@ -1155,9 +1480,16 @@
                             </div>
                             <div class="product-meta d-flex justify-content-between align-items-center mt-auto border-top pt-2">
                                 <span class="price-tag">${priceFormatted}</span>
-                                <button class="btn btn-sm btn-teal-outline rounded-3 px-3 py-1" onclick="event.stopPropagation(); viewProductDetails(${p.id})">
-                                    <i class="fas fa-eye me-1"></i>${t('store.view_details')}
-                                </button>
+                                <div class="d-flex align-items-center gap-1">
+                                    <button class="btn btn-sm btn-teal-outline rounded-3 px-2 py-1" onclick="event.stopPropagation(); viewProductDetails(${p.id})" title="${t('store.view_details')}">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    ${stockQty > 0 ? `
+                                    <button class="btn btn-sm btn-teal rounded-3 px-2 py-1" onclick="event.stopPropagation(); quickAddToCart(${p.id})" title="${t('store.add_to_cart')}">
+                                        <i class="fas fa-cart-plus"></i>
+                                    </button>
+                                    ` : ''}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1304,16 +1636,30 @@
             }
         }
 
+        let currentModalProduct = null;
+        let currentModalQty = 1;
+
         // View product details in modal
         window.viewProductDetails = function(productId) {
             const product = productsList.find(p => p.id == productId);
             if (!product) return;
+
+            currentModalProduct = product;
+            currentModalQty = 1;
 
             document.getElementById('modalName').textContent = product.name;
             document.getElementById('modalBrand').textContent = product.brand_name ? product.brand_name.toUpperCase() : '-';
             document.getElementById('modalCategory').textContent = product.category_name ? product.category_name : '-';
             document.getElementById('modalBarcode').innerHTML = product.barcode ? `<code class="bg-light px-2 py-1 rounded text-dark">${product.barcode}</code>` : `<span class="text-muted">-</span>`;
             
+            // New Badge
+            const isNew = checkIsNewProduct(product);
+            const imgNewBadge = document.getElementById('modalImgNewBadge');
+            const inlineNewBadge = document.getElementById('modalNewBadge');
+            if (imgNewBadge) imgNewBadge.style.display = isNew ? 'inline-flex' : 'none';
+            if (inlineNewBadge) inlineNewBadge.style.display = isNew ? 'inline-flex' : 'none';
+
+            // Stock & Availability
             const stockQty = parseInt(product.stock_qty) || 0;
             const minStock = parseInt(product.min_stock) || 5;
             document.getElementById('modalStockQty').textContent = stockQty;
@@ -1351,12 +1697,43 @@
             // Price
             document.getElementById('modalPrice').textContent = parseFloat(product.selling_price).toLocaleString(undefined, {minimumFractionDigits: 2}) + ' ' + storeSettings.currency;
 
+            // Quantity Controller & Cart Button Configuration
+            const qtyInput = document.getElementById('modalQtyInput');
+            const btnMinus = document.getElementById('btnQtyMinus');
+            const btnPlus = document.getElementById('btnQtyPlus');
+            const hint = document.getElementById('modalStockLimitHint');
+            const btnAddToCart = document.getElementById('btnModalAddToCart');
+
+            if (stockQty <= 0) {
+                currentModalQty = 0;
+                qtyInput.value = 0;
+                qtyInput.disabled = true;
+                btnMinus.disabled = true;
+                btnPlus.disabled = true;
+                hint.textContent = t('store.status_out_of_stock');
+                btnAddToCart.disabled = true;
+                btnAddToCart.className = 'btn btn-secondary flex-grow-1 py-2 px-3 rounded-3 shadow-sm d-flex align-items-center justify-content-center gap-2';
+                btnAddToCart.innerHTML = `<i class="fas fa-ban fs-5"></i><span class="fw-bold">${t('store.out_of_stock_btn')}</span>`;
+                document.getElementById('modalSubtotal').textContent = '0.00 ' + storeSettings.currency;
+            } else {
+                currentModalQty = 1;
+                qtyInput.value = 1;
+                qtyInput.disabled = false;
+                qtyInput.max = stockQty;
+                btnMinus.disabled = true;
+                btnPlus.disabled = stockQty <= 1;
+                hint.textContent = (t('store.quantity') || 'Max') + ': ' + stockQty;
+                btnAddToCart.disabled = false;
+                btnAddToCart.className = 'btn btn-teal flex-grow-1 py-2 px-3 rounded-3 shadow-sm d-flex align-items-center justify-content-center gap-2';
+                btnAddToCart.innerHTML = `<i class="fas fa-cart-plus fs-5"></i><span class="fw-bold">${t('store.add_to_cart')}</span>`;
+                updateModalSubtotal();
+            }
+
             // WhatsApp / Contact button in modal
             const inquireBtn = document.getElementById('modalInquireBtn');
             const storePhone = (storeSettings.store_phone || storeSettings.store_phone_2 || '').replace(/[^0-9]/g, '');
             if (storePhone) {
                 const message = t('store.inquire_msg', { name: product.name, barcode: product.barcode || 'N/A' });
-                // Check if international code needed, default Algeria 213 if starts with 0
                 let waNumber = storePhone;
                 if (waNumber.startsWith('0')) {
                     waNumber = '213' + waNumber.substring(1);
@@ -1371,11 +1748,346 @@
             modal.show();
         };
 
+        // Quantity selector step handlers
+        window.stepModalQty = function(delta) {
+            if (!currentModalProduct) return;
+            const maxStock = parseInt(currentModalProduct.stock_qty) || 0;
+            if (maxStock <= 0) return;
+
+            let newQty = currentModalQty + delta;
+            if (newQty < 1) newQty = 1;
+            if (newQty > maxStock) newQty = maxStock;
+
+            currentModalQty = newQty;
+            applyModalQtyState(maxStock);
+        };
+
+        window.onModalQtyInput = function(input) {
+            if (!currentModalProduct) return;
+            const maxStock = parseInt(currentModalProduct.stock_qty) || 0;
+            if (maxStock <= 0) return;
+
+            let val = parseInt(input.value);
+            if (isNaN(val) || val < 1) val = 1;
+            if (val > maxStock) val = maxStock;
+
+            currentModalQty = val;
+            applyModalQtyState(maxStock, false);
+        };
+
+        window.onModalQtyChange = function(input) {
+            if (!currentModalProduct) return;
+            const maxStock = parseInt(currentModalProduct.stock_qty) || 0;
+            if (maxStock <= 0) return;
+
+            let val = parseInt(input.value);
+            if (isNaN(val) || val < 1) val = 1;
+            if (val > maxStock) val = maxStock;
+
+            currentModalQty = val;
+            input.value = currentModalQty;
+            applyModalQtyState(maxStock, true);
+        };
+
+        function applyModalQtyState(maxStock, syncInput = true) {
+            const qtyInput = document.getElementById('modalQtyInput');
+            if (syncInput && qtyInput) qtyInput.value = currentModalQty;
+
+            const btnMinus = document.getElementById('btnQtyMinus');
+            const btnPlus = document.getElementById('btnQtyPlus');
+            if (btnMinus) btnMinus.disabled = currentModalQty <= 1;
+            if (btnPlus) btnPlus.disabled = currentModalQty >= maxStock;
+
+            updateModalSubtotal();
+        }
+
+        function updateModalSubtotal() {
+            if (!currentModalProduct) return;
+            const price = parseFloat(currentModalProduct.selling_price) || 0;
+            const subtotal = currentModalQty * price;
+            const subtotalEl = document.getElementById('modalSubtotal');
+            if (subtotalEl) {
+                subtotalEl.textContent = subtotal.toLocaleString(undefined, {minimumFractionDigits: 2}) + ' ' + storeSettings.currency;
+            }
+        }
+
+        // ==========================================
+        // Cart Logic (localStorage + WhatsApp Order)
+        // ==========================================
+        function getCart() {
+            try {
+                return JSON.parse(localStorage.getItem('store_cart') || '[]');
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function saveCart(cart) {
+            localStorage.setItem('store_cart', JSON.stringify(cart));
+            updateCartBadge();
+        }
+
+        function updateCartBadge() {
+            const cart = getCart();
+            const count = cart.reduce((sum, item) => sum + (parseInt(item.qty) || 0), 0);
+            
+            const badge = document.getElementById('cartCountBadge');
+            const modalBadge = document.getElementById('cartModalCountBadge');
+
+            if (badge) {
+                badge.textContent = count;
+                badge.classList.remove('cart-badge-pulse');
+                void badge.offsetWidth; // trigger reflow
+                badge.classList.add('cart-badge-pulse');
+            }
+            if (modalBadge) {
+                modalBadge.textContent = count;
+            }
+        }
+
+        window.addCurrentModalToCart = function() {
+            if (!currentModalProduct) return;
+            const stockQty = parseInt(currentModalProduct.stock_qty) || 0;
+            if (stockQty <= 0) return;
+
+            const cart = getCart();
+            const existingItem = cart.find(i => i.id == currentModalProduct.id);
+
+            if (existingItem) {
+                const requestedQty = existingItem.qty + currentModalQty;
+                existingItem.qty = Math.min(requestedQty, stockQty);
+            } else {
+                cart.push({
+                    id: currentModalProduct.id,
+                    name: currentModalProduct.name,
+                    price: parseFloat(currentModalProduct.selling_price) || 0,
+                    brand_name: currentModalProduct.brand_name || '',
+                    barcode: currentModalProduct.barcode || '',
+                    image: currentModalProduct.image || '',
+                    stock_qty: stockQty,
+                    qty: currentModalQty
+                });
+            }
+
+            saveCart(cart);
+
+            // Button feedback
+            const btn = document.getElementById('btnModalAddToCart');
+            const originalHtml = btn.innerHTML;
+            btn.className = 'btn btn-success flex-grow-1 py-2 px-3 rounded-3 shadow-sm d-flex align-items-center justify-content-center gap-2';
+            btn.innerHTML = `<i class="fas fa-check-circle fs-5"></i><span class="fw-bold">${t('store.added_to_cart')}</span>`;
+            
+            setTimeout(() => {
+                if (btn && currentModalProduct) {
+                    btn.className = 'btn btn-teal flex-grow-1 py-2 px-3 rounded-3 shadow-sm d-flex align-items-center justify-content-center gap-2';
+                    btn.innerHTML = originalHtml;
+                }
+            }, 1200);
+        };
+
+        window.quickAddToCart = function(productId) {
+            const product = productsList.find(p => p.id == productId);
+            if (!product) return;
+            const stockQty = parseInt(product.stock_qty) || 0;
+            if (stockQty <= 0) return;
+
+            const cart = getCart();
+            const existingItem = cart.find(i => i.id == product.id);
+
+            if (existingItem) {
+                if (existingItem.qty < stockQty) {
+                    existingItem.qty += 1;
+                }
+            } else {
+                cart.push({
+                    id: product.id,
+                    name: product.name,
+                    price: parseFloat(product.selling_price) || 0,
+                    brand_name: product.brand_name || '',
+                    barcode: product.barcode || '',
+                    image: product.image || '',
+                    stock_qty: stockQty,
+                    qty: 1
+                });
+            }
+
+            saveCart(cart);
+        };
+
+        window.openCartModal = function() {
+            renderCartModal();
+            const modalEl = document.getElementById('cartModal');
+            if (modalEl) {
+                const modal = new bootstrap.Modal(modalEl);
+                modal.show();
+            }
+        };
+
+        window.renderCartModal = function() {
+            const cart = getCart();
+            const body = document.getElementById('cartModalBody');
+            const footer = document.getElementById('cartModalFooter');
+
+            if (cart.length === 0) {
+                body.innerHTML = `
+                    <div class="text-center py-5">
+                        <i class="fas fa-shopping-cart fa-3x text-muted opacity-50 mb-3"></i>
+                        <h5 class="fw-bold font-outfit mb-1">${t('store.cart_empty')}</h5>
+                        <p class="text-muted small mb-4">${t('store.cart_empty_sub')}</p>
+                        <button type="button" class="btn btn-teal px-4 py-2 rounded-3" data-bs-dismiss="modal">
+                            <i class="fas fa-box-open me-2"></i>${t('store.title')}
+                        </button>
+                    </div>
+                `;
+                footer.innerHTML = `
+                    <button type="button" class="btn btn-outline-secondary px-3 py-2 rounded-3 ms-auto" data-bs-dismiss="modal">${t('btn.close')}</button>
+                `;
+                return;
+            }
+
+            let totalAmount = 0;
+            let itemsHtml = '<div class="cart-items-list mb-3">';
+
+            cart.forEach((item, index) => {
+                const itemTotal = item.qty * item.price;
+                totalAmount += itemTotal;
+                const imgSrc = item.image && item.image !== 'default.jpg' && item.image !== 'default.png' ? 'assets/img/products/' + item.image : 'assets/img/img_holder.png';
+
+                itemsHtml += `
+                    <div class="cart-item-row">
+                        <img src="${imgSrc}" class="cart-item-thumb" alt="${App.escapeHtml(item.name)}" onerror="this.onerror=null; this.src='assets/img/img_holder.png';">
+                        <div class="flex-grow-1 min-w-0">
+                            <div class="d-flex justify-content-between align-items-start gap-2">
+                                <div>
+                                    <h6 class="fw-bold mb-0 text-truncate" title="${App.escapeHtml(item.name)}" style="max-width: 280px;">${App.escapeHtml(item.name)}</h6>
+                                    <div class="small text-muted">${App.escapeHtml(item.brand_name || '')}</div>
+                                </div>
+                                <button type="button" class="btn btn-link text-danger p-0 border-0" onclick="removeCartItem(${index})" title="${t('btn.delete')}">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                <div class="quantity-controller">
+                                    <button type="button" class="btn-qty-step" onclick="updateCartItemQty(${index}, -1)" ${item.qty <= 1 ? 'disabled' : ''}>
+                                        <i class="fas fa-minus"></i>
+                                    </button>
+                                    <span class="qty-input d-flex align-items-center justify-content-center" style="font-size: 0.95rem;">${item.qty}</span>
+                                    <button type="button" class="btn-qty-step" onclick="updateCartItemQty(${index}, 1)" ${item.qty >= item.stock_qty ? 'disabled' : ''}>
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                                <div class="text-end">
+                                    <div class="small text-muted">${item.price.toLocaleString(undefined, {minimumFractionDigits: 2})} ${storeSettings.currency}</div>
+                                    <div class="fw-bold text-teal font-outfit fs-6">${itemTotal.toLocaleString(undefined, {minimumFractionDigits: 2})} ${storeSettings.currency}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            itemsHtml += '</div>';
+
+            // Summary card inside body
+            itemsHtml += `
+                <div class="cart-summary-box">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="text-muted small">${t('store.cart_total')} (${cart.reduce((s, i) => s + i.qty, 0)} articles)</span>
+                        <span class="text-muted small">TTC</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                        <span class="fw-bold font-outfit fs-5">${t('store.cart_total')} :</span>
+                        <span class="price-tag fs-3 text-teal font-outfit">${totalAmount.toLocaleString(undefined, {minimumFractionDigits: 2})} ${storeSettings.currency}</span>
+                    </div>
+                </div>
+            `;
+
+            body.innerHTML = itemsHtml;
+
+            // Footer actions
+            footer.innerHTML = `
+                <button type="button" class="btn btn-outline-danger btn-sm rounded-3 px-3" onclick="clearCart()">
+                    <i class="fas fa-trash-alt me-1"></i>${t('store.cart_clear')}
+                </button>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-outline-secondary rounded-3 px-3" data-bs-dismiss="modal">${t('btn.close')}</button>
+                    <button type="button" class="btn btn-success rounded-3 px-3 d-flex align-items-center gap-2 shadow-sm" onclick="sendCartWhatsApp()">
+                        <i class="fab fa-whatsapp fs-5"></i>
+                        <span class="fw-bold">${t('store.cart_order_wa')}</span>
+                    </button>
+                </div>
+            `;
+        };
+
+        window.updateCartItemQty = function(index, delta) {
+            const cart = getCart();
+            if (!cart[index]) return;
+
+            const item = cart[index];
+            const newQty = item.qty + delta;
+
+            if (newQty <= 0) {
+                removeCartItem(index);
+                return;
+            }
+
+            if (newQty > item.stock_qty) return;
+
+            item.qty = newQty;
+            saveCart(cart);
+            renderCartModal();
+        };
+
+        window.removeCartItem = function(index) {
+            const cart = getCart();
+            if (!cart[index]) return;
+
+            cart.splice(index, 1);
+            saveCart(cart);
+            renderCartModal();
+        };
+
+        window.clearCart = function() {
+            if (!confirm(t('store.cart_clear_confirm'))) return;
+            saveCart([]);
+            renderCartModal();
+        };
+
+        window.sendCartWhatsApp = function() {
+            const cart = getCart();
+            if (cart.length === 0) return;
+
+            const storePhone = (storeSettings.store_phone || storeSettings.store_phone_2 || '').replace(/[^0-9]/g, '');
+            let waNumber = storePhone;
+            if (waNumber.startsWith('0')) {
+                waNumber = '213' + waNumber.substring(1);
+            }
+
+            let grandTotal = 0;
+            let lines = [
+                `*Bonjour, je souhaite passer commande sur ${storeSettings.store_name || 'DentalPOS'} :*`,
+                ''
+            ];
+
+            cart.forEach((item, idx) => {
+                const sub = item.qty * item.price;
+                grandTotal += sub;
+                lines.push(`${idx + 1}. *${item.qty}x* ${item.name} ${item.barcode ? `(Réf: ${item.barcode})` : ''} - ${sub.toLocaleString(undefined, {minimumFractionDigits: 2})} ${storeSettings.currency}`);
+            });
+
+            lines.push('');
+            lines.push(`*Total de la commande : ${grandTotal.toLocaleString(undefined, {minimumFractionDigits: 2})} ${storeSettings.currency}*`);
+            lines.push(`_Merci de me confirmer la disponibilité et le mode de livraison._`);
+
+            const url = waNumber ? `https://wa.me/${waNumber}?text=${encodeURIComponent(lines.join('\n'))}` : `https://wa.me/?text=${encodeURIComponent(lines.join('\n'))}`;
+            window.open(url, '_blank');
+        };
+
         // Filter Event Listeners
         document.getElementById('categoryFilter').addEventListener('change', () => loadProducts(1));
         document.getElementById('brandFilter').addEventListener('change', () => loadProducts(1));
         document.getElementById('availabilityFilter').addEventListener('change', () => loadProducts(1));
         document.getElementById('sortFilter').addEventListener('change', () => loadProducts(1));
+
         // Set Items Limit handler
         window.setItemsLimit = function(newLimit) {
             itemsLimit = parseInt(newLimit) || 12;
@@ -1450,6 +2162,7 @@
                 productsGridEl.classList.add('list-mode');
             }
             translatePage();
+            updateCartBadge();
             loadFilters().then(() => {
                 loadProducts();
             });
