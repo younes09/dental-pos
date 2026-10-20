@@ -11,7 +11,7 @@ try {
             $categories = $pdo->query("SELECT * FROM categories ORDER BY name ASC")->fetchAll();
             $brands = $pdo->query("SELECT * FROM brands ORDER BY name ASC")->fetchAll();
             
-            $settings_stmt = $pdo->query("SELECT setting_key, setting_value FROM settings WHERE setting_key IN ('store_name', 'currency', 'store_phone', 'store_phone_2', 'store_email')");
+            $settings_stmt = $pdo->query("SELECT setting_key, setting_value FROM settings WHERE setting_key IN ('store_name', 'currency', 'store_phone', 'store_phone_2', 'store_email', 'store_logo', 'address')");
             $settings = [];
             while ($row = $settings_stmt->fetch()) {
                 $settings[$row['setting_key']] = $row['setting_value'];
@@ -35,6 +35,7 @@ try {
             $category_id = isset($_GET['category_id']) && $_GET['category_id'] !== '' ? (int)$_GET['category_id'] : null;
             $brand_id = isset($_GET['brand_id']) && $_GET['brand_id'] !== '' ? (int)$_GET['brand_id'] : null;
             $availability = $_GET['availability'] ?? 'all';
+            $sort = $_GET['sort'] ?? 'name_asc';
 
             $query = "
                 SELECT p.id, p.name, p.selling_price, p.stock_qty, p.min_stock, p.image, p.barcode, p.expiry_date,
@@ -68,7 +69,26 @@ try {
                 $query .= " AND p.stock_qty = 0";
             }
 
-            $query .= " ORDER BY p.name ASC";
+            switch ($sort) {
+                case 'name_desc':
+                    $query .= " ORDER BY p.name DESC";
+                    break;
+                case 'price_asc':
+                    $query .= " ORDER BY p.selling_price ASC";
+                    break;
+                case 'price_desc':
+                    $query .= " ORDER BY p.selling_price DESC";
+                    break;
+                case 'stock_desc':
+                    $query .= " ORDER BY p.stock_qty DESC, p.name ASC";
+                    break;
+                case 'newest':
+                    $query .= " ORDER BY p.id DESC";
+                    break;
+                default:
+                    $query .= " ORDER BY p.name ASC";
+                    break;
+            }
 
             $stmt = $pdo->prepare($query);
             $stmt->execute($params);
