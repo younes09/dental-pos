@@ -108,11 +108,6 @@
                 margin-bottom: 4px !important;
             }
 
-            .stamp-placeholder {
-                width: 70px !important;
-                height: 70px !important;
-                margin: 2px 0 2px 10px !important;
-            }
 
             .footer {
                 margin-top: 8px !important;
@@ -303,7 +298,6 @@
         .col-idx { text-align: center; width: 40px; }
         .col-ref { text-align: center; width: 85px; }
         .col-desc { text-align: left; }
-        .col-vat { text-align: center; width: 70px; }
         .col-pu { text-align: right; width: 90px; }
         .col-qty { text-align: center; width: 50px; }
         .col-total { text-align: right; width: 100px; font-weight: 600; }
@@ -348,22 +342,6 @@
             font-style: italic;
         }
 
-        .stamp-placeholder {
-            border: 2px dashed #94A3B8;
-            border-radius: 50%;
-            width: 90px;
-            height: 90px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            font-size: 8px;
-            color: #64748B;
-            font-weight: 700;
-            margin: 5px 0 5px 20px;
-            transform: rotate(-8deg);
-            opacity: 0.75;
-        }
 
         .totals-right {
             width: 45%;
@@ -511,7 +489,6 @@
                     <th class="col-idx">N°</th>
                     <th class="col-ref">RÉF</th>
                     <th class="col-desc">DÉSIGNATION</th>
-                    <th class="col-vat">TVA %</th>
                     <th class="col-pu">PU TTC</th>
                     <th class="col-qty">QTÉ</th>
                     <th class="col-total">TOTAL</th>
@@ -532,10 +509,7 @@
                 <div class="amount-in-words" id="amount-words-box">
                     La présente facture est arrêtée à la somme de : <strong id="receipt-total-words">...</strong>
                 </div>
-                
-                <div class="stamp-placeholder">
-                    CACHET ET<br>SIGNATURE
-                </div>
+
             </div>
             
             <div class="totals-right">
@@ -547,10 +521,6 @@
                     <tr id="receipt-discount-row" style="display: none;">
                         <td class="label">Remise</td>
                         <td class="value" id="receipt-discount">0.00</td>
-                    </tr>
-                    <tr id="receipt-tax-row">
-                        <td class="label" id="receipt-tax-label">TVA (19%)</td>
-                        <td class="value" id="receipt-tax">0.00</td>
                     </tr>
                     <tr class="grand-total">
                         <td class="label">Total TTC</td>
@@ -829,7 +799,6 @@
                         <td class="col-idx">${numStr}</td>
                         <td class="col-ref">${item.barcode || '//'}</td>
                         <td class="col-desc">${item.product_name}</td>
-                        <td class="col-vat">${itemVat}</td>
                         <td class="col-pu">${unitPriceTTC.toFixed(2)}</td>
                         <td class="col-qty">${item.qty}</td>
                         <td class="col-total">${totalTTC.toFixed(2)}</td>
@@ -855,9 +824,15 @@
                 discountRow.style.display = 'none';
             }
 
-            // Tax display logic
-            document.getElementById('receipt-tax-label').textContent = `TVA (${isBL ? '0.00' : ((saleTaxRate || (vatRate / 100)) * 100).toFixed(0)}%)`;
-            document.getElementById('receipt-tax').textContent = taxVal.toFixed(2);
+            // Tax display logic (if row present)
+            const taxLabelEl = document.getElementById('receipt-tax-label');
+            if (taxLabelEl) {
+                taxLabelEl.textContent = `TVA (${isBL ? '0.00' : ((saleTaxRate || (vatRate / 100)) * 100).toFixed(0)}%)`;
+            }
+            const taxValEl = document.getElementById('receipt-tax');
+            if (taxValEl) {
+                taxValEl.textContent = taxVal.toFixed(2);
+            }
             document.getElementById('receipt-total').textContent = totalVal.toFixed(2);
 
             // Total in Words
