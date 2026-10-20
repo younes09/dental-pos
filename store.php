@@ -192,6 +192,92 @@
             border-color: var(--primary-teal);
         }
 
+        /* Per Page Dropdown Styling */
+        .per-page-dropdown {
+            position: relative;
+        }
+
+        .per-page-btn {
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            border-radius: 10px;
+            padding: 5px 12px;
+            font-size: 0.82rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+        }
+
+        .per-page-btn:hover, .per-page-btn[aria-expanded="true"] {
+            border-color: var(--primary-teal);
+            color: var(--text-main);
+            box-shadow: 0 2px 8px rgba(0, 191, 166, 0.15);
+        }
+
+        .per-page-btn .per-page-badge {
+            background: rgba(0, 191, 166, 0.12);
+            color: var(--primary-teal);
+            font-weight: 700;
+            font-size: 0.8rem;
+            padding: 2px 8px;
+            border-radius: 6px;
+            min-width: 26px;
+            text-align: center;
+        }
+
+        .per-page-menu {
+            min-width: 155px;
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+            padding: 6px;
+            z-index: 1050;
+        }
+
+        .per-page-menu .dropdown-item {
+            color: var(--text-main);
+            border-radius: 8px;
+            padding: 7px 12px;
+            font-size: 0.84rem;
+            font-weight: 500;
+            transition: all 0.15s ease;
+            cursor: pointer;
+        }
+
+        .per-page-menu .dropdown-item:hover {
+            background-color: rgba(0, 191, 166, 0.08);
+            color: var(--primary-teal);
+        }
+
+        .per-page-menu .dropdown-item.active {
+            background-color: var(--primary-teal) !important;
+            color: #ffffff !important;
+            font-weight: 600;
+        }
+
+        body.dark-mode .per-page-btn {
+            background-color: #1a2a40;
+            border-color: #2a3c54;
+            color: #e2e8f0;
+        }
+
+        body.dark-mode .per-page-menu {
+            background-color: #121c2c;
+            border-color: #1e293b;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+        }
+
+        body.dark-mode .per-page-menu .dropdown-item {
+            color: #cbd5e1;
+        }
+
+        body.dark-mode .per-page-menu .dropdown-item:hover {
+            background-color: rgba(0, 191, 166, 0.18);
+            color: #fff;
+        }
+
         /* Product Cards */
         .product-card {
             background-color: var(--card-bg);
@@ -582,9 +668,34 @@
                         <span id="productsCountText">Chargement...</span>
                     </div>
                     <div class="d-flex align-items-center gap-2 ms-auto">
-                        <div class="d-flex align-items-center gap-1 small text-muted">
-                            <span class="d-none d-sm-inline" data-i18n="store.per_page">Par page :</span>
-                            <select id="limitSelect" class="form-select form-select-sm rounded-3 py-1 px-2" style="width: auto; font-size: 0.82rem;">
+                        <!-- Redesigned Per-Page Dropdown -->
+                        <div class="dropdown per-page-dropdown">
+                            <button class="btn per-page-btn dropdown-toggle d-flex align-items-center gap-2" type="button" id="perPageDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-layer-group text-teal"></i>
+                                <span class="d-none d-sm-inline opacity-75" data-i18n="store.per_page">Par page :</span>
+                                <span class="per-page-badge" id="currentLimitText">12</span>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end per-page-menu shadow-sm" aria-labelledby="perPageDropdown">
+                                <li>
+                                    <button class="dropdown-item d-flex align-items-center justify-content-between active" type="button" onclick="setItemsLimit(12)" data-limit="12">
+                                        <span>12 articles</span>
+                                        <i class="fas fa-check small ms-2"></i>
+                                    </button>
+                                </li>
+                                <li>
+                                    <button class="dropdown-item d-flex align-items-center justify-content-between" type="button" onclick="setItemsLimit(24)" data-limit="24">
+                                        <span>24 articles</span>
+                                        <i class="fas fa-check small ms-2 d-none"></i>
+                                    </button>
+                                </li>
+                                <li>
+                                    <button class="dropdown-item d-flex align-items-center justify-content-between" type="button" onclick="setItemsLimit(48)" data-limit="48">
+                                        <span>48 articles</span>
+                                        <i class="fas fa-check small ms-2 d-none"></i>
+                                    </button>
+                                </li>
+                            </ul>
+                            <select id="limitSelect" class="d-none">
                                 <option value="12" selected>12</option>
                                 <option value="24">24</option>
                                 <option value="48">48</option>
@@ -1265,7 +1376,27 @@
         document.getElementById('brandFilter').addEventListener('change', () => loadProducts(1));
         document.getElementById('availabilityFilter').addEventListener('change', () => loadProducts(1));
         document.getElementById('sortFilter').addEventListener('change', () => loadProducts(1));
-        document.getElementById('limitSelect').addEventListener('change', () => loadProducts(1));
+        // Set Items Limit handler
+        window.setItemsLimit = function(newLimit) {
+            itemsLimit = parseInt(newLimit) || 12;
+            const selectEl = document.getElementById('limitSelect');
+            if (selectEl) selectEl.value = itemsLimit;
+
+            const badgeText = document.getElementById('currentLimitText');
+            if (badgeText) badgeText.textContent = itemsLimit;
+
+            // Update active states and checkmark icons
+            document.querySelectorAll('.per-page-menu .dropdown-item').forEach(btn => {
+                const isSelected = parseInt(btn.getAttribute('data-limit')) === itemsLimit;
+                btn.classList.toggle('active', isSelected);
+                const checkIcon = btn.querySelector('.fa-check');
+                if (checkIcon) {
+                    checkIcon.classList.toggle('d-none', !isSelected);
+                }
+            });
+
+            loadProducts(1);
+        };
 
         // Reset Filters button
         document.getElementById('btnResetFilters').addEventListener('click', () => {
@@ -1275,8 +1406,7 @@
             document.getElementById('brandFilter').value = '';
             document.getElementById('availabilityFilter').value = 'all';
             document.getElementById('sortFilter').value = 'name_asc';
-            document.getElementById('limitSelect').value = '12';
-            loadProducts(1);
+            setItemsLimit(12);
         });
 
         // Search Input Events (Debounced & Enter)
